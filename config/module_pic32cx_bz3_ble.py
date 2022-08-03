@@ -27,7 +27,7 @@
 print('Load Module: Harmony Wireless BLE Stack Library')
 
 ## BLE Stack/Library
-bleStackLibComponent = Module.CreateComponent('BLE_STACK_LIB', 'BLE Stack', 'Wireless/Driver/BLE', 'driver/ble/config/stack/blestack.py')
+bleStackLibComponent = Module.CreateComponent('BLE_STACK_LIB', 'BLE Stack', 'Wireless/Drivers/BLE', 'driver/ble/config/stack/blestack.py')
 bleStackLibComponent.setDisplayType('BLE Stack Library')
 bleStackLibComponent.addDependency('PIC32CX_BZ3_DevSupport_Dependency', 'Device_Support', None, True, True)
 #bleStackLibComponent.addDependency("BLE_CRYPTO", "LIB_CRYPTO", None, True, True)
