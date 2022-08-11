@@ -2870,7 +2870,6 @@ def instantiateComponent(libBLEStackComponent):
     bleDdHeaderFile.setType('HEADER')
     bleDdHeaderFile.setEnabled(True)
     bleDdHeaderFile.setMarkup(True)
-    bleDdHeaderFile.setDependencies(bleConfigEnable, ["BLE_BOOL_GATT_CLIENT"])
 
     # Add ble_scm.h file - static file
     bleScmHeaderFile = libBLEStackComponent.createFileSymbol(None, None)
