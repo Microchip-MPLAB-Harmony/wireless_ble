@@ -1,0 +1,12 @@
+package:
+  format-version: "1.0.0"
+  name: "wireless_ble"
+  type: "package"
+  status: "production"
+  required: true
+  version: "1.0.0"
+
+  dependencies:
+    - name: "wireless_pic32cxbz_wbz"
+      type: "package"
+      version: "1.0.0"
