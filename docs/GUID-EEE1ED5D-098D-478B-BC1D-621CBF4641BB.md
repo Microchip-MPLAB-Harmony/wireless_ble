@@ -1,0 +1,7 @@
+# Defines
+
+-   **[Log type](GUID-654D5ACE-F64F-4D92-8675-41DB4B465DB1.md)**  
+
+
+**Parent topic:**[LOG](GUID-EE337600-5EFC-43E1-BE46-228B381B8839.md)
+

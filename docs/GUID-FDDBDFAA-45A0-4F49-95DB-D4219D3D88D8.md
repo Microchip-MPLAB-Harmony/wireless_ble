@@ -1,0 +1,15 @@
+# Functions
+
+-   **[BLE\_PXPR\_BleEventHandler](GUID-D7EC24BF-02DF-4582-AAE1-362A340EC078.md)**  
+
+-   **[BLE\_PXPR\_EventRegister](GUID-DC724121-E097-45DD-9FAC-B4ED7E2659F8.md)**  
+
+-   **[BLE\_PXPR\_Init](GUID-96471DCC-B7AA-42DD-9E25-F203BA07A64C.md)**  
+
+-   **[BLE\_PXPR\_SetLlsAlertLevel](GUID-0493753C-1E12-45EB-A3DD-3AC427B489DD.md)**  
+
+-   **[BLE\_PXPR\_SetTxPowerLevel](GUID-4CB7027E-C268-4B06-94B3-8875D7228D41.md)**  
+
+
+**Parent topic:**[Proximity Profile Reporter Role](GUID-D3EF214E-CD09-4819-A798-82EC3CEC884D.md)
+

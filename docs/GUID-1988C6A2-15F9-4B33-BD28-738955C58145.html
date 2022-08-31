@@ -1,0 +1,439 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-us" lang="en-us">
+<head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE11" /><meta name="copyright" content="(C) Copyright 2022" />
+<meta name="DC.rights.owner" content="(C) Copyright 2022" />
+<meta name="DC.type" content="topic" />
+<meta name="DC.title" content="OTA Control Point" />
+<meta name="DC.relation" scheme="URI" content="GUID-57858D1B-EA35-40DE-9714-EBD47F6C09F8.html" />
+<meta name="DC.format" content="XHTML" />
+<meta name="DC.identifier" content="GUID-1988C6A2-15F9-4B33-BD28-738955C58145" />
+<meta name="DC.language" content="en-US" />
+<link rel="stylesheet" type="text/css" href="stylesheets/atmel.css" />
+<title>OTA Control Point</title>
+<meta name="Microsoft.Help.Id" content="GUID-C5EAF60E-9124-427C-A0F1-F2DBE662EA92-GUID-1988C6A2-15F9-4B33-BD28-738955C58145" />
+<meta name="Microsoft.Help.TocParent" content="GUID-C5EAF60E-9124-427C-A0F1-F2DBE662EA92-GUID-57858D1B-EA35-40DE-9714-EBD47F6C09F8" />
+<meta name="Microsoft.Help.TocOrder" content="4" />
+<meta name="Microsoft.Help.Locale" content="en-US" />
+<meta name="Microsoft.Help.TopicLocale" content="en-US" />
+<meta name="Microsoft.Help.DisplayVersion" content="MPLAB Harmony wireless_ble Reference 1.0 03/2022" />
+<script language="javascript">
+       
+       if (window.parent.location.protocol != 'file:') {
+				document.addEventListener('click', function(e) {
+				    if (e.target) {
+               if (e.target.nodeName == "A" ) {
+                    if (!e.target.target) {
+                      e.preventDefault();
+                      e.stopPropagation();
+                              
+                      var origUrl = window.parent.location.href.substr(0, window.parent.location.href.indexOf("?"));
+                      if (origUrl.length === 0) {
+                          origUrl = window.parent.location.href;
+                      }
+                      var href= e.target.getAttribute("href");
+                      var parts = href.split("#");
+          
+                      var url = "";
+                      if (parts.length == 2 ) {
+                        if (!parts[0].length) {
+                            url = window.parent.location.search.replace('?','')
+                        } else {
+                            url = parts[0].replace('.html','');
+                        }
+                      } else {
+                        url = parts[0].replace('.html','');
+                      }
+
+                      if (parts.length == 2) {
+                          url += "#" + parts[1];
+                      }
+    
+                      window.parent.location.href = origUrl + "?" + url;
+
+                      return false;
+                    }
+               }
+            }
+				});
+			}
+
+		</script><script language="javascript">
+         
+         function copyContent(content, button) {
+         
+            var textArea = document.createElement("textarea");
+            
+            // Place in the top-left corner of screen regardless of scroll position.
+            textArea.style.position = 'fixed';
+            textArea.style.top = 0;
+            textArea.style.left = 0;
+            
+            // Ensure it has a small width and height. Setting to 1px / 1em
+            // doesn't work as this gives a negative w/h on some browsers.
+            textArea.style.width = '2em';
+            textArea.style.height = '2em';
+            
+            // We don't need padding, reducing the size if it does flash render.
+            textArea.style.padding = 0;
+            
+            // Clean up any borders.
+            textArea.style.border = 'none';
+            textArea.style.outline = 'none';
+            textArea.style.boxShadow = 'none';
+            
+            // Avoid flash of the white box if rendered for any reason.
+            textArea.style.background = 'transparent';
+            
+            textArea.value = content;
+            
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+               var successful = document.execCommand('copy');
+               var msg = successful ? 'successful' : 'unsuccessful';
+               if (!button.classList.contains("copied")){
+                  button.textContent = "Copied";
+                  button.classList.add("copied");
+                  setTimeout(function(){
+                     button.textContent = "Copy";
+                     button.classList.remove("copied");
+                  },1000);
+               }
+            } catch (err) {
+               console.log('Oops, unable to copy');
+            }
+            
+            document.body.removeChild(textArea);
+         }
+         
+         function cpy(id, button) {
+            var element = document.getElementById(id);
+            var content = element.getAttribute("content");
+            
+            copyContent(content, button);
+         }
+         
+         document.addEventListener("DOMContentLoaded", function(event) {
+            document.querySelectorAll(".codeblock").forEach(function(elem) {
+               elem.style.position = "relative";
+               var copy = document.createElement("button");
+               copy.textContent = "Copy";
+               copy.setAttribute("class", "copy-code");
+               
+               var content = elem.textContent;
+               
+               copy.addEventListener("click", function(){
+                  copyContent(content, copy);
+               });
+               
+               elem.addEventListener("mouseenter", function(evt){
+                  elem.prepend(copy);
+               });
+            });
+            
+            document.querySelectorAll(".codeblock").forEach(function(elem) {
+               elem.addEventListener("mouseleave", function(evt){
+                  document.querySelector(".copy-code").remove();
+               });
+            });
+         });
+         
+      </script><script language="javascript">
+          
+          // Add the MathML namespace to html
+          var html = document.getElementsByTagName("html")[0],
+          head = document.getElementsByTagName("head")[0];
+          
+          var mathJax = document.createElement("script");
+          mathJax.src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML";
+          head.appendChild(mathJax);
+          
+          html.setAttribute("xmlns:m","http://www.w3.org/1998/Math/MathML");
+          
+          function inIframe() { try { return window.self !== window.top; } catch (e) { return true; } }
+          
+          if (!inIframe()) { 
+          
+          var Default = "index.html?GUID-1988C6A2-15F9-4B33-BD28-738955C58145"; 
+          
+          var displaylocation = "value" + window.location.href;
+          
+          var GUIDS = displaylocation.split('GUID');          
+          
+          if (displaylocation.indexOf('#GUID') != -1) {            
+          var First = GUIDS[1].split('.html');  
+          if (GUIDS[3]){First = GUIDS[2].split('.html');}
+          if (GUIDS[4]){First = GUIDS[3].split('.html');}
+          if (GUIDS[5]){First = GUIDS[4].split('.html');}
+          
+          var Second = GUIDS[2].split('#');   
+          if (GUIDS[3]){Second = GUIDS[3].split('#');}
+          if (GUIDS[4]){Second = GUIDS[4].split('#');}
+          if (GUIDS[5]){Second = GUIDS[5].split('#');}
+          
+          Default = "index.html?" + "GUID" + First[0] + "GUID" + Second[0];     
+          }                    
+          window.top.location = Default;
+          }       
+          
+        </script><link rel="stylesheet" type="text/css" href="syntax-highlight.css" /><style xml:space="">
+        
+          button.copy-code{
+            display:none;
+            padding:0.7em 1.4em;
+            margin:0 0.3em 0.3em 0;
+            border-radius:0.15em;
+            box-sizing: border-box;
+            text-decoration:none;
+            font-family:'Roboto',sans-serif;
+            text-transform:uppercase;
+            font-weight:400;
+            color:#FFFFFF;
+            background-color:#9c9c9c;
+            box-shadow:inset 0 -0.6em 0 -0.35em rgba(0,0,0,0.17);
+            text-align:center;
+            position:relative;
+            border: 0;
+            float: right;
+            border-radius: .5em;
+            cursor: pointer;
+          }
+          button.copy-code:active{
+            top:0.1em;
+          }
+          
+          pre:hover button.copy-code{
+            display: inline-block !important;
+          }
+          button.copy-code.copied {
+            cursor: default !important;
+          }
+          
+          
+          @media all and (max-width:30em){
+            button.copy-code{
+              display:block;
+              margin:0.4em auto;
+            }
+          }
+        
+        
+      </style><link rel="stylesheet" type="text/css" href="syntax-highlight.css" /></head>
+<body id="GUID-1988C6A2-15F9-4B33-BD28-738955C58145">
+
+<h1 class="title topictitle1" id="GUID-1988C6A2-15F9-4B33-BD28-738955C58145__GUID-5B326C4E-41BE-45E1-A346-C2FAEBD54DAC">OTA Control Point</h1>
+
+<div class="body"><p class="shortdesc"></p>
+
+<p class="p">When written by a client, the OTA Control Point characteristic is an 8-bit enumerated value
+            (known as the opcode) followed by zero or more parameter octets. The opcode is used by
+            the server to determine which OTA Control operation is being initiated by the client. A
+            notification of the OTA Control Point is used to provide a response to a
+            client-initiated the OTA Control Point operation.</p>
+
+        <p class="p">The structure of the OTA Control Point characteristic is defined in Table 3.6.</p>
+
+        <div class="p">
+            
+<div class="tablenoborder"><table cellpadding="4" cellspacing="0" summary="" id="GUID-1988C6A2-15F9-4B33-BD28-738955C58145__TABLE_EH5_5PD_VSB" class="table" frame="border" border="1" rules="all"><span class="desc tabledesc">Table 3.6: Structure of OTA Control Point characteristic</span>
+                    <col style="width:25%" />
+                    <col style="width:25%" />
+                    <col style="width:25%" />
+                    <col style="width:25%" />
+                    <thead class="thead" style="text-align:left;">
+                        <tr class="row">
+                            <th class="entry cellrowborder" style="vertical-align:middle;" id="d173765e45"><span><strong class="ph b">Field</strong></span></th>
+
+                            <th class="entry cellrowborder" style="vertical-align:middle;" id="d173765e49"><span><strong class="ph b">Requirement</strong></span></th>
+
+                            <th class="entry cellrowborder" style="vertical-align:middle;" id="d173765e53"><span><strong class="ph b">Size (octets)</strong></span></th>
+
+                            <th class="entry cellrowborder" style="vertical-align:middle;" id="d173765e57"><span><strong class="ph b">Description</strong></span></th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody class="tbody">
+                        <tr class="row">
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e45 "><span>Opcode</span></td>
+
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e49 "><span>M</span></td>
+
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e53 "><span>uint8</span></td>
+
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e57 "><span>Opcode of the client -initiated OTA Control operation</span></td>
+
+                        </tr>
+
+                        <tr class="row">
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e45 "><span>Parameter</span></td>
+
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e49 "><span>M</span></td>
+
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e53 "><span>variables</span></td>
+
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e57 "><span>Dependent of the operations defined in Table 3.7</span></td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+</div>
+
+        </div>
+
+        <p class="p">OTA Control Point procedures only can be initiated by client.</p>
+
+        <p class="p">Client shall enable the Client Characteristic Configuration Descriptor (CCCD) of OTA
+            Control Point on Server before issuing OTA Control Point procedure.</p>
+
+        <p class="p">OTA Control operation and any associated opcodes are defined in Table 3.7.</p>
+
+        <div class="p">
+            
+<div class="tablenoborder"><table cellpadding="4" cellspacing="0" summary="" id="GUID-1988C6A2-15F9-4B33-BD28-738955C58145__TABLE_SY3_FQD_VSB" class="table" frame="border" border="1" rules="all"><span class="desc tabledesc">Table 3.7: OTA Control operations</span>
+                    <col style="width:20%" />
+                    <col style="width:20%" />
+                    <col style="width:20%" />
+                    <col style="width:20%" />
+                    <col style="width:20%" />
+                    <thead class="thead" style="text-align:left;">
+                        <tr class="row">
+                            <th class="entry cellrowborder" style="vertical-align:middle;" id="d173765e134"><span>Opcode</span></th>
+
+                            <th class="entry cellrowborder" style="vertical-align:middle;" id="d173765e137"><span>Operation</span></th>
+
+                            <th class="entry cellrowborder" style="vertical-align:middle;" id="d173765e140"><span>Requirement</span></th>
+
+                            <th class="entry cellrowborder" style="vertical-align:middle;" id="d173765e143"><span><strong class="ph b">Applicable Response Values </strong></span></th>
+
+                            <th class="entry cellrowborder" style="vertical-align:middle;" id="d173765e147"><span><strong class="ph b">Response Parameter</strong></span></th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody class="tbody">
+                        <tr class="row">
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e134 "><span>0x00</span></td>
+
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e137 "><span>RFU</span></td>
+
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e140 "><span>-</span></td>
+
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e143 "><span> </span></td>
+
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e147 "><span> </span></td>
+
+                        </tr>
+
+                        <tr class="row">
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e134 "><span>0x01</span></td>
+
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e137 "><span>Response Code</span></td>
+
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e140 "><span>M</span></td>
+
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e143 "><span>N/A</span></td>
+
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e147 "><span>N/A</span></td>
+
+                        </tr>
+
+                        <tr class="row">
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e134 "><span>0x02</span></td>
+
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e137 "><span>Firmware Update Request</span></td>
+
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e140 "><span>M</span></td>
+
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e143 "><span><p class="p">Success</p>
+<p class="p">Not Supported</p>
+<p class="p">Operation Failed</p>
+ Invalid
+                                Parameter</span></td>
+
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e147 "><span><p class="p">Max Fragmented Image Size (uint16)</p>
+ Current Firmware
+                                Version (uint32)</span></td>
+
+                        </tr>
+
+                        <tr class="row">
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e134 "><span>0x03</span></td>
+
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e137 "><span>Firmware Update Start</span></td>
+
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e140 "><span>M</span></td>
+
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e143 "><span><p class="p">Success</p>
+<p class="p">Invalid State</p>
+ Not Supported</span></td>
+
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e147 "><span>N/A</span></td>
+
+                        </tr>
+
+                        <tr class="row">
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e134 "><span>0x04</span></td>
+
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e137 "><span>Firmware Update Complete</span></td>
+
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e140 "><span>M</span></td>
+
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e143 "><span><p class="p">Success</p>
+ Invalid State</span></td>
+
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e147 "><span>N/A</span></td>
+
+                        </tr>
+
+                        <tr class="row">
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e134 "><span>0x05</span></td>
+
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e137 "><span>Device Reset Request</span></td>
+
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e140 "><span>M</span></td>
+
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e143 "><span>N/A</span></td>
+
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e147 "><span>N/A</span></td>
+
+                        </tr>
+
+                        <tr class="row">
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e134 "><span>0x06-0xFF</span></td>
+
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e137 "><span>RFU</span></td>
+
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e140 "><span>-</span></td>
+
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e143 "><span> </span></td>
+
+                            <td class="entry cellrowborder" style="vertical-align:middle;" headers="d173765e147 "><span> </span></td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+</div>
+
+        </div>
+
+</div>
+
+<div class="related-links">
+<div class="familylinks">
+<div class="parentlink"><strong>Parent topic:</strong> <a class="link" href="GUID-57858D1B-EA35-40DE-9714-EBD47F6C09F8.html">Service Characteristics</a></div>
+</div>
+</div></body>
+</html>
