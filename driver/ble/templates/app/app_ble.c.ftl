@@ -686,7 +686,7 @@ void APP_BleConfigAdvance()
     smpParam.oobDataFlag = true;                                /* OOB Authentication Data Present */
     </#if>
     <#if SMP_SC_ONLY == true>
-    smpParam.secureConnectionsOnly = true;                      /* Secure Connections Only */
+    smpParam.scOnly = true;                      				/* Secure Connections Only */
     </#if>
     <#if SMP_AUTH_PAIR == true>
     smpParam.authPairingRequired = true;                        /* Authenticated pairing method is required */

@@ -11,25 +11,9 @@
         <#assign CMS_CHAR_PERM_CCC += [CMS_CHAR_PROP_ID?eval]>
     </#if>
 </#list>
+
 /*******************************************************************************
-  BLE ${CMS_SVC_NAME_VALUE?capitalize} Service Header File
-
-  Company:
-    Microchip Technology Inc.
-
-  File Name:
-    ble_${CMS_SVC_NAME_VALUE?lower_case}_svc.h
-
-  Summary:
-    This file contains the BLE ${CMS_SVC_NAME_VALUE?capitalize} Service functions for application user.
-
-  Description:
-    This file contains the BLE ${CMS_SVC_NAME_VALUE?capitalize} Service functions for application user.
- *******************************************************************************/
-
-// DOM-IGNORE-BEGIN
-/*******************************************************************************
-* Copyright (C) 2018 Microchip Technology Inc. and its subsidiaries.
+* Copyright (C) 2022 Microchip Technology Inc. and its subsidiaries.
 *
 * Subject to your compliance with these terms, you may use Microchip software
 * and any derivatives exclusively with Microchip products. It is your
@@ -50,7 +34,23 @@
 * ANY WAY RELATED TO THIS SOFTWARE WILL NOT EXCEED THE AMOUNT OF FEES, IF ANY,
 * THAT YOU HAVE PAID DIRECTLY TO MICROCHIP FOR THIS SOFTWARE.
 *******************************************************************************/
-// DOM-IGNORE-END
+
+/*******************************************************************************
+  BLE ${CMS_SVC_NAME_VALUE?capitalize} Service Header File
+
+  Company:
+    Microchip Technology Inc.
+
+  File Name:
+    ble_${CMS_SVC_NAME_VALUE?lower_case}_svc.h
+
+  Summary:
+    This file contains the BLE ${CMS_SVC_NAME_VALUE?capitalize} Service functions for application user.
+
+  Description:
+    This file contains the BLE ${CMS_SVC_NAME_VALUE?capitalize} Service functions for application user.
+ *******************************************************************************/
+
 
 /**
  * @addtogroup BLE_${CMS_SVC_NAME_VALUE?upper_case} BLE ${CMS_SVC_NAME_VALUE?upper_case}

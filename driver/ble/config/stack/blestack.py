@@ -1378,13 +1378,13 @@ def instantiateComponent(libBLEStackComponent):
     gapExtAdvDataSvcUUID = libBLEStackComponent.createStringSymbol("GAP_EXT_ADV_DATA_SERVICE_UUID", gapExtAdvDataSvcDataEn)
     gapExtAdvDataSvcUUID.setLabel("Service UUID")
     gapExtAdvDataSvcUUID.setDescription("Service UUID")
-    gapExtAdvDataSvcUUID.setDefaultValue("FEDA")
+    gapExtAdvDataSvcUUID.setDefaultValue("DAFE")
     gapExtAdvDataSvcUUID.setVisible(False)
     gapExtAdvDataSvcUUID.setDependencies(bleConfigVisibility, ["GAP_EXT_ADV_DATA_SERVICE_DATA_EN"])
 
     #Ext Advertising Data-Service UUID Warning Message
     gapExtAdvDataSvcUUIDComment = libBLEStackComponent.createCommentSymbol("GAP_EXT_ADV_DATA_SERVICE_UUID_CMT", gapExtAdvDataSvcDataEn)
-    gapExtAdvDataSvcUUIDComment.setLabel("**** 2 bytes in hexadecimal format. Invalid value will result in compiling error! ****")
+    gapExtAdvDataSvcUUIDComment.setLabel("**** 2 bytes in hexadecimal format(LSB). Invalid value will result in compiling error! ****")
     gapExtAdvDataSvcUUIDComment.setVisible(False)
     gapExtAdvDataSvcUUIDComment.setDependencies(bleConfigVisibility, ["GAP_EXT_ADV_DATA_SERVICE_DATA_EN"])
 
@@ -1505,13 +1505,13 @@ def instantiateComponent(libBLEStackComponent):
     gapExtScanRspDataSvcUUID = libBLEStackComponent.createStringSymbol("GAP_EXT_SCAN_RSP_DATA_SERVICE_UUID", gapExtScanRspDataSvcDataEn)
     gapExtScanRspDataSvcUUID.setLabel("Service UUID")
     gapExtScanRspDataSvcUUID.setDescription("Service UUID")
-    gapExtScanRspDataSvcUUID.setDefaultValue("FEDA")
+    gapExtScanRspDataSvcUUID.setDefaultValue("DAFE")
     gapExtScanRspDataSvcUUID.setVisible(False)
     gapExtScanRspDataSvcUUID.setDependencies(bleConfigVisibility, ["GAP_EXT_SCAN_RSP_DATA_SERVICE_DATA_EN"])
 
     #Ext Scan Response Data-Service UUID Warning Message
     gapExtScanRspDataSvcUUIDComment = libBLEStackComponent.createCommentSymbol("GAP_EXT_SCAN_RSP_DATA_SERVICE_UUID_CMT", gapExtScanRspDataSvcDataEn)
-    gapExtScanRspDataSvcUUIDComment.setLabel("**** 2 bytes in hexadecimal format. Invalid value will result in compiling error! ****")
+    gapExtScanRspDataSvcUUIDComment.setLabel("**** 2 bytes in hexadecimal format(LSB).Invalid value will result in compiling error! ****")
     gapExtScanRspDataSvcUUIDComment.setVisible(False)
     gapExtScanRspDataSvcUUIDComment.setDependencies(bleConfigVisibility, ["GAP_EXT_SCAN_RSP_DATA_SERVICE_DATA_EN"])
 
@@ -1806,13 +1806,13 @@ def instantiateComponent(libBLEStackComponent):
     gapExtAdvDataSvcUUID = libBLEStackComponent.createStringSymbol("GAP_EXT_ADV_DATA_SERVICE_UUID_2", gapExtAdvDataSvcDataEn)
     gapExtAdvDataSvcUUID.setLabel("Service UUID")
     gapExtAdvDataSvcUUID.setDescription("Service UUID")
-    gapExtAdvDataSvcUUID.setDefaultValue("FEDA")
+    gapExtAdvDataSvcUUID.setDefaultValue("DAFE")
     gapExtAdvDataSvcUUID.setVisible(False)
     gapExtAdvDataSvcUUID.setDependencies(bleConfigVisibility, ["GAP_EXT_ADV_DATA_SERVICE_DATA_EN_2"])
 
     #Ext Advertising Data-Service UUID Warning Message
     gapExtAdvDataSvcUUIDComment = libBLEStackComponent.createCommentSymbol("GAP_EXT_ADV_DATA_SERVICE_UUID_2_CMT", gapExtAdvDataSvcDataEn)
-    gapExtAdvDataSvcUUIDComment.setLabel("**** 2 bytes in hexadecimal format. Invalid value will result in compiling error! ****")
+    gapExtAdvDataSvcUUIDComment.setLabel("**** 2 bytes in hexadecimal format(LSB). Invalid value will result in compiling error! ****")
     gapExtAdvDataSvcUUIDComment.setVisible(False)
     gapExtAdvDataSvcUUIDComment.setDependencies(bleConfigVisibility, ["GAP_EXT_ADV_DATA_SERVICE_DATA_EN_2"])
 
@@ -1942,13 +1942,13 @@ def instantiateComponent(libBLEStackComponent):
     gapExtScanRspDataSvcUUID = libBLEStackComponent.createStringSymbol("GAP_EXT_SCAN_RSP_DATA_SERVICE_UUID_2", gapExtScanRspDataSvcDataEn)
     gapExtScanRspDataSvcUUID.setLabel("Service UUID")
     gapExtScanRspDataSvcUUID.setDescription("Service UUID")
-    gapExtScanRspDataSvcUUID.setDefaultValue("FEDA")
+    gapExtScanRspDataSvcUUID.setDefaultValue("DAFE")
     gapExtScanRspDataSvcUUID.setVisible(False)
     gapExtScanRspDataSvcUUID.setDependencies(bleConfigVisibility, ["GAP_EXT_SCAN_RSP_DATA_SERVICE_DATA_EN_2"])
 
     #Ext Scan Response Data-Service UUID Warning Message
     gapExtScanRspDataSvcUUIDComment = libBLEStackComponent.createCommentSymbol("GAP_EXT_SCAN_RSP_DATA_SERVICE_UUID_2_CMT", gapExtScanRspDataSvcDataEn)
-    gapExtScanRspDataSvcUUIDComment.setLabel("**** 2 bytes in hexadecimal format. Invalid value will result in compiling error! ****")
+    gapExtScanRspDataSvcUUIDComment.setLabel("**** 2 bytes in hexadecimal format(LSB). Invalid value will result in compiling error! ****")
     gapExtScanRspDataSvcUUIDComment.setVisible(False)
     gapExtScanRspDataSvcUUIDComment.setDependencies(bleConfigVisibility, ["GAP_EXT_SCAN_RSP_DATA_SERVICE_DATA_EN_2"])
 
@@ -2092,13 +2092,13 @@ def instantiateComponent(libBLEStackComponent):
     gapAdvDataSvcUUID = libBLEStackComponent.createStringSymbol("GAP_ADV_DATA_SERVICE_UUID", gapAdvDataSvcDataEn)
     gapAdvDataSvcUUID.setLabel("Service UUID")
     gapAdvDataSvcUUID.setDescription("Service UUID")
-    gapAdvDataSvcUUID.setDefaultValue("FEDA")
+    gapAdvDataSvcUUID.setDefaultValue("DAFE")
     gapAdvDataSvcUUID.setVisible(False)
     gapAdvDataSvcUUID.setDependencies(bleConfigVisibility, ["GAP_ADV_DATA_SERVICE_DATA_EN"])
 
     #Advertising Data-Service UUID Warning Message
     gapAdvDataSvcUUIDComment = libBLEStackComponent.createCommentSymbol("GAP_ADV_DATA_SERVICE_UUID_CMT", gapAdvDataSvcDataEn)
-    gapAdvDataSvcUUIDComment.setLabel("**** 2 bytes in hexadecimal format. Invalid value will result in compiling error! ****")
+    gapAdvDataSvcUUIDComment.setLabel("**** 2 bytes in hexadecimal format(LSB). Invalid value will result in compiling error! ****")
     gapAdvDataSvcUUIDComment.setVisible(False)
     gapAdvDataSvcUUIDComment.setDependencies(bleConfigVisibility, ["GAP_ADV_DATA_SERVICE_DATA_EN"])
 
@@ -2227,13 +2227,13 @@ def instantiateComponent(libBLEStackComponent):
     gapScanRspDataSvcUUID = libBLEStackComponent.createStringSymbol("GAP_SCAN_RSP_DATA_SERVICE_UUID", gapScanRspDataSvcDataEn)
     gapScanRspDataSvcUUID.setLabel("Service UUID")
     gapScanRspDataSvcUUID.setDescription("Service UUID")
-    gapScanRspDataSvcUUID.setDefaultValue("FEDA")
+    gapScanRspDataSvcUUID.setDefaultValue("DAFE")
     gapScanRspDataSvcUUID.setVisible(False)
     gapScanRspDataSvcUUID.setDependencies(bleConfigVisibility, ["GAP_SCAN_RSP_DATA_SERVICE_DATA_EN"])
 
     #Scan Response Data-Service UUID Warning Message
     gapScanRspDataSvcUUIDComment = libBLEStackComponent.createCommentSymbol("GAP_SCAN_RSP_DATA_SERVICE_UUID_CMT", gapScanRspDataSvcDataEn)
-    gapScanRspDataSvcUUIDComment.setLabel("**** 2 bytes in hexadecimal format. Invalid value will result in compiling error! ****")
+    gapScanRspDataSvcUUIDComment.setLabel("**** 2 bytes in hexadecimal format(LSB). Invalid value will result in compiling error! ****")
     gapScanRspDataSvcUUIDComment.setVisible(False)
     gapScanRspDataSvcUUIDComment.setDependencies(bleConfigVisibility, ["GAP_SCAN_RSP_DATA_SERVICE_DATA_EN"])
 
