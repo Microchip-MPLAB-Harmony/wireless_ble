@@ -47,15 +47,23 @@
 #ifndef BLE_BAS_H
 #define BLE_BAS_H
 
+// DOM-IGNORE-BEGIN
+#ifdef __cplusplus  // Provide C++ Compatibility
+
+extern "C" {
+
+#endif
+// DOM-IGNORE-END
+
 // *****************************************************************************
 // *****************************************************************************
 // Section: Macros
 // *****************************************************************************
 // *****************************************************************************
 <#if BAS_NOTIFY_ENABLE == true>
-#define BAS_BAT_LEVEL_NOTIFY_ENABLE
+#define BAS_BAT_LEVEL_NOTIFY_ENABLE        /* Enable Notify Property */
 <#else>
-//#define BAS_BAT_LEVEL_NOTIFY_ENABLE
+//#define BAS_BAT_LEVEL_NOTIFY_ENABLE        /* Enable Notify Property */
 </#if>
 
 /**@defgroup BLE_BAS_UUID_DEF BLE_BAS_UUID_DEF
@@ -105,7 +113,7 @@ typedef enum BLE_BAS_AttributeHandle_T
  *@retval MBA_RES_NO_RESOURCE                Fail to register service.
  *
  */
-uint16_t BLE_BAS_Add();
+uint16_t BLE_BAS_Add(void);
 
 /**
  *@brief Set Battery level.
@@ -127,6 +135,12 @@ uint16_t BLE_BAS_SetBatteryLevel(uint8_t batteryLevel);
  *
  */
 uint16_t BLE_BAS_GetBatteryLevel(uint8_t *p_batteryLevel);
+
+//DOM-IGNORE-BEGIN
+#ifdef __cplusplus
+}
+#endif
+//DOM-IGNORE-END
 
 #endif
 

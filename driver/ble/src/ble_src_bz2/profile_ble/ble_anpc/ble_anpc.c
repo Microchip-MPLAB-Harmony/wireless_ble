@@ -31,10 +31,10 @@
     ble_anpc.c
 
   Summary:
-    This file contains the BLE Alert Notification Server functions for application user.
+    This file contains the BLE Alert Notification Client functions for application user.
 
   Description:
-    This file contains the BLE Alert Notification Server functions for application user.
+    This file contains the BLE Alert Notification Client functions for application user.
  *******************************************************************************/
 
 
@@ -48,7 +48,7 @@
 #include "mba_error_defs.h"
 #include "ble_gap.h"
 #include "ble_util/byte_stream.h"
-#include "ble_anpc/ble_anpc.h"
+#include "ble_anpc.h"
 
 // *****************************************************************************
 // *****************************************************************************
@@ -62,22 +62,19 @@
 // *****************************************************************************
 // *****************************************************************************
 
-#define BLE_ANPC_UUID_ANS_SVC                0x1811
-#define BLE_ANPC_UUID_ANCP                   0x2A44    /**< Alert Notification Control Point.*/
-#define BLE_ANPC_UUID_UNREAD_ALERT_STAT      0x2A45    /**< Unread Alert Status Declaration.*/
-#define BLE_ANPC_UUID_NEW_ALERT              0x2A46    /**< New Alert Declaration.*/
-#define BLE_ANPC_UUID_SUPP_NEW_ALERT_CAT     0x2A47    /**< Supported New Alert Category Declaration.*/
-#define BLE_ANPC_UUID_SUPP_UNREAD_ALERT_CAT  0x2A48    /**< Support Unread Alert Category Declaration.*/
+/**@defgroup BLE_ANPC_UUID_ANS_SVC_UUID BLE_ANPC_UUID_ANS_SVC_UUID
+ * @brief The definition of ANPC service UUID.
+ * @{ */
+#define BLE_ANPC_UUID_ANS_SVC                (0x1811)   /**< ANPC procdure: Idle. */
+/** @} */
 
-
-
-/**@defgroup BLE_ANPC_CBFC_PROC BLE_ANPC_CBFC_PROC
+/**@defgroup BLE_ANPC_PROC BLE_ANPC_PROC
  * @brief The definition of ANPC procedure in connect/disconnect process.
  * @{ */
-#define BLE_ANPC_ANPC_PROC_IDLE                0x00    /**< CBFC procdure: Idle. */
-#define BLE_ANPC_ANPC_PROC_ENABLE_NEW_CCCD     0x01    /**< CBFC procdure: Enable NEW CCCD. */
-#define BLE_ANPC_ANPC_PROC_ENABLE_UNREAD_CCCD  0x02    /**< CBFC procdure: Enable UNREAD CCCD. */
-#define BLE_ANPC_ANPC_PROC_ENABLE_SESSION      0x03    /**< CBFC procdure: Enable Control Point CCCD. */
+#define BLE_ANPC_ANPC_PROC_IDLE                0x00    /**< ANPC procdure: Idle. */
+#define BLE_ANPC_ANPC_PROC_ENABLE_NEW_CCCD     0x01    /**< ANPC procdure: Enable NEW CCCD. */
+#define BLE_ANPC_ANPC_PROC_ENABLE_UNREAD_CCCD  0x02    /**< ANPC procdure: Enable UNREAD CCCD. */
+#define BLE_ANPC_ANPC_PROC_ENABLE_SESSION      0x03    /**< ANPC procdure: Enable Control Point CCCD. */
 /** @} */
 
 /**@defgroup BLE_ANPC_MAX_CONN_NBR BLE_ANPC_MAX_CONN_NBR
@@ -88,25 +85,39 @@
 
 typedef enum BLE_ANPC_CharAlertNotiIndex_T
 {
-    ANPC_INDEX_CHARAN_SUPP_NEW_ALERT_CAT,
-    ANPC_INDEX_CHARAN_NEW_ALERT,
-    ANPC_INDEX_CHARAN_NEW_ALERT_CCC,
-    ANPC_INDEX_CHARAN_SUPP_UNREAD_ALERT_CAT,
-    ANPC_INDEX_CHARAN_UNREAD_ALERT_STAT,
-    ANPC_INDEX_CHARAN_UNREAD_ALERT_CCC,
-    ANPC_INDEX_CHARAN_ANCP,
-    ANPC_CHARAN_CHAR_NUM
+    ANPC_INDEX_CHARAN_SUPP_NEW_ALERT_CAT = 0U, /**< Index of Support New Alert Category. */
+    ANPC_INDEX_CHARAN_NEW_ALERT,               /**< Index of New Alert. */
+    ANPC_INDEX_CHARAN_NEW_ALERT_CCC,           /**< Index of New Alert CCCD. */
+    ANPC_INDEX_CHARAN_SUPP_UNREAD_ALERT_CAT,   /**< Index of Support Unread Alert Category. */                         
+    ANPC_INDEX_CHARAN_UNREAD_ALERT_STAT,       /**< Index of Unread Alert State. */
+    ANPC_INDEX_CHARAN_UNREAD_ALERT_CCC,        /**< Index of Unread Alert CCCD. */
+    ANPC_INDEX_CHARAN_ANCP,                    /**< Index of Control Point. */
+    ANPC_CHARAN_CHAR_NUM                       /**< Total number of ANPC characteristics. */
 } BLE_ANPC_CharAlertNotiIndex_T;
 
+/**@defgroup BLE_ANPC_STATE ANPC state
+ * @brief The definition of BLE ANPC connection state
+ * @{ */
+typedef enum BLE_ANPC_State_T
+{
+    BLE_ANPC_STATE_IDLE = 0x00,   /**< Default state (Disconnected). */
+    BLE_ANPC_STATE_CONNECTED      /**< Connected. */
+} BLE_ANPC_State_T;
+/** @} */
+
+/**@brief The structure contains information about BLE ANPC profile connection parameters for recording connection information. */
 typedef struct BLE_ANPC_ConnList_T
 {
-    int8_t      connIndex;
-    uint16_t    connHandle;
+    int8_t            connIndex;  /**< Connection index associated with this connection. */
+    BLE_ANPC_State_T  state;      /**< State associated with this connection. */
+    uint16_t          connHandle; /**< Connection handle associated with this connection. */
 } BLE_ANPC_ConnList_T;
 
-static BLE_ANPC_EventCb_T       sp_anpcCbRoutine;
-static BLE_ANPC_ConnList_T      s_anpcConnList[BLE_ANPC_MAX_CONN_NBR];
-static BLE_DD_CharInfo_T        s_anpcAnsCharInfoList[BLE_ANPC_MAX_CONN_NBR][ANPC_CHARAN_CHAR_NUM];
+static BLE_ANPC_EventCb_T   sp_anpcCbRoutine;
+static BLE_ANPC_ConnList_T  s_anpcConnList[BLE_ANPC_MAX_CONN_NBR];
+static BLE_DD_DiscInfo_T    s_anpcAnsDiscInfo[BLE_ANPC_MAX_CONN_NBR];
+static BLE_DD_CharInfo_T    s_anpcAnsCharInfoList[BLE_ANPC_MAX_CONN_NBR][ANPC_CHARAN_CHAR_NUM];
+static BLE_DD_CharList_T    s_anpcAnsCharList[BLE_ANPC_MAX_CONN_NBR];
 
 static const ATT_Uuid_T anpcDiscCharSuppNewAlertCat = { { UINT16_TO_BYTES(BLE_ANPC_UUID_SUPP_NEW_ALERT_CAT) }, ATT_UUID_LENGTH_2 };
 static const ATT_Uuid_T anpcDiscCharNewAlert = { { UINT16_TO_BYTES(BLE_ANPC_UUID_NEW_ALERT) }, ATT_UUID_LENGTH_2 };
@@ -134,8 +145,7 @@ static BLE_DD_DiscChar_T   *anpcDiscAlertNotiCharList[] =
     &anpcUnreadAlertCcc,      /* Unread Alert Client Characteristic Configuration. */
     &anpcAncp                 /* Alert Notification Control Point. */
 }; 
-static const uint8_t anpcDiscAnsUuid[] = { UINT16_TO_BYTES(BLE_ANPC_UUID_ANS_SVC) };
-static BLE_DD_CharList_T s_anpcAnsCharList[BLE_ANPC_MAX_CONN_NBR];
+static const uint8_t s_anpcDiscAnsUuid[] = { UINT16_TO_BYTES(BLE_ANPC_UUID_ANS_SVC) };
 // *****************************************************************************
 // *****************************************************************************
 // Section: Functions
@@ -143,7 +153,8 @@ static BLE_DD_CharList_T s_anpcAnsCharList[BLE_ANPC_MAX_CONN_NBR];
 // *****************************************************************************
 static void ble_anpc_InitConnList(uint8_t connIndex)
 {
-    memset((uint8_t *)&s_anpcConnList[connIndex], 0, sizeof(BLE_ANPC_ConnList_T)); }
+    (void)memset((uint8_t *)&s_anpcConnList[connIndex], 0, sizeof(BLE_ANPC_ConnList_T));
+}
 
 static BLE_ANPC_ConnList_T *ble_anpc_GetConnListByHandle(uint16_t connHandle)
 {
@@ -151,7 +162,7 @@ static BLE_ANPC_ConnList_T *ble_anpc_GetConnListByHandle(uint16_t connHandle)
 
     for(i=0; i<BLE_ANPC_MAX_CONN_NBR; i++)
     {
-        if (s_anpcConnList[i].connHandle == connHandle)
+        if ((s_anpcConnList[i].state == BLE_ANPC_STATE_CONNECTED) && (s_anpcConnList[i].connHandle == connHandle))
         {
             return &s_anpcConnList[i];
         }
@@ -165,8 +176,9 @@ static BLE_ANPC_ConnList_T *ble_anpc_GetFreeConnList(void)
 
     for(i=0; i<BLE_ANPC_MAX_CONN_NBR; i++)
     {
-        if (s_anpcConnList[i].connHandle == 0)
+        if (s_anpcConnList[i].state == BLE_ANPC_STATE_IDLE)
         {
+            s_anpcConnList[i].state = BLE_ANPC_STATE_CONNECTED;
             s_anpcConnList[i].connIndex = i;
             return &s_anpcConnList[i];
         }
@@ -176,7 +188,7 @@ static BLE_ANPC_ConnList_T *ble_anpc_GetFreeConnList(void)
 
 static void ble_anpc_ConveyEvent(BLE_ANPC_Event_T *p_event)
 {
-    if(sp_anpcCbRoutine)
+    if(sp_anpcCbRoutine != NULL)
     {
         sp_anpcCbRoutine(p_event);
     }
@@ -184,21 +196,10 @@ static void ble_anpc_ConveyEvent(BLE_ANPC_Event_T *p_event)
 
 static void ble_anpc_InitAnsCharList(uint8_t connIndex)
 {
-    memset(&s_anpcAnsCharList[connIndex], 0x0, sizeof(BLE_DD_CharList_T));
-    memset(s_anpcAnsCharInfoList[connIndex], 0x0, sizeof(BLE_DD_CharInfo_T) * ANPC_CHARAN_CHAR_NUM);
+    (void)memset(&s_anpcAnsDiscInfo[connIndex], 0x0, sizeof(BLE_DD_DiscInfo_T));
+    (void)memset(&s_anpcAnsCharList[connIndex], 0x0, sizeof(BLE_DD_CharList_T));
+    (void)memset(s_anpcAnsCharInfoList[connIndex], 0x0, sizeof(BLE_DD_CharInfo_T) * ANPC_CHARAN_CHAR_NUM);
     s_anpcAnsCharList[connIndex].p_charInfo = s_anpcAnsCharInfoList[connIndex];
-}
-
-static uint16_t ble_anpc_InitAlertNotiSvcDiscRegister(const uint8_t * p_uuid, BLE_DD_CharList_T * p_charList)
-{
-    BLE_DD_DiscSvc_T anpDisc;
-
-    anpDisc.svcUuid.uuidLength = ATT_UUID_LENGTH_2;
-    memcpy(anpDisc.svcUuid.uuid, p_uuid, ATT_UUID_LENGTH_2);
-    anpDisc.p_discChars = anpcDiscAlertNotiCharList;
-    anpDisc.p_charList = p_charList;
-    anpDisc.discCharsNum = ANPC_CHARAN_CHAR_NUM;
-    return BLE_DD_ServiceDiscoveryRegister(&anpDisc);
 }
 
 static uint16_t ble_anpc_ReadAlertCat(uint16_t connHandle, BLE_ANPC_CharAlertNotiIndex_T index)
@@ -215,7 +216,7 @@ static uint16_t ble_anpc_ReadAlertCat(uint16_t connHandle, BLE_ANPC_CharAlertNot
         return MBA_RES_INVALID_PARA;
     }
     charHandle = s_anpcAnsCharList[p_conn->connIndex].p_charInfo[index].charHandle;
-    if (charHandle == 0)
+    if (charHandle == 0U)
     {
         return MBA_RES_FAIL;
     }
@@ -235,7 +236,7 @@ static uint16_t ble_anpc_WriteAlertDataCccd(uint16_t connHandle, bool enable, BL
     }
 
     charHandle = s_anpcAnsCharInfoList[p_conn->connIndex][index].charHandle;
-    if (charHandle == 0)
+    if (charHandle == 0U)
     {
         return MBA_RES_INVALID_PARA;
     }
@@ -271,11 +272,11 @@ static void ble_anpc_ProcNotificationInd(GATT_Event_T *p_event)
 
     if(p_conn == NULL)
     {
-        evt.eventId = BLE_ANPC_EVT_ERR_UNSPECTIFIED_IND;
+        evt.eventId = BLE_ANPC_EVT_ERR_UNSPECIFIED_IND;
         ble_anpc_ConveyEvent(&evt);
         return;
-    } 
-    
+    }
+
     if (p_event->eventField.onNotification.charHandle == s_anpcAnsCharList[p_conn->connIndex].p_charInfo[ANPC_INDEX_CHARAN_NEW_ALERT].charHandle)
     {
         uint16_t rcvLength = p_event->eventField.onNotification.receivedLength;
@@ -288,7 +289,7 @@ static void ble_anpc_ProcNotificationInd(GATT_Event_T *p_event)
             return;
         }
         evt.eventField.evtNewAlertInd.connHandle = p_event->eventField.onNotification.connHandle;
-        evt.eventField.evtNewAlertInd.receivedLength = (rcvLength - 2);
+        evt.eventField.evtNewAlertInd.receivedLength = (rcvLength - 2U);
 
         STREAM_TO_U8(&evt.eventField.evtNewAlertInd.categoryId, &p_value);
         STREAM_TO_U8(&evt.eventField.evtNewAlertInd.numOfNewAlert, &p_value);
@@ -309,6 +310,10 @@ static void ble_anpc_ProcNotificationInd(GATT_Event_T *p_event)
 
         ble_anpc_ConveyEvent(&evt);
     }
+    else
+    {
+		//Shall not enter here
+    }
 }
 
 static void ble_anpc_ProcReadResponse(GATT_Event_T *p_event)
@@ -319,10 +324,10 @@ static void ble_anpc_ProcReadResponse(GATT_Event_T *p_event)
 
     if(p_conn == NULL)
     {
-        evt.eventId = BLE_ANPC_EVT_ERR_UNSPECTIFIED_IND;
+        evt.eventId = BLE_ANPC_EVT_ERR_UNSPECIFIED_IND;
         ble_anpc_ConveyEvent(&evt);
         return;
-    } 
+    }
     if (p_event->eventField.onReadResp.charHandle == s_anpcAnsCharList[p_conn->connIndex].p_charInfo[ANPC_INDEX_CHARAN_SUPP_NEW_ALERT_CAT].charHandle)
     {
         evt.eventId = BLE_ANPC_EVT_SUPP_NEW_ALERT_CAT_IND;
@@ -339,6 +344,10 @@ static void ble_anpc_ProcReadResponse(GATT_Event_T *p_event)
 
         ble_anpc_ConveyEvent(&evt);
     }
+    else
+    {
+		//Shall not enter here
+    }
 
 }
 
@@ -350,7 +359,7 @@ static void ble_anpc_ProcWriteResponse(GATT_Event_T *p_event)
 
     if(p_conn == NULL)
     {
-        evt.eventId = BLE_ANPC_EVT_ERR_UNSPECTIFIED_IND;
+        evt.eventId = BLE_ANPC_EVT_ERR_UNSPECIFIED_IND;
         ble_anpc_ConveyEvent(&evt);
         return;
     }
@@ -375,8 +384,6 @@ static void ble_anpc_ProcWriteResponse(GATT_Event_T *p_event)
     }
     else
     {
-        evt.eventId = BLE_ANPC_EVT_ERR_UNSPECTIFIED_IND;
-        ble_anpc_ConveyEvent(&evt);
         return;
     }
     ble_anpc_ConveyEvent(&evt);
@@ -390,7 +397,7 @@ static void ble_anpc_ProcErrorResponse(GATT_Event_T *p_event)
 
     if (p_conn == NULL)
     {
-        evt.eventId = BLE_ANPC_EVT_ERR_UNSPECTIFIED_IND;
+        evt.eventId = BLE_ANPC_EVT_ERR_UNSPECIFIED_IND;
         ble_anpc_ConveyEvent(&evt);
         return;
     }
@@ -461,6 +468,7 @@ static void ble_anpc_GattEventProcess(GATT_Event_T *p_event)
 static void ble_anpc_GapEventProcess(BLE_GAP_Event_T *p_event)
 {
     BLE_ANPC_ConnList_T *p_conn = NULL;
+    BLE_ANPC_Event_T evt;
     switch(p_event->eventId)
     {
         case BLE_GAP_EVT_CONNECTED:
@@ -468,10 +476,13 @@ static void ble_anpc_GapEventProcess(BLE_GAP_Event_T *p_event)
             if ((p_event->eventField.evtConnect.status == GAP_STATUS_SUCCESS))
             {
                 p_conn = ble_anpc_GetFreeConnList();
-                if (p_conn != NULL)
-                {
-                    p_conn->connHandle = p_event->eventField.evtConnect.connHandle;
+                if (p_conn == NULL)
+				{
+                    evt.eventId = BLE_ANPC_EVT_ERR_UNSPECIFIED_IND;
+                    ble_anpc_ConveyEvent(&evt);
+                    return;
                 }
+                p_conn->connHandle = p_event->eventField.evtConnect.connHandle;
             }
         }
         break;
@@ -494,16 +505,21 @@ static void ble_anpc_GapEventProcess(BLE_GAP_Event_T *p_event)
 uint16_t BLE_ANPC_Init(void)
 {
     uint8_t i;
+    BLE_DD_DiscSvc_T anpDisc;
+
     sp_anpcCbRoutine = NULL;
 
     for(i = 0; i < BLE_ANPC_MAX_CONN_NBR; i++)
     {
         ble_anpc_InitConnCharList(i);
     }
-    if(ble_anpc_InitAlertNotiSvcDiscRegister(anpcDiscAnsUuid, s_anpcAnsCharList) != MBA_RES_SUCCESS)
-        return MBA_RES_FAIL;
-
-    return MBA_RES_SUCCESS;
+    anpDisc.svcUuid.uuidLength = ATT_UUID_LENGTH_2;
+    (void)memcpy(anpDisc.svcUuid.uuid, s_anpcDiscAnsUuid, ATT_UUID_LENGTH_2);
+    anpDisc.p_discInfo = s_anpcAnsDiscInfo;
+    anpDisc.p_discChars = anpcDiscAlertNotiCharList;
+    anpDisc.p_charList = s_anpcAnsCharList;
+    anpDisc.discCharsNum = ANPC_CHARAN_CHAR_NUM;
+    return BLE_DD_ServiceDiscoveryRegister(&anpDisc);
 }
 
 void BLE_ANPC_EventRegister(BLE_ANPC_EventCb_T routine)
@@ -540,7 +556,7 @@ uint16_t BLE_ANPC_WriteAncp(uint16_t connHandle, uint8_t cmdId, uint8_t catId)
     if(p_conn == NULL)
     {
         return MBA_RES_INVALID_PARA;
-    } 
+    }
 
     p_writeParams = OSAL_Malloc(sizeof(GATTC_WriteParams_T));
     if (p_writeParams == NULL)
@@ -548,7 +564,7 @@ uint16_t BLE_ANPC_WriteAncp(uint16_t connHandle, uint8_t cmdId, uint8_t catId)
         result = MBA_RES_OOM;
     }
     charHandle = s_anpcAnsCharList[p_conn->connIndex].p_charInfo[ANPC_INDEX_CHARAN_ANCP].charHandle;
-    if (charHandle == 0)
+    if (charHandle == 0U)
     {
         return MBA_RES_INVALID_PARA;
     }
@@ -566,6 +582,58 @@ uint16_t BLE_ANPC_WriteAncp(uint16_t connHandle, uint8_t cmdId, uint8_t catId)
     return result;
 }
 
+uint16_t BLE_ANPC_GetCharList(uint16_t connHandle, uint16_t charUuid, BLE_ANPC_CharList_T *p_charList)
+{
+    uint8_t             num;
+    uint16_t            desUuid;
+    BLE_ANPC_ConnList_T *p_conn = ble_anpc_GetConnListByHandle(connHandle);
+
+    if ((p_conn == NULL) || (p_charList == NULL) ||
+        (charUuid < BLE_ANPC_UUID_ANCP) ||
+        (charUuid > BLE_ANPC_UUID_SUPP_UNREAD_ALERT_CAT)
+       )
+    {
+        return MBA_RES_INVALID_PARA;
+    } 
+    (void)memset(p_charList, 0, sizeof(BLE_ANPC_CharList_T)); 
+    for (num = 0; num < ANPC_CHARAN_CHAR_NUM; num++)
+    {
+        BUF_LE_TO_U16(&desUuid, anpcDiscAlertNotiCharList[num]->p_uuid->uuid);
+        if ((desUuid == charUuid) &&
+            ((anpcDiscAlertNotiCharList[num]->settings & CHAR_SET_DESCRIPTOR) != CHAR_SET_DESCRIPTOR))
+        {
+            p_charList->attrHandle = s_anpcAnsCharList[p_conn->connIndex].p_charInfo[num].attrHandle; 
+            p_charList->property   = s_anpcAnsCharList[p_conn->connIndex].p_charInfo[num].property;
+            p_charList->charHandle = s_anpcAnsCharList[p_conn->connIndex].p_charInfo[num].charHandle;
+            break;
+        }
+    }
+    return MBA_RES_SUCCESS;
+}
+
+uint16_t BLE_ANPC_GetDescList(uint16_t connHandle, BLE_ANPC_DescList_T *p_descList)
+{
+    uint8_t             num, descNum = 0;
+    BLE_ANPC_ConnList_T *p_conn = ble_anpc_GetConnListByHandle(connHandle);
+
+    if ((p_conn == NULL) || (p_descList == NULL))
+    {
+        return MBA_RES_INVALID_PARA;
+    } 
+    (void)memset(p_descList, 0, sizeof(BLE_ANPC_DescList_T)); 
+    for (num = 0; num < ANPC_CHARAN_CHAR_NUM; num++)
+    {
+        if ((anpcDiscAlertNotiCharList[num]->settings & CHAR_SET_DESCRIPTOR) && (s_anpcAnsCharList[p_conn->connIndex].p_charInfo[num].charHandle != 0))
+        {
+            p_descList->descInfo[descNum].attrHandle = s_anpcAnsCharList[p_conn->connIndex].p_charInfo[num].charHandle;
+            VARIABLE_COPY_TO_BUF(&p_descList->descInfo[descNum].uuid, anpcDiscAlertNotiCharList[num]->p_uuid->uuid, anpcDiscAlertNotiCharList[num]->p_uuid->uuidLength);
+            descNum++;
+        }
+    }
+    p_descList->num = descNum; 
+    return MBA_RES_SUCCESS;
+}
+
 void BLE_ANPC_BleDdEventHandler(BLE_DD_Event_T *p_event)
 {
     switch (p_event->eventId)
@@ -576,17 +644,19 @@ void BLE_ANPC_BleDdEventHandler(BLE_DD_Event_T *p_event)
             BLE_ANPC_ConnList_T *p_conn = ble_anpc_GetConnListByHandle(p_event->eventField.evtDiscResult.connHandle);
             if(p_conn == NULL)
             {
-                evt.eventId = BLE_ANPC_EVT_ERR_UNSPECTIFIED_IND;
+                evt.eventId = BLE_ANPC_EVT_ERR_UNSPECIFIED_IND;
                 ble_anpc_ConveyEvent(&evt);
                 return;
             } 
-            if (s_anpcAnsCharList[p_conn->connIndex].p_charInfo[ANPC_INDEX_CHARAN_ANCP].charHandle)
+            if (s_anpcAnsCharList[p_conn->connIndex].p_charInfo[ANPC_INDEX_CHARAN_ANCP].charHandle != 0)
             {
                 evt.eventId = BLE_ANPC_EVT_DISC_COMPLETE_IND;
-                evt.eventField.evtDiscComplete.connHandle = p_event->eventField.evtDiscResult.connHandle;
+                evt.eventField.evtDiscComplete.connHandle  = p_event->eventField.evtDiscResult.connHandle;
+                evt.eventField.evtDiscComplete.ansStartHandle = s_anpcAnsDiscInfo[p_conn->connIndex].svcStartHandle;
+                evt.eventField.evtDiscComplete.ansEndHandle   = s_anpcAnsDiscInfo[p_conn->connIndex].svcEndHandle;
                 ble_anpc_ConveyEvent(&evt);
             }
-        } 
+        }
         break;
 
         default:

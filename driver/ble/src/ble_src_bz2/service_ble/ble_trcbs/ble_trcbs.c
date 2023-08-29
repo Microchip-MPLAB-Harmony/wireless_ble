@@ -49,7 +49,7 @@
 #include "mba_error_defs.h"
 #include "gatt.h"
 #include "ble_util/byte_stream.h"
-#include "ble_trcbs/ble_trcbs.h"
+#include "ble_trcbs.h"
 
 
 // *****************************************************************************

@@ -65,6 +65,14 @@
 #include "ble_gcm/ble_dd.h"
 #include "gatt.h"
 
+// DOM-IGNORE-BEGIN
+#ifdef __cplusplus  // Provide C++ Compatibility
+
+extern "C" {
+
+#endif
+// DOM-IGNORE-END
+
 // *****************************************************************************
 // *****************************************************************************
 // Section: Macros
@@ -73,7 +81,7 @@
 /**@addtogroup BLE_ANPC_DEFINES Defines
  * @{ */
 
-/**@defgroup BLE_ANPC_ERRCODE    Error Code definition 
+/**@defgroup BLE_ANPC_ERRCODE    Error Code definition
  * @brief The definition of command id.
  * @{ */
 #define BLE_ANPC_ERRCODE_COMMAND_NOT_SUPPORTTED     (0xA0) /**< Command not supportted.*/
@@ -82,7 +90,7 @@
 /**@defgroup BLE_ANPC_CMD   Command definition
  * @brief The definition of command id.
  * @{ */
-#define BLE_ANPC_CMD_ENABLE_NEW_ALERT               (0x00) /**< Enable new alert notification.*/ 
+#define BLE_ANPC_CMD_ENABLE_NEW_ALERT               (0x00) /**< Enable new alert notification.*/
 #define BLE_ANPC_CMD_ENABLE_UNREAD_ALERT_STAT       (0x01) /**< Enable unread alert status notification.*/
 #define BLE_ANPC_CMD_DISABLE_NEW_ALERT              (0x02) /**< Disable new alert notification.*/
 #define BLE_ANPC_CMD_DISABLE_UNREAD_ALERT_STAT      (0x03) /**< Disable unread alert status notification.*/
@@ -91,26 +99,32 @@
 #define BLE_ANPC_CMD_END                            (BLE_ANPC_CMD_NOTI_UNREAD_ALERT_STAT_IMM) /**< End of command ID.*/
 /** @} */
 
+/**@defgroup BLE_ANPC_DESC_MAX_NUM   Maximum number of descriptor
+ * @brief The definition of the max number of descriptor.
+ * @{ */
+#define BLE_ANPC_DESC_MAX_NUM 						(2)	   /**< Maximum number of descriptor.*/
+/** @} */
+
 /**@defgroup BLE_ANPC_CAT_ID    Category Id
  * @brief The definition of category id. 
  * @{ */
-#define BLE_ANPC_CAT_ID_SIMPLE_ALERT                (0x00) /**< Simple Alert. The title of the alert.*/  
+#define BLE_ANPC_CAT_ID_SIMPLE_ALERT                (0x00) /**< Simple Alert. The title of the alert.*/
 #define BLE_ANPC_CAT_ID_EMAIL                       (0x01) /**< Email. Sender name.*/
 #define BLE_ANPC_CAT_ID_NEWS                        (0x02) /**< News. Title of the news feed.*/
 #define BLE_ANPC_CAT_ID_CALL                        (0x03) /**< Call. Caller name or caller ID.*/
 #define BLE_ANPC_CAT_ID_MISSED_CALL                 (0x04) /**< Missed Call. Caller name or caller ID*/
 #define BLE_ANPC_CAT_ID_SMS_MMS                     (0x05) /**< SMS. Sender name or caller ID.*/
 #define BLE_ANPC_CAT_ID_VOICE_MAIL                  (0x06) /**< Voice Mail. Sender name or caller ID.*/
-#define BLE_ANPC_CAT_ID_SCHEDULE                    (0x07) /**< Sechedule. Title of the schedule.*/
+#define BLE_ANPC_CAT_ID_SCHEDULE                    (0x07) /**< Schedule. Title of the schedule.*/
 #define BLE_ANPC_CAT_ID_HIGH_PRIOR_ALERT            (0x08) /**< High Prioritized Alert. Title of alert.*/
 #define BLE_ANPC_CAT_ID_INSTANT_MSG                 (0x09) /**< Instant Messaging. Sender name.*/
 #define BLE_ANPC_CAT_ID_ALL_ALERT                   (0xFF) /**< All alert.*/
 /** @} */
 
-/**@defgroup BLE_ANPC_SUPP_CAT_ID_BIT_MASK          Supported Category ID. If a bit is set to 0, the associated feature is not supported. 1 is supported.
+/**@defgroup BLE_ANPC_SUPP_CAT_ID_BIT_MASK          Supported category mask
  * @brief The definition of category id bit mask.
  * @{ */
-#define BLE_ANPC_SUPP_CAT_SIMPLE_ALERT              (1<<0) /**< Simple Alert.*/  
+#define BLE_ANPC_SUPP_CAT_SIMPLE_ALERT              (1<<0) /**< Simple Alert.*/
 #define BLE_ANPC_SUPP_CAT_EMAIL                     (1<<1) /**< Email.*/
 #define BLE_ANPC_SUPP_CAT_NEWS                      (1<<2) /**< News.*/
 #define BLE_ANPC_SUPP_CAT_CALL                      (1<<3) /**< Call.*/
@@ -122,6 +136,15 @@
 #define BLE_ANPC_SUPP_CAT_INSTANT_MSG               (1<<9) /**< Instant Message.*/
 /** @} */
 
+/**@defgroup BLE_ANPC_UUID    UUID of characteristic in Alert Notification profile
+ * @brief The definition of UUID of characteristics are used in Alert Notification profile.
+ * @{ */
+#define BLE_ANPC_UUID_ANCP                          (0x2A44) /**< Alert Notification Control Point UUID .*/
+#define BLE_ANPC_UUID_UNREAD_ALERT_STAT             (0x2A45) /**< Unread Alert Status UUID.*/
+#define BLE_ANPC_UUID_NEW_ALERT                     (0x2A46) /**< New Alert UUID.*/
+#define BLE_ANPC_UUID_SUPP_NEW_ALERT_CAT            (0x2A47) /**< Supported New Alert Category UUID.*/
+#define BLE_ANPC_UUID_SUPP_UNREAD_ALERT_CAT         (0x2A48) /**< Support Unread Alert Category UUID.*/
+/** @} */
 /**@} */ //BLE_ANPC_DEFINES
 
 /**@addtogroup BLE_ANPC_ENUMS Enumerations
@@ -139,7 +162,7 @@ typedef enum BLE_ANPC_EventId_T
     BLE_ANPC_EVT_WRITE_CP_RSP_IND,                 /**< Event for receiving write cp response. See @ref BLE_ANPC_EvtWriteCpRspInd_T for event details.*/
     BLE_ANPC_EVT_NEW_ALERT_IND,                    /**< Event for receiving new alert notification. See @ref BLE_ANPC_EvtNewAlertInd_T for event details.*/
     BLE_ANPC_EVT_UNREAD_ALERT_STAT_IND,            /**< Event for receiving unread alert status notification. See @ref BLE_ANPC_EvtUnreadAlertStatInd_T for event details.*/
-    BLE_ANPC_EVT_ERR_UNSPECTIFIED_IND,             /**< Profile internal unspecified error occurs.*/
+    BLE_ANPC_EVT_ERR_UNSPECIFIED_IND,              /**< Profile internal unspecified error occurs.*/
     BLE_ANPC_EVT_ERR_NO_MEM_IND,                   /**< Profile internal error occurs due to insufficient heap memory.*/
 }BLE_ANPC_EventId_T;
 
@@ -157,13 +180,15 @@ typedef enum BLE_ANPC_EventId_T
 typedef struct BLE_ANPC_EvtDiscComplete_T
 {
     uint16_t        connHandle;         /**< The connection handle of discovery completion. */
+    uint16_t        ansStartHandle;     /**< The start handle of ANS. */
+    uint16_t        ansEndHandle;       /**< The end handle of ANS. */
 }BLE_ANPC_EvtDiscComplete_T;
 
 /**@brief Data structure for @ref BLE_ANPC_EVT_SUPP_NEW_ALERT_CAT_IND event. */
 typedef struct BLE_ANPC_EvtSuppNewAlertCatInd_T
 {
     uint16_t        connHandle;         /**< The connection handle. */
-    uint16_t        category;           /**< Supported New Alert Category. See @ref BLE_ANPC_SUPP_CAT_ID_BIT_MASK.*/ 
+    uint16_t        category;           /**< Supported New Alert Category. See @ref BLE_ANPC_SUPP_CAT_ID_BIT_MASK.*/
 }BLE_ANPC_EvtSuppNewAlertCatInd_T;
 
 /**@brief Data structure for @ref BLE_ANPC_EVT_SUPP_UNREAD_ALERT_STAT_CAT_IND event. */
@@ -212,25 +237,46 @@ typedef struct BLE_ANPC_EvtUnreadAlertStatInd_T
     uint8_t         unreadCnt;          /**< Unread Count.*/
 }BLE_ANPC_EvtUnreadAlertStatInd_T;
 
+/**@brief Data structure for BLE_ANPC_GetCharList function. */
+typedef struct BLE_ANPC_CharList_T
+{
+    uint16_t   		attrHandle;         /**< Attribute handle.*/
+    uint8_t    		property;           /**< Property.*/
+    uint16_t   		charHandle;         /**< Characteristic handle.*/
+}BLE_ANPC_CharList_T;
+
+/**@brief Information structure for @ref BLE_ANPC_GetDescList function. */
+typedef struct BLE_ANPC_DescInfo_T
+{
+    uint16_t  		attrHandle;   		/**< Attribute handle of the descriptor.*/
+    uint16_t  		uuid;         		/**< UUID of the descriptor.*/
+}BLE_ANPC_DescInfo_T;
+
+/**@brief Data structure for @ref BLE_ANPC_GetDescList function. */
+typedef struct BLE_ANPC_DescList_T
+{
+    uint8_t 		    num;  				             /**< Total number of the descriptor.*/
+    BLE_ANPC_DescInfo_T descInfo[BLE_ANPC_DESC_MAX_NUM]; /**< Discovered informations.*/
+}BLE_ANPC_DescList_T;
 
 /**@brief Union of BLE Alert Notification Client callback event data types. */
 typedef union
 {
-    BLE_ANPC_EvtDiscComplete_T           evtDiscComplete;          /**< Handle @ref BLE_ANPC_EVT_DISC_COMPLETE_IND */
-    BLE_ANPC_EvtSuppNewAlertCatInd_T     evtSuppNewAlertCatInd;    /**< Handle @ref BLE_ANPC_EVT_SUPP_NEW_ALERT_CAT_IND */
-    BLE_ANPC_EvtSuppUnreadAlertCatInd_T  evtSuppUnreadAlertCatInd; /**< Handle @ref BLE_ANPC_EVT_SUPP_UNREAD_ALERT_STAT_CAT_IND */
-    BLE_ANPC_EvtWriteNewAlertRspInd_T    evtWriteNewAlertRspInd;   /**< Handle @ref BLE_ANPC_EVT_WRITE_NEW_ALERT_NTFY_RSP_IND */
-    BLE_ANPC_EvtWriteUnreadAlertRspInd_T evtWriteUnreadAlertRspInd;/**< Handle @ref BLE_ANPC_EVT_WRITE_UNREAD_ALERT_NTFY_RSP_IND */
-    BLE_ANPC_EvtWriteCpRspInd_T          evtWriteCpRspInd;         /**< Handle @ref BLE_ANPC_EVT_WRITE_CP_RSP_IND */
-    BLE_ANPC_EvtNewAlertInd_T            evtNewAlertInd;           /**< Handle @ref BLE_ANPC_EVT_NEW_ALERT_IND */
-    BLE_ANPC_EvtUnreadAlertStatInd_T     evtUnreadAlertStatInd;    /**< Handle @ref BLE_ANPC_EVT_UNREAD_ALERT_STAT_IND */
+    BLE_ANPC_EvtDiscComplete_T           evtDiscComplete;          /**< Handle @ref BLE_ANPC_EVT_DISC_COMPLETE_IND. */
+    BLE_ANPC_EvtSuppNewAlertCatInd_T     evtSuppNewAlertCatInd;    /**< Handle @ref BLE_ANPC_EVT_SUPP_NEW_ALERT_CAT_IND. */
+    BLE_ANPC_EvtSuppUnreadAlertCatInd_T  evtSuppUnreadAlertCatInd; /**< Handle @ref BLE_ANPC_EVT_SUPP_UNREAD_ALERT_STAT_CAT_IND. */
+    BLE_ANPC_EvtWriteNewAlertRspInd_T    evtWriteNewAlertRspInd;   /**< Handle @ref BLE_ANPC_EVT_WRITE_NEW_ALERT_NTFY_RSP_IND. */
+    BLE_ANPC_EvtWriteUnreadAlertRspInd_T evtWriteUnreadAlertRspInd;/**< Handle @ref BLE_ANPC_EVT_WRITE_UNREAD_ALERT_NTFY_RSP_IND. */
+    BLE_ANPC_EvtWriteCpRspInd_T          evtWriteCpRspInd;         /**< Handle @ref BLE_ANPC_EVT_WRITE_CP_RSP_IND. */
+    BLE_ANPC_EvtNewAlertInd_T            evtNewAlertInd;           /**< Handle @ref BLE_ANPC_EVT_NEW_ALERT_IND. */
+    BLE_ANPC_EvtUnreadAlertStatInd_T     evtUnreadAlertStatInd;    /**< Handle @ref BLE_ANPC_EVT_UNREAD_ALERT_STAT_IND. */
 }BLE_ANPC_EventField_T;
 
 /**@brief BLE Alert Notification Client callback event. */
 typedef struct  BLE_ANPC_Event_T
 {
-    BLE_ANPC_EventId_T                  eventId;            /**< Event ID. See @ref BLE_ANPC_EventId_T.  */
-    BLE_ANPC_EventField_T               eventField;         /**< Event field */
+    BLE_ANPC_EventId_T                   eventId;                  /**< Event ID. See @ref BLE_ANPC_EventId_T.  */
+    BLE_ANPC_EventField_T                eventField;               /**< Event field. */
 }BLE_ANPC_Event_T;
 
 /**@brief BLE Alert Notification profile Client callback type. This callback function sends BLE Alert Notification profile client events to the application.*/
@@ -268,10 +314,11 @@ void BLE_ANPC_EventRegister(BLE_ANPC_EventCb_T routine);
  * @brief Read the value of Supported New Alert Category.\n
  *       Application must call this API after starting BLE Alert Notification Client procedure.
  *
- *@param[in] connHandle             Handle of the connection.
+ * @param[in] connHandle            Handle of the connection.
  *
- * @retval MBA_RES_SUCCESS          Send command successful.
- * @retval MBA_RES_FAIL             Fail.
+ * @retval MBA_RES_SUCCESS          Successfully issue a read Supported New Alert Category packet.
+ * @retval MBA_RES_INVALID_PARA     Invalid connection handle.
+ * @retval MBA_RES_FAIL             Fail to issue a read Supported New Alert Category packet.
  */
 uint16_t BLE_ANPC_ReadSuppNewAlertCat(uint16_t connHandle);
 
@@ -280,7 +327,10 @@ uint16_t BLE_ANPC_ReadSuppNewAlertCat(uint16_t connHandle);
  *       Application must call this API after starting BLE Alert Notification Client procedure.
  *
  * @param[in] connHandle            Handle of the connection.
- * @retval MBA_RES_SUCCESS          Success.
+ *
+ * @retval MBA_RES_SUCCESS          Successfully issue a read Supported Unread Alert Category packet.
+ * @retval MBA_RES_INVALID_PARA     Invalid connection handle.
+ * @retval MBA_RES_FAIL             Fail to issue a read Supported Unread Alert Category packet.
  */
 uint16_t BLE_ANPC_ReadSuppUnreadAlertCat(uint16_t connHandle);
 
@@ -291,8 +341,8 @@ uint16_t BLE_ANPC_ReadSuppUnreadAlertCat(uint16_t connHandle);
  * @param[in] connHandle            Handle of the connection.
  * @param[in] enable                Set true to enable notification of New Alert. Otherwise set false.
  *
- * @retval MBA_RES_SUCCESS          Send command successful.
- * @retval MBA_RES_INVALID_PARA     Invalid parameters.
+ * @retval MBA_RES_SUCCESS          Successfully enable New Alert notification.
+ * @retval MBA_RES_INVALID_PARA     Invalid connection handle.
  * @retval MBA_RES_OOM              Internal memory allocation failure.
  */
 uint16_t BLE_ANPC_EnableNewAlertNtfy(uint16_t connHandle, bool enable);
@@ -304,8 +354,8 @@ uint16_t BLE_ANPC_EnableNewAlertNtfy(uint16_t connHandle, bool enable);
  * @param[in] connHandle            Handle of the connection.
  * @param[in] enable                Set true to enable notification of Unread Alert. Otherwise set false.
  *
- * @retval MBA_RES_SUCCESS          Send command successful.
- * @retval MBA_RES_INVALID_PARA     Invalid parameters.
+ * @retval MBA_RES_SUCCESS          Successfully enable Unread Alert notification.
+ * @retval MBA_RES_INVALID_PARA     Invalid connection handle.
  * @retval MBA_RES_OOM              Internal memory allocation failure.
  */
 uint16_t BLE_ANPC_EnableUnreadAlertNtfy(uint16_t connHandle, bool enable);
@@ -318,22 +368,48 @@ uint16_t BLE_ANPC_EnableUnreadAlertNtfy(uint16_t connHandle, bool enable);
  * @param[in] cmdId                 The command Id. See @ref BLE_ANPC_CMD.
  * @param[in] catId                 The category Id. See @ref BLE_ANPC_CAT_ID.
  *
- * @retval MBA_RES_SUCCESS          Send command successful.
- * @retval MBA_RES_INVALID_PARA     Invalid parameters.
+ * @retval MBA_RES_SUCCESS          Successfully issue a wirte packet to Alert Notification Control Point.
+ * @retval MBA_RES_INVALID_PARA     Invalid connection handle.
  * @retval MBA_RES_OOM              Internal memory allocation failure.
  */
 uint16_t BLE_ANPC_WriteAncp(uint16_t connHandle, uint8_t cmdId, uint8_t catId);
 
 /**
+ * @brief Get information about characteristic UUID of the Alert Notification services that has been discovered.
+ *       This API could be called only after @ref BLE_ANPC_EVT_DISC_COMPLETE_IND event is issued.
+ *
+ * @param[in]  connHandle           Handle of the connection.
+ * @param[in]  charUuid             Characteristic uuid. See @ref BLE_ANPC_UUID.
+ * @param[out] p_charList           Characteristic information of discovered service.  When the characteristic UUID is not found then characteristic list will be 0. 
+ *
+ * @retval MBA_RES_SUCCESS          Successfully get the characteristic list.
+ * @retval MBA_RES_INVALID_PARA     Invalid parameters.
+ *                                  - Connection handle is not valid. 
+ *                                  - Characteristic Uuid is not valid. 
+ */
+uint16_t BLE_ANPC_GetCharList(uint16_t connHandle, uint16_t charUuid, BLE_ANPC_CharList_T *p_charList);
+
+/**
+ * @brief Get information about descriptor list within start handle and end handle of the Alert Notification Service that has been discovered.
+ *       This API could be called only after @ref BLE_ANPC_EVT_DISC_COMPLETE_IND event is issued.
+ *
+ * @param[in]  connHandle           Handle of the connection.
+ * @param[out] p_descList           Descriptor information of the discovered service. When the descriptor is not found then descriptor list will be 0. 
+ *
+ * @retval MBA_RES_SUCCESS          Successfully get the descriptor list.
+ * @retval MBA_RES_INVALID_PARA     Invalid parameters. Connection handle is not valid.
+ */
+uint16_t BLE_ANPC_GetDescList(uint16_t connHandle, BLE_ANPC_DescList_T *p_descList);
+
+/**
  * @brief Handle BLE_Stack related events.
- *       This API should be called in the application while caching BLE_Stack events
+ *       This API should be called in the application while caching BLE_Stack events.
  *
 */
 void BLE_ANPC_BleEventHandler(STACK_Event_T *p_stackEvent);
 
 /**
  * @brief Handle BLE DD (Database Discovery middleware) events.
- *       This API should be called in the application while caching BLE DD events
  *
  * @param[in] p_event          Pointer to BLE DD events buffer.
  *
@@ -342,6 +418,11 @@ void BLE_ANPC_BleDdEventHandler(BLE_DD_Event_T *p_event);
 
 /**@} */ //BLE_ANPC_FUNS
 
+//DOM-IGNORE-BEGIN
+#ifdef __cplusplus
+}
+#endif
+//DOM-IGNORE-END
 
 #endif
 

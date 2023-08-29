@@ -41,8 +41,8 @@
     are defined here for convenience.
 *******************************************************************************/
 
-#ifndef _APP_BLE_DSADV_H
-#define _APP_BLE_DSADV_H
+#ifndef APP_BLE_DSADV_H
+#define APP_BLE_DSADV_H
 
 // *****************************************************************************
 // *****************************************************************************
@@ -151,14 +151,14 @@ void APP_BleDsadvRestart(void);
 */
 void APP_BleDsadvCompl(void);
 
-
-#endif /* _APP_BLE_DSADV_H */
-
 //DOM-IGNORE-BEGIN
 #ifdef __cplusplus
 }
 #endif
 //DOM-IGNORE-END
+
+#endif /* APP_BLE_DSADV_H */
+
 
 /*******************************************************************************
  End of File

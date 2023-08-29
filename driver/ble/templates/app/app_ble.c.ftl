@@ -43,8 +43,12 @@
 #include "osal/osal_freertos_extend.h"
 #include "app_ble.h"
 #include "app_ble_handler.h"
-<#if BLE_SYS_LOG_EN == true>
+<#if BLE_VIRTUAL_SNIFFER_EN == true>
 #include "app_ble_log_handler.h"
+</#if>
+
+<#if BLE_SYS_PTA_EN == true>
+#include "app_pta_handler.h"
 </#if>
 
 <#if APP_TRCBP_SERVER == true>
@@ -109,7 +113,7 @@
 // *****************************************************************************
 // *****************************************************************************
 <#if BLE_BOOL_GATT_CLIENT == true>
-BLE_DD_Config_T         ddConfig;
+static BLE_DD_Config_T         ddConfig;
 </#if>
 
 // *****************************************************************************
@@ -125,19 +129,19 @@ BLE_DD_Config_T         ddConfig;
 // *****************************************************************************
 // *****************************************************************************
 
-void APP_BleStackCb(STACK_Event_T *p_stack)
+static void APP_BleStackCb(STACK_Event_T *p_stack)
 {
     STACK_Event_T stackEvent;
     APP_Msg_T   appMsg;
     APP_Msg_T   *p_appMsg;
 
-    memcpy((uint8_t *)&stackEvent, (uint8_t *)p_stack, sizeof(STACK_Event_T));
+    (void)memcpy((uint8_t *)&stackEvent, (uint8_t *)p_stack, sizeof(STACK_Event_T));
     stackEvent.p_event=OSAL_Malloc(p_stack->evtLen);
     if(stackEvent.p_event==NULL)
     {
         return;
     }
-    memcpy(stackEvent.p_event, p_stack->p_event, p_stack->evtLen);
+    (void)memcpy(stackEvent.p_event, p_stack->p_event, p_stack->evtLen);
     stackEvent.p_event=stackEvent.p_event;
 
     if (p_stack->groupId==STACK_GRP_GATT)
@@ -151,7 +155,7 @@ void APP_BleStackCb(STACK_Event_T *p_stack)
             p_payload = (uint8_t *)OSAL_Malloc((p_evtGatt->eventField.onClientCccdListChange.numOfCccd*4));
             if (p_payload != NULL)
             {
-                memcpy(p_payload, (uint8_t *)p_evtGatt->eventField.onClientCccdListChange.p_cccdList, (p_evtGatt->eventField.onClientCccdListChange.numOfCccd*4));
+                (void)memcpy(p_payload, (uint8_t *)p_evtGatt->eventField.onClientCccdListChange.p_cccdList, (p_evtGatt->eventField.onClientCccdListChange.numOfCccd*4));
                 p_evtGatt->eventField.onClientCccdListChange.p_cccdList = (GATTS_CccdList_T *)p_payload;
             }
         }
@@ -264,38 +268,38 @@ void APP_BleStackEvtHandler(STACK_Event_T *p_stackEvt)
     OSAL_Free(p_stackEvt->p_event);
 }
 
-<#if BLE_SYS_LOG_EN == true>
-void APP_BleStackLogCb(BT_SYS_LogEvent_T *p_event)
+<#if BLE_VIRTUAL_SNIFFER_EN == true>
+static void APP_BleStackLogCb(BT_SYS_LogEvent_T *p_event)
 {
-    BT_SYS_LogEvent_T  	logEvent;
-    APP_Msg_T       	appMsg;
-    
+    BT_SYS_LogEvent_T   logEvent;
+    APP_Msg_T           appMsg;
+
     logEvent.p_logPayload = NULL;
     logEvent.p_returnParams = NULL;
 
-    if (p_event->payloadLength)
+    if (p_event->payloadLength != 0U)
     {
         logEvent.p_logPayload = OSAL_Malloc(p_event->payloadLength);
         if (logEvent.p_logPayload == NULL)
         {
             return;
         }
-        memcpy(logEvent.p_logPayload, p_event->p_logPayload, p_event->payloadLength);
+        (void)memcpy(logEvent.p_logPayload, p_event->p_logPayload, p_event->payloadLength);
     }
 
     /* Allocate memory for returned parameters if exists. */
-    if (p_event->paramsLength)
+    if (p_event->paramsLength != 0U)
     {
         logEvent.p_returnParams = OSAL_Malloc(p_event->paramsLength);
         if (logEvent.p_returnParams == NULL)
         {
-            if (p_event->payloadLength)
+            if (p_event->payloadLength != 0U)
             {
                 OSAL_Free(logEvent.p_logPayload);
             }
             return;
         }
-        memcpy(logEvent.p_returnParams, p_event->p_returnParams, p_event->paramsLength);
+        (void)memcpy(logEvent.p_returnParams, p_event->p_returnParams, p_event->paramsLength);
     }
 
     logEvent.logType = p_event->logType;
@@ -305,7 +309,7 @@ void APP_BleStackLogCb(BT_SYS_LogEvent_T *p_event)
 
     appMsg.msgId = APP_MSG_BLE_STACK_LOG;
 
-    memcpy((uint8_t *)appMsg.msgData, (uint8_t *)&logEvent, sizeof(BT_SYS_LogEvent_T));
+    (void)memcpy((uint8_t *)appMsg.msgData, (uint8_t *)&logEvent, sizeof(BT_SYS_LogEvent_T));
 
     OSAL_QUEUE_Send(&appData.appQueue, &appMsg, 0);
 }
@@ -314,13 +318,13 @@ void APP_BleStackLogCb(BT_SYS_LogEvent_T *p_event)
 
 void APP_BleStackLogHandler(BT_SYS_LogEvent_T *p_logEvt)
 {
-<#if BLE_SYS_LOG_EN == true>
+<#if BLE_VIRTUAL_SNIFFER_EN == true>
     BLE_LOG_StackLogHandler(p_logEvt);
 </#if>
 }
 
 <#if BLE_BOOL_GATT_CLIENT == true>
-void APP_DdEvtHandler(BLE_DD_Event_T *p_event)
+static void APP_DdEvtHandler(BLE_DD_Event_T *p_event)
 {
     <#if BOOL_GCM_SCM == true>
     BLE_SCM_BleDdEventHandler(p_event);
@@ -348,7 +352,7 @@ void APP_DdEvtHandler(BLE_DD_Event_T *p_event)
 }
 
     <#if BOOL_GCM_SCM == true>
-void APP_ScmEvtHandler(BLE_SCM_Event_T *p_event)
+static void APP_ScmEvtHandler(BLE_SCM_Event_T *p_event)
 {
     if (p_event->eventId == BLE_SCM_EVT_SVC_CHANGE)
     {
@@ -361,10 +365,13 @@ void APP_ScmEvtHandler(BLE_SCM_Event_T *p_event)
 </#if>
 
 
-void APP_BleConfigBasic()
+static void APP_BleConfigBasic(void)
 {
     <#if GAP_PERIPHERAL == true>
     int8_t                          connTxPower;
+    </#if>
+    <#if BOOL_GAP_PRIVACY == true>
+    BLE_GAP_LocalPrivacyParams_T    localPriParam;
     </#if>
     <#if GAP_ADVERTISING == true && BOOL_GAP_EXT_ADV == false>
     int8_t                          advTxPower;
@@ -376,32 +383,40 @@ void APP_BleConfigBasic()
         <#if GAP_SCAN_RSP_DATA_LEN != 0>
     uint8_t scanRspData[]={${GAP_SCAN_RSP_DATA}};
     BLE_GAP_AdvDataParams_T         appScanRspData;
-        </#if>    
+        </#if>
+    </#if>
+    
+    <#if BOOL_GAP_PRIVACY == true>
+    // Configure privacy
+    localPriParam.privacyAddrType = ${GAP_PRIV_ADDR_TYPE};  /* Address Type */
+    localPriParam.addrTimeout = ${GAP_PRIV_ADDR_TO};        /* Address Timeout */
+    memset(localPriParam.localIrk, 0, 16);
+    BLE_GAP_SetLocalPrivacy(true, &localPriParam);
     </#if>
 
     <#if GAP_ADVERTISING == true && BOOL_GAP_EXT_ADV == false>
     // Configure advertising parameters
     BLE_GAP_SetAdvTxPowerLevel(${GAP_ADV_TX_PWR},&advTxPower);      /* Advertising TX Power */
     
-    memset(&advParam, 0, sizeof(BLE_GAP_AdvParams_T));
+    (void)memset(&advParam, 0, sizeof(BLE_GAP_AdvParams_T));
     advParam.intervalMin = ${GAP_ADV_INTERVAL_MIN};     /* Advertising Interval Min */
     advParam.intervalMax = ${GAP_ADV_INTERVAL_MAX};     /* Advertising Interval Max */
     advParam.type = ${GAP_ADV_TYPE};        /* Advertising Type */
     advParam.advChannelMap = ${GAP_CHANNEL_MAP};        /* Advertising Channel Map */
     advParam.filterPolicy = ${GAP_ADV_FILT_POLICY};     /* Advertising Filter Policy */
     BLE_GAP_SetAdvParams(&advParam);
-    
+
         <#if GAP_ADV_DATA_LEN != 0>
     // Configure advertising data
     appAdvData.advLen=sizeof(advData);
-    memcpy(appAdvData.advData, advData, appAdvData.advLen);     /* Advertising Data */
+    (void)memcpy(appAdvData.advData, advData, appAdvData.advLen);     /* Advertising Data */
     BLE_GAP_SetAdvData(&appAdvData);
         </#if>
 
         <#if GAP_SCAN_RSP_DATA_LEN != 0>
     //Configure advertising scan response data
     appScanRspData.advLen=sizeof(scanRspData);
-    memcpy(appScanRspData.advData, scanRspData, appScanRspData.advLen);     /* Scan Response Data */
+    (void)memcpy(appScanRspData.advData, scanRspData, appScanRspData.advLen);     /* Scan Response Data */
     BLE_GAP_SetScanRspData(&appScanRspData);
         </#if>
     </#if>
@@ -410,7 +425,7 @@ void APP_BleConfigBasic()
     BLE_GAP_SetConnTxPowerLevel(${GAP_CONN_TX_PWR}, &connTxPower);      /* Connection TX Power */
     </#if>
 }
-void APP_BleConfigAdvance()
+static void APP_BleConfigAdvance(void)
 {
     uint8_t devName[]={GAP_DEV_NAME_VALUE};
     <#if GAP_ADVERTISING == true && BOOL_GAP_EXT_ADV == true>
@@ -433,14 +448,10 @@ void APP_BleConfigAdvance()
     uint8_t scanRspData2[]={${GAP_EXT_SCAN_RSP_DATA_2}};
             </#if>
         </#if>
-    </#if>    
+    </#if>
 
     BLE_SMP_Config_T                smpParam;
 
-    <#if BOOL_GAP_PRIVACY == true>
-    BLE_GAP_LocalPrivacyParams_T    localPriParam;
-    </#if>
-   
     <#if GAP_SCAN == true>
         <#if BOOL_GAP_EXT_SCAN == false>
     BLE_GAP_ScanningParams_T        scanParam;
@@ -460,7 +471,7 @@ void APP_BleConfigAdvance()
 
     // Configure Device Name
     BLE_GAP_SetDeviceName(sizeof(devName), devName);    /* Device Name */
-
+    
     <#if GAP_ADVERTISING == true && BOOL_GAP_EXT_ADV == true>
     //Configure advertising Set 1
     advParams.advHandle = ${GAP_EXT_ADV_ADV_SET_HANDLE};        /* Advertising Handle */
@@ -507,7 +518,7 @@ void APP_BleConfigAdvance()
     advParams.sid = ${GAP_EXT_ADV_SID};     /* Advertising SID */
     advParams.scanReqNotifiEnable = ${GAP_EXT_ADV_SCAN_ENABLE?c};   /* Scan Request Notification Enable */
     BLE_GAP_SetExtAdvParams(&advParams, &selectedTxPower);
-    
+
         <#if GAP_EXT_ADV_DATA_LEN != 0>
     appAdvData.advHandle = ${GAP_EXT_ADV_ADV_SET_HANDLE};
     appAdvData.operation = BLE_GAP_EXT_ADV_DATA_OP_COMPLETE;
@@ -582,7 +593,7 @@ void APP_BleConfigAdvance()
     advParams.sid = ${GAP_EXT_ADV_SID_2};       /* Advertising SID */
     advParams.scanReqNotifiEnable = ${GAP_EXT_ADV_SCAN_ENABLE_2?c};     /* Scan Request Notification Enable */
     BLE_GAP_SetExtAdvParams(&advParams, &selectedTxPower2);
-    
+
             <#if GAP_EXT_ADV_DATA_LEN_2 != 0>
     appAdvData.advHandle = ${GAP_EXT_ADV_ADV_SET_HANDLE_2};
     appAdvData.operation = BLE_GAP_EXT_ADV_DATA_OP_COMPLETE;
@@ -596,7 +607,7 @@ void APP_BleConfigAdvance()
     BLE_GAP_SetExtAdvData(&appAdvData);
     OSAL_Free(appAdvData.p_advData);
             </#if>
-    
+
             <#if GAP_EXT_SCAN_RSP_DATA_LEN_2 != 0>
     appScanRspData.advHandle = ${GAP_EXT_ADV_ADV_SET_HANDLE_2};
     appScanRspData.operation = BLE_GAP_EXT_ADV_DATA_OP_COMPLETE;
@@ -611,29 +622,21 @@ void APP_BleConfigAdvance()
     OSAL_Free(appScanRspData.p_advData);
             </#if>
         </#if>
-    </#if>    
-    
+    </#if>
+
     // GAP Service option
     gapServiceOptions.charDeviceName.enableWriteProperty = ${GAP_SVC_DEV_NAME_WRITE?c};             /* Enable Device Name Write Property */
     gapServiceOptions.charAppearance.appearance = 0x${GAP_SVC_APPEARANCE};                          /* Appearance */
-    gapServiceOptions.charPeriPreferConnParam.enable = ${GAP_SVC_PERI_PRE_CP?c};                    /* Enable Peripheral Preffered Connection Parameters */
+    gapServiceOptions.charPeriPreferConnParam.enable = ${GAP_SVC_PERI_PRE_CP?c};                    /* Enable Peripheral Preferred Connection Parameters */
     <#if GAP_SVC_PERI_PRE_CP == true>
     gapServiceOptions.charPeriPreferConnParam.minConnInterval = ${GAP_SVC_CP_MIN_CONN_INTERVAL};    /* Minimum Connection Interval */
     gapServiceOptions.charPeriPreferConnParam.maxConnInterval = ${GAP_SVC_CP_MAX_CONN_INTERVAL};    /* Maximum Connection Interval */
     gapServiceOptions.charPeriPreferConnParam.peripheralLatency = ${GAP_SVC_CP_PERI_LATENCY};       /* Peripheral Latency */
     gapServiceOptions.charPeriPreferConnParam.connSupervisionTimeoutMulti = ${GAP_SVC_CP_PERI_SUPERVISION_TIMEOUT}; /* Connection Sup ervision Timeout Multiplier */
     </#if>
-    
+
     BLE_GAP_ConfigureBuildInService(&gapServiceOptions);
-    
-    <#if BOOL_GAP_PRIVACY == true> 
-    // Configure privacy
-    localPriParam.privacyAddrType = ${GAP_PRIV_ADDR_TYPE};  /* Address Type */
-    localPriParam.addrTimeout = ${GAP_PRIV_ADDR_TO};        /* Address Timeout */
-    memset(localPriParam.localIrk, 0, 16);
-    BLE_GAP_SetLocalPrivacy(true, &localPriParam);
-    </#if>
-    
+
     <#if GAP_SCAN == true>
     // Configure scan parameters
         <#if BOOL_GAP_EXT_SCAN == false>
@@ -671,7 +674,7 @@ void APP_BleConfigAdvance()
     </#if>
 
     // Configure SMP parameters
-    memset(&smpParam, 0, sizeof(BLE_SMP_Config_T));
+    (void)memset(&smpParam, 0, sizeof(BLE_SMP_Config_T));
     smpParam.ioCapability = ${SMP_IOCAP_TYPE};                  /* IO Capability */
     <#if SMP_AUTH_REQ_BOND == true>
     smpParam.authReqFlag |= BLE_SMP_OPTION_BONDING;             /* Authentication Setting: Bonding */
@@ -685,8 +688,8 @@ void APP_BleConfigAdvance()
     <#if SMP_OOB == true>
     smpParam.oobDataFlag = true;                                /* OOB Authentication Data Present */
     </#if>
-    <#if SMP_SC_ONLY == true>
-    smpParam.scOnly = true;                      				/* Secure Connections Only */
+    <#if SMP_SC_ONLY == true && SMP_AUTH_REQ_SC == true>
+    smpParam.scOnly = true;                                     /* Secure Connections Only */
     </#if>
     <#if SMP_AUTH_PAIR == true>
     smpParam.authPairingRequired = true;                        /* Authenticated pairing method is required */
@@ -724,7 +727,7 @@ void APP_BleConfigAdvance()
     </#if>
 }
 
-void APP_BleStackInitBasic()
+void APP_BleStackInitBasic(void)
 {
     BLE_GAP_Init();
 
@@ -737,14 +740,14 @@ void APP_BleStackInitBasic()
     </#if>
 }
 
-void APP_BleStackInitAdvance()
+void APP_BleStackInitAdvance(void)
 {
     <#if BLE_BOOL_GATT_CACHING == true>
     uint16_t gattsInitParam=GATTS_CONFIG_CACHING_SUPPORT;       /* Enable GATT Caching */
     <#else>
     uint16_t gattsInitParam=GATTS_CONFIG_NONE;
     </#if>
-    
+
     <#if BLE_BOOL_GATT_CLIENT == true>
     <#if BLE_BOOL_GATT_MANU_CONFIRM == true>
     uint16_t gattcInitParam=GATTC_CONFIG_MANUAL_CONFIRMATION;       /* Enable Manual Handle Confirmation */
@@ -754,7 +757,7 @@ void APP_BleStackInitAdvance()
     </#if>
 
     STACK_EventRegister(APP_BleStackCb);
-    
+
 
     <#if GAP_ADVERTISING == true && BOOL_GAP_EXT_ADV == true>
     BLE_GAP_ExtAdvInit();   /* Enable Extended Advertising */
@@ -766,7 +769,7 @@ void APP_BleStackInitAdvance()
     BLE_GAP_ExtScanInit(${GAP_EXT_SCAN_DATA_LEN}, ${GAP_EXT_SCAN_NUM_2_PKT});       /* Enable Extended Scan, Maximum Data Len, Maximum Number of Secondary Packets */
     </#if>
     </#if>
-    
+
     <#if GAP_CENTRAL == true>
     BLE_GAP_ConnCentralInit();  /* Central */
     </#if>
@@ -775,15 +778,15 @@ void APP_BleStackInitAdvance()
     <#if BOOL_L2CAP_CREDIT_FLOWCTRL == true>
     BLE_L2CAP_CbInit();     /* Credit Base Flow Control */
     </#if>
-    
+
     GATTS_Init(gattsInitParam);
-    
+
     <#if BLE_BOOL_GATT_CLIENT == true>
     GATTC_Init(gattcInitParam);     /* Enable Client Role */
     </#if>
 
     BLE_SMP_Init();
-    
+
     <#if GAP_DIRECT_TEST_MODE == true>
     BLE_DTM_Init();     /* Enable Direct Test Mode */
     </#if>
@@ -802,7 +805,7 @@ void APP_BleStackInitAdvance()
         </#if>
     </#if>
 
-    <#if BLE_SYS_LOG_EN == true>
+    <#if BLE_VIRTUAL_SNIFFER_EN == true>
     BLE_LOG_EventRegister(APP_BleLogOutput);
     BT_SYS_LogEnable(APP_BleStackLogCb);        /* Enable BLE Log */
     </#if>
@@ -876,10 +879,14 @@ void APP_BleStackInitAdvance()
     BLE_ANCS_EventRegister(APP_AncsEvtHandler);
     </#if>
 
+    <#if BLE_SYS_PTA_EN == true>
+    APP_PtaInit();
+    </#if>
+
     APP_BleConfigAdvance();
 }
 
-void APP_BleStackInit()
+void APP_BleStackInit(void)
 {
     APP_BleStackInitBasic();
     APP_BleConfigBasic();

@@ -41,15 +41,14 @@
     are defined here for convenience.
 *******************************************************************************/
 
-#ifndef _APP_ANPS_HANDLER_H
-#define _APP_ANPS_HANDLER_H
+#ifndef APP_ANPS_HANDLER_H
+#define APP_ANPS_HANDLER_H
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Included Files
 // *****************************************************************************
 // *****************************************************************************
-
 #include <stdint.h>
 #include <string.h>
 #include "ble_anps/ble_anps.h"
@@ -88,14 +87,13 @@ extern "C" {
 */
 void APP_AnpsEvtHandler(BLE_ANPS_Event_T *p_event);
 
-
-#endif /* _APP_ANPS_HANDLER_H */
-
 //DOM-IGNORE-BEGIN
 #ifdef __cplusplus
 }
 #endif
 //DOM-IGNORE-END
+
+#endif /* APP_ANPS_HANDLER_H */
 
 /*******************************************************************************
  End of File

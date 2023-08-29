@@ -20,7 +20,7 @@ def trspClientConfig(symbol, event):
         if (Database.getSymbolValue("BLE_STACK_LIB", "BLE_BOOL_GATT_CLIENT") == False):
             Database.setSymbolValue("BLE_STACK_LIB", "BLE_BOOL_GATT_CLIENT", True)
     else:
-        Database.setSymbolValue("BLE_STACK_LIB", "APP_OTAP_CLIENT", False)
+        Database.setSymbolValue("BLE_STACK_LIB", "APP_TRSP_CLIENT", False)
 
 def trspServerConfig(symbol, event):
     if event["value"] == True:

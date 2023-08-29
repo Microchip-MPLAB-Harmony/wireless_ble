@@ -61,9 +61,9 @@ serviceIasComponent = Module.CreateComponent('SERVICE_IAS', 'Immediate Alert Ser
 serviceIasComponent.addCapability('BLE_IAS_Capability', 'BLE_IAS', None, False)
 serviceIasComponent.addDependency('BLE_STACK_Dependency', 'BLE_STACK', 'BLE Stack', True, True)
 
-#serviceOtasComponent = Module.CreateComponent('SERVICE_OTAS', 'Over-The-Air Service', 'Wireless/Drivers/BLE/Services', '/driver/ble/config/services/otas.py')
-#serviceOtasComponent.addCapability("BLE_OTAS_Capability", "BLE_OTAS", None, False)
-#serviceOtasComponent.addDependency('BLE_STACK_Dependency', 'BLE_STACK', 'BLE Stack', True, True)
+serviceOtasComponent = Module.CreateComponent('SERVICE_OTAS', 'Over-The-Air Service', 'Wireless/Drivers/BLE/Services', '/driver/ble/config/services/otas.py')
+serviceOtasComponent.addCapability("BLE_OTAS_Capability", "BLE_OTAS", None, False)
+serviceOtasComponent.addDependency('BLE_STACK_Dependency', 'BLE_STACK', 'BLE Stack', True, True)
 
 serviceAnsComponent = Module.CreateComponent('SERVICE_ANS', 'Alert Notification Service', 'Wireless/Drivers/BLE/Services', '/driver/ble/config/services/ans.py')
 serviceAnsComponent.addCapability('BLE_ANS_Capability', 'BLE_ANS', None, False)

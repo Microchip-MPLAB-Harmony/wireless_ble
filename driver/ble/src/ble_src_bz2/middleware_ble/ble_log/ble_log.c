@@ -45,7 +45,7 @@
 // *****************************************************************************
 #include "osal/osal_freertos_extend.h"
 #include "ble_util/byte_stream.h"
-#include "ble_log/ble_log.h"
+#include "ble_log.h"
 #include "host_hci_defs.h"
 
 // *****************************************************************************
@@ -56,21 +56,21 @@
 /**@defgroup LOG_PAYLOAD_PARAMS_SIZE Size of parameters in log payload of the log packet.
  * @brief The size of parameters in the log payload of log packets.
  * @{ */
-#define HCI_COMMAND_OPCODE_SIZE             0x02                                            /**< Size of opcode parameter in HCI command packet. */
-#define HCI_COMMAND_PARAMETER_LENGTH_SIZE   0x01                                            /**< Size of length parameter in HCI command packet. */
+#define HCI_COMMAND_OPCODE_SIZE             0x02U                                            /**< Size of opcode parameter in HCI command packet. */
+#define HCI_COMMAND_PARAMETER_LENGTH_SIZE   0x01U                                            /**< Size of length parameter in HCI command packet. */
 
-#define HCI_EVENT_CODE_SIZE                 0x01                                            /**< Size of event code parameter in HCI event packet. */
-#define HCI_EVENT_PARAMETER_LENGTH_SIZE     0x01                                            /**< Size of length parameter in the HCI event packet. */
-#define HCI_EVENT_CC_PARAMETER_NUMBER_SIZE  0x01                                            /**< Size of number of HCI commands parameter in HCI command complete event. */
-#define HCI_EVENT_CC_PARAMETER_OPCODE_SIZE  0x02                                            /**< Size of opcode parameter in HCI command complete event. */
-#define HCI_EVENT_CC_PARAMETER_STATUS_SIZE  0x01                                            /**< Size of status parameter in HCI command complete event. */
-#define HCI_EVENT_CS_PARAMETER_NUMBER_SIZE  0x01                                            /**< Size of number of HCI commands parameter in HCI command status event. */
-#define HCI_EVENT_CS_PARAMETER_OPCODE_SIZE  0x02                                            /**< Size of opcode parameter in HCI command status event. */
-#define HCI_EVENT_CS_PARAMETER_STATUS_SIZE  0x01                                            /**< Size of status parameter in HCI command status event. */
-#define HCI_EVENT_LE_PARAMETER_SUBCODE_SIZE 0x01                                            /**< Size of sub-event code parameter in HCI LE meta event. */
+#define HCI_EVENT_CODE_SIZE                 0x01U                                            /**< Size of event code parameter in HCI event packet. */
+#define HCI_EVENT_PARAMETER_LENGTH_SIZE     0x01U                                            /**< Size of length parameter in the HCI event packet. */
+#define HCI_EVENT_CC_PARAMETER_NUMBER_SIZE  0x01U                                            /**< Size of number of HCI commands parameter in HCI command complete event. */
+#define HCI_EVENT_CC_PARAMETER_OPCODE_SIZE  0x02U                                            /**< Size of opcode parameter in HCI command complete event. */
+#define HCI_EVENT_CC_PARAMETER_STATUS_SIZE  0x01U                                            /**< Size of status parameter in HCI command complete event. */
+#define HCI_EVENT_CS_PARAMETER_NUMBER_SIZE  0x01U                                            /**< Size of number of HCI commands parameter in HCI command status event. */
+#define HCI_EVENT_CS_PARAMETER_OPCODE_SIZE  0x02U                                            /**< Size of opcode parameter in HCI command status event. */
+#define HCI_EVENT_CS_PARAMETER_STATUS_SIZE  0x01U                                            /**< Size of status parameter in HCI command status event. */
+#define HCI_EVENT_LE_PARAMETER_SUBCODE_SIZE 0x01U                                            /**< Size of sub-event code parameter in HCI LE meta event. */
 
-#define HCI_ACL_HEADER_SIZE                 0x02                                            /**< Size of the parameters in header (BC:2, PB: 2, Handle:10) in HCI ACL packet. */
-#define HCI_ACL_PKT_PARAMETER_LENGTH_SIZE   0x02                                            /**< Size of length parameter in HCI ACL packet. */
+#define HCI_ACL_HEADER_SIZE                 0x02U                                            /**< Size of the parameters in header (BC:2, PB: 2, Handle:10) in HCI ACL packet. */
+#define HCI_ACL_PKT_PARAMETER_LENGTH_SIZE   0x02U                                            /**< Size of length parameter in HCI ACL packet. */
 /** @} */
 
 // *****************************************************************************
@@ -146,6 +146,8 @@ static void ble_log_PackEnhancedReadTransmitPowerLevel(BT_SYS_LogEvent_T *p_log,
 static void ble_log_PackReadRemoteTransmitPowerLevel(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
 static void ble_log_PackSetTransmitPowerReportingEnable(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
 static void ble_log_PackTransmitterTestV4(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
+static void ble_log_PackSetPathLossParams(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
+static void ble_log_PackSetPathLossEnable(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
 
 static void ble_log_PackDiscComplete(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
 static void ble_log_PackEncryptionChange(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
@@ -170,6 +172,7 @@ static void ble_log_PackAdvSetTerminated(BT_SYS_LogEvent_T *p_log, uint8_t *p_lo
 static void ble_log_PackScanRequestReceived(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
 static void ble_log_PackChannelSelectAlgorithm(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
 static void ble_log_PackTransmitPowerReporting(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
+static void ble_log_PackPathLossThreshold(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
 static void ble_log_PackAuthenticatedPayloadTimeoutExpired(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
 
 // *****************************************************************************
@@ -177,7 +180,7 @@ static void ble_log_PackAuthenticatedPayloadTimeoutExpired(BT_SYS_LogEvent_T *p_
 // Section: Local Variables
 // *****************************************************************************
 // *****************************************************************************
-BLE_LOG_EventCb_T                 g_logEventCb = NULL;
+static BLE_LOG_EventCb_T                 s_logEventCb = NULL;
 
 static const _BLE_LOG_FunTbl_T  s_hciCmdFun[] =
 {
@@ -301,8 +304,8 @@ static const _BLE_LOG_FunTbl_T  s_hciCmdFun[] =
     NULL,   // (0x75)
     ble_log_PackEnhancedReadTransmitPowerLevel,         // HCI_LE_ENHANCED_READ_TRANSMIT_POWER_LEVEL (0x76)
     ble_log_PackReadRemoteTransmitPowerLevel,           // HCI_LE_READ_REMOTE_TRANSMIT_POWER_LEVEL (0x77)
-    NULL,   // (0x78)
-    NULL,   // (0x79)
+    ble_log_PackSetPathLossParams,                      // HCI_LE_SET_PATH_LOSS_REPORTING_PARAMS (0x78)
+    ble_log_PackSetPathLossEnable,                      // HCI_LE_SET_PATH_LOSS_REPORTING_ENABLE (0x79)
     ble_log_PackSetTransmitPowerReportingEnable,        // HCI_LE_SET_TRANSMIT_POWER_REPORTING_ENABLE (0x7A)
     ble_log_PackTransmitterTestV4                       // HCI_LE_TRANSMITTER_TEST_V4 (0x7B)
 };
@@ -341,11 +344,11 @@ static const _BLE_LOG_FunTbl_T  s_hciLeMetaEvtFun[] =
     NULL,   // (0x1D)
     NULL,   // (0x1E)
     NULL,   // (0x1F)
-    NULL,   // (0x20)
-    ble_log_PackTransmitPowerReporting                  // HCI_LE_TRANSMIT_POWER_REPORTING (0x21)
+    ble_log_PackPathLossThreshold,                      // HCI_LE_PATH_LOSS_THRESHOLD (0x20)
+    ble_log_PackTransmitPowerReporting                 // HCI_LE_TRANSMIT_POWER_REPORTING (0x21)
 };
 
-uint8_t s_hciCmdPktSize[] =
+static const uint8_t s_hciCmdPktSize[] =
 {
     0x00,   // (0x00)
     0x00,   // (0x01)
@@ -467,13 +470,13 @@ uint8_t s_hciCmdPktSize[] =
     0x00, // (0x75)
     HCI_CMD_SIZE_LE_ENHANCED_READ_TRANSMIT_POWER_LEVEL, // HCI_LE_ENHANCED_READ_TRANSMIT_POWER_LEVEL (0x76)
     HCI_CMD_SIZE_LE_READ_REMOTE_TRANSMIT_POWER_LEVEL,   // HCI_LE_READ_REMOTE_TRANSMIT_POWER_LEVEL (0x77)
-    0x00, // (0x78)
-    0x00, // (0x79)
+    HCI_CMD_SIZE_LE_SET_PATH_LOSS_PARAMS,               // HCI_LE_SET_PATH_LOSS_REPORTING_PARAMS (0x78)
+    HCI_CMD_SIZE_LE_SET_PATH_LOSS_ENABLE,               // HCI_LE_SET_PATH_LOSS_REPORTING_ENABLE (0x79)
     HCI_CMD_SIZE_LE_SET_TRANSMIT_POWER_REPORTING_ENABLE,// HCI_LE_SET_TRANSMIT_POWER_REPORTING_ENABLE (0x7A)
     HCI_CMD_SIZE_LE_TRANSMITTER_TEST_V4                 // HCI_LE_TRANSMITTER_TEST_V4 (0x7B)
 };
 
-uint8_t s_hciLeMetaEvtSize[] =
+static const uint8_t s_hciLeMetaEvtSize[] =
 {
     0x00,   // Reserved (0x00)
     HCI_EVT_SIZE_LE_CONNECT_COMPLETE,                   // HCI_LE_CONNECT_COMPLETE (0x01)
@@ -507,8 +510,8 @@ uint8_t s_hciLeMetaEvtSize[] =
     0x00,   // (0x1D)
     0x00,   // (0x1E)
     0x00,   // (0x1F)
-    0x00,   // (0x20)
-    HCI_EVT_SIZE_LE_TX_POWER_REPORTING                  // HCI_LE_TRANSMIT_POWER_REPORTING (0x21)
+    HCI_EVT_SIZE_LE_PATH_LOSS_THRESHOLD,               // HCI_LE_PATH_LOSS_THRESHOLD (0x20)
+    HCI_EVT_SIZE_LE_TX_POWER_REPORTING                 // HCI_LE_TRANSMIT_POWER_REPORTING (0x21)
 };
 
 // *****************************************************************************
@@ -519,9 +522,9 @@ uint8_t s_hciLeMetaEvtSize[] =
 
 static void ble_log_Print(uint8_t logType, uint16_t logLength, uint8_t *p_logPacket)
 {
-    if (g_logEventCb)
+    if (s_logEventCb != NULL)
     {
-        g_logEventCb(logType, logLength, p_logPacket);
+        s_logEventCb(logType, logLength, p_logPacket);
     }
 }
 
@@ -531,12 +534,12 @@ static void ble_log_GenerateHciCommandComplete(uint16_t logId, uint8_t result, u
     uint8_t *p_buf;
     uint8_t eventCode = HCI_COMMAND_COMPLETE;
     uint8_t numberOfHciPacket = 1;
-    uint8_t ogf;
+    uint16_t ogf;
     uint16_t logLength;
     uint16_t ocf;
 
-    ogf = (logId >> 10);
-    ocf = (logId & 0x03FF);
+    ogf = (logId >> 10U);
+    ocf = (logId & 0x03FFU);
     logLength = (HCI_EVENT_CODE_SIZE+HCI_EVENT_PARAMETER_LENGTH_SIZE+
                 HCI_EVENT_CC_PARAMETER_NUMBER_SIZE+HCI_EVENT_CC_PARAMETER_OPCODE_SIZE+
                 paramsLength);
@@ -602,9 +605,21 @@ static void ble_log_GenerateHciCommandComplete(uint16_t logId, uint8_t result, u
         {
             VARIABLE_COPY_TO_STREAM(&p_buf, (p_returnParams+HCI_EVENT_CC_PARAMETER_STATUS_SIZE), (HCI_CC_EVT_SIZE_ENHANCED_READ_TRANSMIT_POWER-HCI_EVENT_CC_PARAMETER_STATUS_SIZE));
         }
+        else if (ocf == HCI_LE_SET_PATH_LOSS_REPORTING_PARAMS)
+        {
+            VARIABLE_COPY_TO_STREAM(&p_buf, (p_returnParams+HCI_EVENT_CC_PARAMETER_STATUS_SIZE), (HCI_CC_EVT_SIZE_SET_PASS_LOSS_REPORTING_PARAMS-HCI_EVENT_CC_PARAMETER_STATUS_SIZE));
+        }
+        else if (ocf == HCI_LE_SET_PATH_LOSS_REPORTING_ENABLE)
+        {
+            VARIABLE_COPY_TO_STREAM(&p_buf, (p_returnParams+HCI_EVENT_CC_PARAMETER_STATUS_SIZE), (HCI_CC_EVT_SIZE_SET_PASS_LOSS_REPORTING_ENABLE-HCI_EVENT_CC_PARAMETER_STATUS_SIZE));
+        }
         else if (ocf == HCI_LE_SET_TRANSMIT_POWER_REPORTING_ENABLE)
         {
             VARIABLE_COPY_TO_STREAM(&p_buf, (p_returnParams+HCI_EVENT_CC_PARAMETER_STATUS_SIZE), (HCI_CC_EVT_SIZE_SET_TRANSMIT_POWER_REPORTING_ENABLE-HCI_EVENT_CC_PARAMETER_STATUS_SIZE));
+        }
+        else
+        {
+            //Shall not enter here
         }
     }
     else if (ogf == HCI_HC)
@@ -617,6 +632,10 @@ static void ble_log_GenerateHciCommandComplete(uint16_t logId, uint8_t result, u
         {
             VARIABLE_COPY_TO_STREAM(&p_buf, (p_returnParams+HCI_EVENT_CC_PARAMETER_STATUS_SIZE), (HCI_CC_EVT_SIZE_WRITE_AUTH_PAYLOAD_TO-HCI_EVENT_CC_PARAMETER_STATUS_SIZE));
         }
+        else
+        {
+            //Shall not enter here
+        }
     }
     else if ((ogf == HCI_IP) && (ocf == HCI_READ_BD_ADDR))
     {
@@ -625,6 +644,10 @@ static void ble_log_GenerateHciCommandComplete(uint16_t logId, uint8_t result, u
     else if ((ogf == HCI_SP) && (ocf == HCI_READ_RSSI))
     {
         VARIABLE_COPY_TO_STREAM(&p_buf, (p_returnParams+HCI_EVENT_CC_PARAMETER_STATUS_SIZE), (HCI_CC_EVT_SIZE_READ_RSSI-HCI_EVENT_CC_PARAMETER_STATUS_SIZE));
+    }
+    else
+    {
+        //Shall not enter here
     }
 
     ble_log_Print(BLE_LOG_TYPE_HCI_EVENT, logLength, p_logPacket);
@@ -1189,7 +1212,7 @@ static void ble_log_PackSetExtScanParam(BT_SYS_LogEvent_T *p_log, uint8_t *p_log
     }
 
     /* Correct actual length */
-    cmdParamLength = 1+1+1+(usedPhys*5);
+    cmdParamLength = 1U+1U+1U+(usedPhys*5U);
     logLength = HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE+cmdParamLength;
     *(p_logPacket+HCI_COMMAND_OPCODE_SIZE) = cmdParamLength;
 
@@ -1245,7 +1268,7 @@ static void ble_log_PackExtCreateConn(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPa
     }
 
     /* Correct actual length */
-    cmdParamLength = 1+1+1+6+1+(usedPhys*16);
+    cmdParamLength = 1U+1U+1U+6U+1U+(usedPhys*16U);
     logLength = HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE+cmdParamLength;
     *(p_logPacket+HCI_COMMAND_OPCODE_SIZE) = cmdParamLength;
 
@@ -1400,6 +1423,30 @@ static void ble_log_PackTransmitterTestV4(BT_SYS_LogEvent_T *p_log, uint8_t *p_l
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+static void ble_log_PackSetPathLossParams(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
+{
+    uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
+
+    U16_TO_STREAM_LE(&p_buf, ((HCI_LE_SetPathLossReportingParams_T *)p_log->p_logPayload)->connHandle);
+    U8_TO_STREAM(&p_buf, ((HCI_LE_SetPathLossReportingParams_T *)p_log->p_logPayload)->highThreshold);
+    U8_TO_STREAM(&p_buf, ((HCI_LE_SetPathLossReportingParams_T *)p_log->p_logPayload)->highHysteresis);
+    U8_TO_STREAM(&p_buf, ((HCI_LE_SetPathLossReportingParams_T *)p_log->p_logPayload)->lowThreshold);
+    U8_TO_STREAM(&p_buf, ((HCI_LE_SetPathLossReportingParams_T *)p_log->p_logPayload)->lowHysteresis);
+    U16_TO_STREAM_LE(&p_buf, ((HCI_LE_SetPathLossReportingParams_T *)p_log->p_logPayload)->minTimeSpent);
+    ble_log_Print(BLE_LOG_TYPE_HCI_COMMAND, logLength, p_logPacket);
+    ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
+}
+
+static void ble_log_PackSetPathLossEnable(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
+{
+    uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
+    
+    U16_TO_STREAM_LE(&p_buf, ((HCI_LE_SetPathLossReportingEnable_T *)p_log->p_logPayload)->connHandle);
+    U8_TO_STREAM(&p_buf, ((HCI_LE_SetPathLossReportingEnable_T *)p_log->p_logPayload)->reportEnable);
+    ble_log_Print(BLE_LOG_TYPE_HCI_COMMAND, logLength, p_logPacket);
+    ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
+}
+
 static uint16_t ble_log_GetHciCommandParametersSize(uint8_t ogf, uint16_t ocf)
 {
     uint16_t cmdParamsSize = 0;
@@ -1424,6 +1471,10 @@ static uint16_t ble_log_GetHciCommandParametersSize(uint8_t ogf, uint16_t ocf)
             {
                 cmdParamsSize = HCI_CMD_SIZE_WRITE_AUTH_PAYLOAD_TO;
             }
+            else
+            {
+                //Shall not enter here
+            }
         }
         else if ((ogf == HCI_IP) && (ocf == HCI_READ_BD_ADDR))
         {
@@ -1432,6 +1483,10 @@ static uint16_t ble_log_GetHciCommandParametersSize(uint8_t ogf, uint16_t ocf)
         else if ((ogf == HCI_SP) && (ocf == HCI_READ_RSSI))
         {
             cmdParamsSize = HCI_CMD_SIZE_READ_RSSI;
+        }
+        else
+        {
+            //Shall not enter here
         }
     }
 
@@ -1463,6 +1518,10 @@ static void ble_log_GenerateHciCommand(BT_SYS_LogEvent_T *p_log, uint8_t *p_logP
             {
                 ble_log_PackWriteAuthenticatedPayloadTimeout(p_log, p_logPacket, logLength);
             }
+            else
+            {
+                //Shall not enter here
+            }
         }
         else if ((ogf == HCI_IP) && (ocf == HCI_READ_BD_ADDR))
         {
@@ -1472,11 +1531,15 @@ static void ble_log_GenerateHciCommand(BT_SYS_LogEvent_T *p_log, uint8_t *p_logP
         {
             ble_log_PackReadRssi(p_log, p_logPacket, logLength);
         }
+        else
+        {
+            //Shall not enter here
+        }
     }
 }
 
 //void ble_log_ProcHciCommand(BLE_Log_T *p_log)
-void ble_log_ProcHciCommand(BT_SYS_LogEvent_T *p_log)
+static void ble_log_ProcHciCommand(BT_SYS_LogEvent_T *p_log)
 {
     uint8_t *p_logPacket;
     uint8_t *p_buf;
@@ -1783,6 +1846,16 @@ static void ble_log_PackTransmitPowerReporting(BT_SYS_LogEvent_T *p_log, uint8_t
     ble_log_Print(BLE_LOG_TYPE_HCI_EVENT, logLength, p_logPacket);
 }
 
+static void ble_log_PackPathLossThreshold(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
+{
+    uint8_t *p_buf = (p_logPacket+HCI_EVENT_CODE_SIZE+HCI_EVENT_PARAMETER_LENGTH_SIZE+HCI_EVENT_LE_PARAMETER_SUBCODE_SIZE);
+
+    U16_TO_STREAM_LE(&p_buf, ((HCI_EvtLePathLossThreshold_T *)p_log->p_logPayload)->connHandle);
+    U8_TO_STREAM(&p_buf, ((HCI_EvtLePathLossThreshold_T *)p_log->p_logPayload)->currentPathLoss);
+    U8_TO_STREAM(&p_buf, ((HCI_EvtLePathLossThreshold_T *)p_log->p_logPayload)->zoneEntered);
+    ble_log_Print(BLE_LOG_TYPE_HCI_EVENT, logLength, p_logPacket);
+}
+
 static void ble_log_PackAuthenticatedPayloadTimeoutExpired(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_EVENT_CODE_SIZE+HCI_EVENT_PARAMETER_LENGTH_SIZE);
@@ -1837,6 +1910,10 @@ static uint8_t ble_log_GetHciEventParametersSize(BT_SYS_LogEvent_T *p_log, uint8
         {
             evtParamsSize -= (HCI_EVT_MAX_PERIODIC_ADVERTISING_DATA_LENGTH-((HCI_EvtLePeriodicAdvReport_T *)p_log->p_logPayload)->advLength);
         }
+        else
+        {
+            //Shall not enter here
+        }
     }
 
     return evtParamsSize;
@@ -1868,10 +1945,14 @@ static void ble_log_GenerateHciEvent(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPac
     {
         ble_log_PackAuthenticatedPayloadTimeoutExpired(p_log, p_logPacket, logLength);
     }
+    else
+    {
+        //Shall not enter here
+    }
 }
 
 //void ble_log_ProcHciEvent(BLE_Log_T *p_log)
-void ble_log_ProcHciEvent(BT_SYS_LogEvent_T *p_log)
+static void ble_log_ProcHciEvent(BT_SYS_LogEvent_T *p_log)
 {
     uint8_t *p_logPacket;
     uint8_t *p_buf;
@@ -1918,7 +1999,7 @@ void ble_log_ProcHciEvent(BT_SYS_LogEvent_T *p_log)
 }
 
 //void ble_log_ProcHciAcl(BLE_Log_T *p_log)
-void ble_log_ProcHciAcl(BT_SYS_LogEvent_T *p_log)
+static void ble_log_ProcHciAcl(BT_SYS_LogEvent_T *p_log)
 {
     uint8_t *p_logPacket;
     uint8_t *p_buf;
@@ -1967,13 +2048,17 @@ void BLE_LOG_StackLogHandler(BT_SYS_LogEvent_T *p_log)
     {
         ble_log_ProcHciAcl(p_log);
     }
+    else
+    {
+        //Shall not enter here
+    }
 
-    if (p_log->p_logPayload)
+    if (p_log->p_logPayload != NULL)
     {
         OSAL_Free(p_log->p_logPayload);
     }
 
-    if (p_log->p_returnParams)
+    if (p_log->p_returnParams!= NULL)
     {
         OSAL_Free(p_log->p_returnParams);
     }
@@ -1983,11 +2068,11 @@ void BLE_LOG_StackLogHandler(BT_SYS_LogEvent_T *p_log)
 
 void BLE_LOG_EventRegister(BLE_LOG_EventCb_T eventCb)
 {
-    g_logEventCb = NULL;
+    s_logEventCb = NULL;
 
-    if (eventCb)
+    if (eventCb != NULL)
     {
-        g_logEventCb = eventCb;
+        s_logEventCb = eventCb;
     }
 }
 

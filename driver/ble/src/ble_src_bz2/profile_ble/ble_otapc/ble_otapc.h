@@ -57,6 +57,13 @@
 #include "stack_mgr.h"
 #include "ble_gcm/ble_dd.h"
 
+// DOM-IGNORE-BEGIN
+#ifdef __cplusplus  // Provide C++ Compatibility
+
+extern "C" {
+
+#endif
+// DOM-IGNORE-END
 
 // *****************************************************************************
 // *****************************************************************************
@@ -73,12 +80,30 @@
 #define BLE_OTAPC_IMG_TYPE_FW                 (1 << 0)                                 /**< Firmaware image type. */
 /** @} */
 
-/**@defgroup BLE_OTAPC_ENC_TYPE_DEF Encryption method
+
+/**@defgroup BLE_OTAPC_FW_FEATURE_DEF OTAPC firmware extended feature
+ * @brief The definition of firmware extended feature.
+ * @{ */
+#define BLE_OTAPC_FW_FEATURE_MASK1            (1 << 0)                                 /**< Supported feature mask 1. */
+/** @} */
+
+
+/**@defgroup BLE_OTAPC_ENC_TYPE_DEF OTAPC Encryption method
  * @brief The definition of encryption method.
  * @{ */
 #define BLE_OTAPC_ENC_NONE                    0x00                                     /**< New firmware image is not encrypted. */
 #define BLE_OTAPC_ENC_AES_CBC                 0x01                                     /**< New firmware image is encrypted by AES-CBC. */
 /** @} */
+
+
+/**@defgroup BLE_OTAPC_FILE_TYPE_DEF OTAPC image file type
+ * @brief The definition of file type.
+ * @{ */
+#define BLE_OTAPC_IMG_FILE_TYPE_EMB_STACK     0x01                                     /**< The image is for embeded or stack flash. */
+#define BLE_OTAPC_IMG_FILE_TYPE_APP           0x02                                     /**< Pass the image to application. */
+#define BLE_OTAPC_IMG_FILE_TYPE_EXT           0x03                                     /**< The image is for external flash. */
+/** @} */
+
 
 /**@defgroup BLE_OTAPC_RESULT_DEF OTAPC result code
  * @brief The definition of operation result.
@@ -140,7 +165,8 @@ typedef struct BLE_OTAPC_EvtConnectInd_T
 typedef struct BLE_OTAPC_EvtFeatureInd_T
 {
     uint16_t        connHandle;                         /**< Connection handle associated with this connection. */
-    uint8_t         suppImgType;                        /**< The supported image type. See @ref BLE_OTAPC_IMG_TYPE_DEF */
+    uint8_t         suppImgType;                        /**< The supported image type. See @ref BLE_OTAPC_IMG_TYPE_DEF. */
+    uint8_t         fwExtFeaure;                        /**< The supported firmware extened feature. See @ref BLE_OTAPC_FW_FEATURE_DEF. */
 } BLE_OTAPC_EvtFeatureInd_T;
 
 /**@brief Data structure for @ref BLE_OTAPC_EVT_REQ_RSP_IND event. */
@@ -201,8 +227,11 @@ typedef struct BLE_OTAPC_Req_T
 {
     uint32_t                    fwImageSize;            /**< The size of new firmware image. */
     uint32_t                    fwImageId;              /**< The identity of new firmware image. */
-    uint32_t                    fwImageVer;             /**< The version of new firmware image */
+    uint32_t                    fwImageVer;             /**< The version of new firmware image. */
     uint8_t                     fwImageEnc;             /**< The encrypt method of new firmware image. See @ref BLE_OTAPC_ENC_TYPE_DEF. */
+    uint16_t                    fwImageChksum;          /**< The checksum of new firmware image. */
+    uint8_t                     fwImageFileType;        /**< The file type of new firmware image. See @ref BLE_OTAPC_FILE_TYPE_DEF. */
+    uint16_t                    fwImageCrc16;           /**< The CRC-16 value of new firmware image. */
 } BLE_OTAPC_Req_T;
 
 /**@brief BLE OTA profile callback type. This callback function sends BLE OTA profile events to the application. */
@@ -224,7 +253,7 @@ typedef void(*BLE_OTAPC_EventCb_T)(BLE_OTAPC_Event_T *p_event);
  * @retval MBA_RES_SUCCESS          Success to initialize BLE OTA Profile. 
  *
  */
-uint16_t BLE_OTAPC_Init();
+uint16_t BLE_OTAPC_Init(void);
 
 /**
  *@brief Register BLE OTA profile callback.\n
@@ -244,7 +273,7 @@ void BLE_OTAPC_EventRegister(BLE_OTAPC_EventCb_T bleOtapcRoutine);
  *
  *@retval MBA_RES_SUCCESS           Successfully starts the feature discovery procedure.
  *@retval MBA_RES_OOM               No available memory.
- *@retval MBA_RES_INVALID_PARA      Invalid parameters. Connection handle is not valid
+ *@retval MBA_RES_INVALID_PARA      Invalid parameters. Connection handle is not valid.
  *@retval MBA_RES_BAD_STATE         OTA profile is not ready to perform this operation.
  *
  */
@@ -259,7 +288,7 @@ uint16_t BLE_OTAPC_FeatureDisc(uint16_t connHandle);
  *
  *@retval MBA_RES_SUCCESS           Successfully starts firmware update request operation.
  *@retval MBA_RES_OOM               No available memory.
- *@retval MBA_RES_INVALID_PARA      Invalid parameters. Connection handle is not valid
+ *@retval MBA_RES_INVALID_PARA      Invalid parameters. Connection handle is not valid.
  *@retval MBA_RES_BAD_STATE         OTA profile is not ready to perform this operation.
  *
  */
@@ -274,7 +303,7 @@ uint16_t BLE_OTAPC_UpdateRequest(uint16_t connHandle, BLE_OTAPC_Req_T * p_req);
  *
  *@retval MBA_RES_SUCCESS           Successfully starts firmware update start operation.
  *@retval MBA_RES_OOM               No available memory.
- *@retval MBA_RES_INVALID_PARA      Invalid parameters. Connection handle is not valid
+ *@retval MBA_RES_INVALID_PARA      Invalid parameters. Connection handle is not valid.
  *@retval MBA_RES_BAD_STATE         OTA profile server has not allowed to perform firmware update proceudre yet.
  *
  */
@@ -308,7 +337,7 @@ uint16_t BLE_OTAPC_FragmentDist(uint16_t connHandle, uint16_t length, uint8_t *p
  *
  *@retval MBA_RES_SUCCESS           Successfully starts firmware update complete operation.
  *@retval MBA_RES_OOM               No available memory.
- *@retval MBA_RES_INVALID_PARA      Invalid parameters. Connection handle is not valid
+ *@retval MBA_RES_INVALID_PARA      Invalid parameters. Connection handle is not valid.
  *@retval MBA_RES_BAD_STATE         OTA profile server has not allowed to perform firmware update proceudre yet.
  *
  */
@@ -321,7 +350,7 @@ uint16_t BLE_OTAPC_UpdateComplete(uint16_t connHandle);
  *
  *@retval MBA_RES_SUCCESS           Successfully starts device reset request operation.
  *@retval MBA_RES_OOM               No available memory.
- *@retval MBA_RES_INVALID_PARA      Invalid parameters. Connection handle is not valid
+ *@retval MBA_RES_INVALID_PARA      Invalid parameters. Connection handle is not valid.
  *@retval MBA_RES_BAD_STATE         OTA profile server has not allowed to perform firmware update proceudre yet.
  *
  */
@@ -336,7 +365,7 @@ uint16_t BLE_OTAPC_DeviceReset(uint16_t connHandle);
 void BLE_OTAPC_BleEventHandler(STACK_Event_T *p_stackEvent);
 
 /**@brief Handle BLE_DD (Database Discovery middleware) events.
- *        This API should be called in the application while caching BLE_DD events
+ *        This API should be called in the application while caching BLE_DD events.
  *
  * @param[in] p_event               Pointer to BLE_DD events buffer.
  *
@@ -345,6 +374,12 @@ void BLE_OTAPC_BleDdEventHandler(BLE_DD_Event_T *p_event);
 
 /**@} */ //BLE_OTAPC_FUNS
 
+
+//DOM-IGNORE-BEGIN
+#ifdef __cplusplus
+}
+#endif
+//DOM-IGNORE-END
 
 #endif
 

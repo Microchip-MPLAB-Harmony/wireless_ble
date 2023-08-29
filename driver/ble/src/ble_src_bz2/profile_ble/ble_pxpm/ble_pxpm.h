@@ -74,6 +74,15 @@
 #include "stack_mgr.h"
 #include "ble_gcm/ble_dd.h"
 
+// DOM-IGNORE-BEGIN
+#ifdef __cplusplus  // Provide C++ Compatibility
+
+extern "C" {
+
+#endif
+// DOM-IGNORE-END
+
+
 // *****************************************************************************
 // *****************************************************************************
 // Section: Macros
@@ -81,8 +90,30 @@
 // *****************************************************************************
 /**@addtogroup BLE_PXPM_DEFINES Defines
  * @{ */
+/**@defgroup BLE_PXPM_DESC_MAX_NUM   Max descriptor number
+ * @brief The definition of the max number of descriptor.
+ * @{ */
+#define BLE_PXPM_DESC_MAX_NUM               (2)         /**< Maximum number of descriptor.*/
+/** @} */
 
+
+/**@defgroup BLE_PXPM_SVC_UUID   UUID of service in Proximity profile
+ * @brief The definition of UUID of services are used in Proximity profile.
+ * @{ */
+#define BLE_PXPM_UUID_IMMEDIATE_ALERT_SVC    0x1802     /**< Immediate Alert Service UUID. */
+#define BLE_PXPM_UUID_LINKLOSS_SVC           0x1803     /**< Link Loss Service UUID. */
+#define BLE_PXPM_UUID_TXPOWER_SVC            0x1804     /**< Tx Power Service UUID. */
+/** @} */
+
+
+/**@defgroup BLE_PXPM_UUID    UUID of characteristic in Proximity profile
+ * @brief The definition of UUID of characteristics are used in Proximity profile.
+ * @{ */
+#define BLE_PXPM_UUID_ALERT_LEVEL            0x2A06     /**< Alert Level UUID. */
+#define BLE_PXPM_UUID_TXPOWER_LEVEL          0x2A07     /**< Tx Power Level UUID. */
+/** @} */
 /**@} */ //BLE_PXPM_DEFINES
+
 
 /**@addtogroup BLE_PXPM_ENUMS Enumerations
  * @{ */
@@ -120,13 +151,23 @@ typedef enum BLE_PXPM_EventId_T
 typedef struct BLE_PXPM_EvtDiscComplete_T
 {
     uint16_t        connHandle;         /**< The connection handle of discovery completion. */
+    uint16_t        llsStartHandle;     /**< The start handle of LLS. */
+    uint16_t        llsEndHandle;       /**< The end handle of LLS. */
+#ifdef BLE_PXPM_IAS_ENABLE
+    uint16_t        iasStartHandle;     /**< The start handle of IAS. */
+    uint16_t        iasEndHandle;       /**< The end handle of IAS. */
+#endif
+#ifdef BLE_PXPM_TPS_ENABLE
+    uint16_t        tpsStartHandle;     /**< The start handle of TPS. */
+    uint16_t        tpsEndHandle;       /**< The end handle of TPS. */
+#endif
 } BLE_PXPM_EvtDiscComplete_T;
 
 
 /**@brief Data structure for @ref BLE_PXPM_EVT_LLS_ALERT_LEVEL_WRITE_RSP_IND event. */
 typedef struct BLE_PXPM_EvtLlsAlertLvWriteRspInd_T
 {
-    uint16_t        connHandle;         /**< Connection Handle */
+    uint16_t        connHandle;         /**< Connection Handle. */
     uint16_t        errCode;            /**< The error code of the writing alert level response. See @ref ATT_ERROR_CODES.*/
 } BLE_PXPM_EvtLlsAlertLvWriteRspInd_T;
 
@@ -134,34 +175,59 @@ typedef struct BLE_PXPM_EvtLlsAlertLvWriteRspInd_T
 /**@brief Data structure for @ref BLE_PXPM_EVT_TPS_TX_POWER_LEVEL_IND event. */
 typedef struct BLE_PXPM_EvtTpsTxPwrLvInd_T
 {
-    uint16_t        connHandle;         /**< Connection handle */
-    int8_t          txPowerLevel;       /**< Tx power level */
+    uint16_t        connHandle;         /**< Connection handle. */
+    int8_t          txPowerLevel;       /**< Tx power level. */
 } BLE_PXPM_EvtTpsTxPwrLvInd_T;
 
 
 /**@brief Data structure for @ref BLE_PXPM_EVT_LLS_ALERT_LEVEL_IND event. */
 typedef struct BLE_PXPM_EvtLlsAlertLvInd_T
 {
-    uint16_t                connHandle;         /**< Connection handle */
-    BLE_PXPM_AlertLevel_T   alertLevel;         /**< Alert level*/
+    uint16_t                connHandle; /**< Connection handle. */
+    BLE_PXPM_AlertLevel_T   alertLevel; /**< Alert level.*/
 } BLE_PXPM_EvtLlsAlertLvInd_T;
+
+
+/**@brief Characteristic list. */
+typedef struct BLE_PXPM_CharList_T
+{
+    uint16_t        attrHandle;         /**< Attribute handle.*/
+    uint8_t         property;           /**< Property.*/
+    uint16_t        charHandle;         /**< Characteristic handle.*/
+} BLE_PXPM_CharList_T;
+
+
+/**@brief Descriptor information. */
+typedef struct BLE_PXPM_DescInfo_T
+{
+    uint16_t        attrHandle;         /**< Attribute handle of the descriptor.*/
+    uint16_t        uuid;               /**< UUID of the descriptor.*/
+} BLE_PXPM_DescInfo_T;
+
+
+/**@brief Descriptor list. */
+typedef struct BLE_PXPM_DescList_T
+{
+    uint8_t             num;                             /**< Total number of the descriptor.*/
+    BLE_PXPM_DescInfo_T descInfo[BLE_PXPM_DESC_MAX_NUM]; /**< Discovered informations.*/
+} BLE_PXPM_DescList_T;
 
 
 /**@brief Union of BLE PXP Monitor callback event data types. */
 typedef union
 {
-    BLE_PXPM_EvtDiscComplete_T          evtDiscComplete;                /**< Handle @ref BLE_PXPM_EVT_DISC_COMPLETE_IND */
-    BLE_PXPM_EvtLlsAlertLvWriteRspInd_T evtLlsAlertLvWriteRspInd;       /**< Handle @ref BLE_PXPM_EVT_LLS_ALERT_LEVEL_WRITE_RSP_IND */
-    BLE_PXPM_EvtLlsAlertLvInd_T         evtLlsAlertLvInd;               /**< Handle @ref BLE_PXPM_EVT_LLS_ALERT_LEVEL_IND */
-    BLE_PXPM_EvtTpsTxPwrLvInd_T         evtTpsTxPwrLvInd;               /**< Handle @ref BLE_PXPM_EVT_TPS_TX_POWER_LEVEL_IND */
+    BLE_PXPM_EvtDiscComplete_T          evtDiscComplete;            /**< Handle @ref BLE_PXPM_EVT_DISC_COMPLETE_IND. */
+    BLE_PXPM_EvtLlsAlertLvWriteRspInd_T evtLlsAlertLvWriteRspInd;   /**< Handle @ref BLE_PXPM_EVT_LLS_ALERT_LEVEL_WRITE_RSP_IND. */
+    BLE_PXPM_EvtLlsAlertLvInd_T         evtLlsAlertLvInd;           /**< Handle @ref BLE_PXPM_EVT_LLS_ALERT_LEVEL_IND. */
+    BLE_PXPM_EvtTpsTxPwrLvInd_T         evtTpsTxPwrLvInd;           /**< Handle @ref BLE_PXPM_EVT_TPS_TX_POWER_LEVEL_IND. */
 } BLE_PXPM_EventField_T;
 
 
 /**@brief BLE PXP Monitor callback event. */
 typedef struct  BLE_PXPM_Event_T
 {
-    BLE_PXPM_EventId_T                  eventId;            /**< Event ID. See @ref BLE_PXPM_EventId_T.  */
-    BLE_PXPM_EventField_T               eventField;         /**< Event field */
+    BLE_PXPM_EventId_T                  eventId;                    /**< Event ID. See @ref BLE_PXPM_EventId_T.  */
+    BLE_PXPM_EventField_T               eventField;                 /**< Event field. */
 } BLE_PXPM_Event_T;
 
 /**@brief BLE PXP Monitor callback type. This callback function sends BLE PXP Monitor events to the application. */
@@ -238,9 +304,38 @@ uint16_t BLE_PXPM_ReadLlsAlertLevel(uint16_t connHandle);
  */
 uint16_t BLE_PXPM_ReadTpsTxPowerLevel(uint16_t connHandle);
 
+/**
+ * @brief Get information about characteristic UUID of the Proximity service that has been discovered.
+ *       This API could be called only after @ref BLE_PXPM_EVT_DISC_COMPLETE_IND event is issued.
+ *
+ * @param[in]  connHandle           Handle of the connection.
+ * @param[in]  svcUuid              Service uuid. See @ref BLE_PXPM_SVC_UUID.
+ * @param[in]  charUuid             Characteristic uuid. See @ref BLE_PXPM_UUID.
+ * @param[out] p_charList           Characteristic information of discovered service. When the characteristic UUID is not found then characteristic list will be 0. 
+ *
+ * @retval MBA_RES_SUCCESS          Successfully get the characteristic list.
+ * @retval MBA_RES_INVALID_PARA     Invalid parameters.
+ *                                  - Connection handle is not valid.
+ *                                  - Service Uuid is not valid.
+ *                                  - Characteristic Uuid is not valid.
+ */
+uint16_t BLE_PXPM_GetCharList(uint16_t connHandle, uint16_t svcUuid, uint16_t charUuid, BLE_PXPM_CharList_T *p_charList);
+
+/**
+ * @brief Get information about descriptor list of the Proximity Service that has been discovered.
+ *       This API could be called only after @ref BLE_PXPM_EVT_DISC_COMPLETE_IND event is issued.
+ *
+ * @param[in]  connHandle           Handle of the connection.
+ * @param[out] p_descList           Descriptor information of the discovered service. When the descriptor is not found then descriptor list will be 0. 
+ *
+ * @retval MBA_RES_SUCCESS          Successfully get the descriptor list.
+ * @retval MBA_RES_INVALID_PARA     Invalid parameters. Connection handle is not valid.
+ */
+
+uint16_t BLE_PXPM_GetDescList(uint16_t connHandle, BLE_PXPM_DescList_T *p_descList);
 
 /**@brief Handle BLE_Stack related events.
- *       This API should be called in the application while caching BLE_Stack events
+ *       This API should be called in the application while caching BLE_Stack events.
  *
  * @param[in] p_stackEvent   Pointer to BLE_Stack events buffer.
  *
@@ -249,7 +344,7 @@ void BLE_PXPM_BleEventHandler(STACK_Event_T *p_stackEvent);
 
 
 /**@brief Handle BLE DD (Database Discovery middleware) events.
- *       This API should be called in the application while caching BLE DD events
+ *       This API should be called in the application while caching BLE DD events.
  *
  * @param[in] p_event        Pointer to BLE DD events buffer.
  *
@@ -259,6 +354,11 @@ void BLE_PXPM_BleDdEventHandler(BLE_DD_Event_T *p_event);
 
 /**@} */ //BLE_PXPM_FUNS
 
+//DOM-IGNORE-BEGIN
+#ifdef __cplusplus
+}
+#endif
+//DOM-IGNORE-END
 
 #endif
 

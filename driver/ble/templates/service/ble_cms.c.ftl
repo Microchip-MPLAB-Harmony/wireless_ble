@@ -93,7 +93,7 @@
 // *****************************************************************************
 /* Little Endian. */
 <#if CMS_SVC_UUID_VALUE?length gt 0>
-#define UUID_${CMS_SVC_NAME_VALUE?upper_case}_PRIMARY_SVC_LE         ${CMS_SVC_UUID_VALUE}
+#define UUID_${CMS_SVC_NAME_VALUE?upper_case}_PRIMARY_SVC_LE         ${CMS_SVC_UUID_VALUE}    /* Service UUID */
 <#else>
 #define UUID_${CMS_SVC_NAME_VALUE?upper_case}_PRIMARY_SVC_LE         !!! Service UUID of Service ${CMS_SVC_NO} is invalid !!!
 </#if>
@@ -101,8 +101,8 @@
 <#list 0..(CMS_SVC_CHAR_COUNT_ID?eval - 1) as i>
 <#assign CMS_CHAR_UUID_ID = "CMS_STR_SVC_" + "${CMS_SVC_NO}" + "_CHAR_" + i + "_UUID_C">
 <#assign CMS_CHAR_UUID_VALUE = CMS_CHAR_UUID_ID?eval>
-<#if CMS_SVC_UUID_VALUE?length gt 0>
-#define UUID_${CMS_SVC_NAME_VALUE?upper_case}_CHARACTERISTIC_${i}_LE         ${CMS_CHAR_UUID_VALUE}
+<#if CMS_CHAR_UUID_VALUE?length gt 0>
+#define UUID_${CMS_SVC_NAME_VALUE?upper_case}_CHARACTERISTIC_${i}_LE         ${CMS_CHAR_UUID_VALUE}    /* Characteristic ${i} UUID */
 <#else>
 #define UUID_${CMS_SVC_NAME_VALUE?upper_case}_CHARACTERISTIC_${i}_LE         !!! Characteristic ${i} UUID of Service ${CMS_SVC_NO} is invalid !!!
 </#if>
@@ -153,6 +153,20 @@ ${propSeg?join("|", "not configured")}<#rt>
 </#macro>
 <#t>
 <#t>
+<#macro cmsGenPropComment charNo>
+<#local commentSeg = []>
+<#local cms_props  = ["_PROP_READ", "_PROP_WRITE_CMD", "_PROP_WRITE_REQ", "_PROP_NOTIFY", "_PROP_INDICATE"] >
+<#local cms_prop_labels  = ["Read", "Write without response", "Write with response", "Notify", "Indicate"] >
+<#list 0..4 as i>
+    <#local CMS_CHAR_PROP_ID = "CMS_BOOL_SVC_" + "${CMS_SVC_NO}" + "_CHAR_" + charNo + cms_props[i]>
+    <#if CMS_CHAR_PROP_ID?eval == true>
+        <#local commentSeg += ["/* " + cms_prop_labels[i] + " */"]>
+    </#if>
+</#list>
+${commentSeg?join(" ")}<#rt>
+</#macro>
+<#t>
+<#t>
 <#macro cmsGenCharValLen charNo>
 <#if CMS_CHAR_PERM_WRITE[charNo] == true>
     <#local cms_char_value_max_len_id = "CMS_INT_SVC_" + "${CMS_SVC_NO}" + "_CHAR_" + charNo + "_LEN">
@@ -164,6 +178,12 @@ ${propSeg?join("|", "not configured")}<#rt>
 <#if CMS_CHAR_PERM_READ[charNo] == true>
     <#local cms_char_value_id = "CMS_STR_SVC_" + "${CMS_SVC_NO}" + "_CHAR_" + charNo + "_VALUE_C">
     ${cms_char_value_id?eval}<#t>
+    <#if CMS_CHAR_PERM_WRITE[charNo] == true>
+        <#local cms_char_value_max_len_id = "CMS_INT_SVC_" + "${CMS_SVC_NO}" + "_CHAR_" + charNo + "_LEN">
+        <#if  cms_char_value_id?eval?length gt cms_char_value_max_len_id?eval * 4 + (cms_char_value_max_len_id?eval - 1) * 2>
+           <#lt> !!! The length of Default Value exceeds Maximum Length !!! <#rt>
+        </#if>
+    </#if>
 <#elseif CMS_CHAR_PERM_WRITE[charNo] == false>
     0x00<#t>
 </#if>
@@ -172,12 +192,12 @@ ${propSeg?join("|", "not configured")}<#rt>
 <#list 0..(CMS_SVC_CHAR_COUNT_ID?eval - 1) as i>
 /* ${CMS_SVC_NAME_VALUE?capitalize} Characteristic ${i} Characteristic */
 <@cmsChkProp charNo = i/>
-static const uint8_t s_${CMS_SVC_NAME_VALUE?lower_case}Char${i}[] = {<@cmsGenProp charNo = i/>, UINT16_TO_BYTES(${CMS_SVC_NAME_VALUE?upper_case}_HDL_CHARVAL_${i}), UUID_${CMS_SVC_NAME_VALUE?upper_case}_CHARACTERISTIC_${i}_LE};
+static const uint8_t s_${CMS_SVC_NAME_VALUE?lower_case}Char${i}[] = {<@cmsGenProp charNo = i/>, UINT16_TO_BYTES(${CMS_SVC_NAME_VALUE?upper_case}_HDL_CHARVAL_${i}), UUID_${CMS_SVC_NAME_VALUE?upper_case}_CHARACTERISTIC_${i}_LE};    <@cmsGenPropComment charNo = i/>
 static const uint16_t s_${CMS_SVC_NAME_VALUE?lower_case}Char${i}Len = sizeof(s_${CMS_SVC_NAME_VALUE?lower_case}Char${i});
 
 /* ${CMS_SVC_NAME_VALUE?capitalize} Characteristic ${i} Characteristic Value */
 static const uint8_t s_${CMS_SVC_NAME_VALUE?lower_case}UuidChar${i}[] = {UUID_${CMS_SVC_NAME_VALUE?upper_case}_CHARACTERISTIC_${i}_LE};
-static uint8_t s_${CMS_SVC_NAME_VALUE?lower_case}Char${i}Val[<@cmsGenCharValLen charNo = i/>] = {<@cmsGenCharVal charNo = i/>};
+static uint8_t s_${CMS_SVC_NAME_VALUE?lower_case}Char${i}Val[<@cmsGenCharValLen charNo = i/>] = {<@cmsGenCharVal charNo = i/>};    /* Default Value */
 static uint16_t s_${CMS_SVC_NAME_VALUE?lower_case}Char${i}ValLen = sizeof(s_${CMS_SVC_NAME_VALUE?lower_case}Char${i}Val);
 
 <#if CMS_CHAR_PERM_CCC[i] == true>
@@ -211,6 +231,28 @@ static const uint16_t s_${CMS_SVC_NAME_VALUE?lower_case}CccChar${i}Len = sizeof(
     <#local setting += ["SETTING_UUID_16"]>
 </#if>
 ${setting?join("|", "0")}<#rt>
+</#macro>
+<#t>
+<#macro cmsGenCharSettingComment charNo>
+<#local settingComment = []>
+<#if CMS_CHAR_PERM_READ[charNo] == true>
+    <#local cms_id = "CMS_BOOL_SVC_" + "${CMS_SVC_NO}" + "_CHAR_" + charNo + "_SETTING_READ">
+    <#if cms_id?eval == true>
+        <#local settingComment += ["/* Manual Read Response */"]>
+    </#if>
+</#if>
+<#if CMS_CHAR_PERM_WRITE[charNo] == true>
+    <#local cms_id = "CMS_BOOL_SVC_" + "${CMS_SVC_NO}" + "_CHAR_" + charNo + "_SETTING_WRITE">
+    <#if cms_id?eval == true>
+        <#local settingComment += ["/* Manual Write Response */"]>
+    </#if>
+    <#local cms_id = "CMS_BOOL_SVC_" + "${CMS_SVC_NO}" + "_CHAR_" + charNo + "_SETTING_VAR">
+    <#if cms_id?eval == true>
+        <#local settingComment += ["/* Variable Length */"]>
+    </#if>
+</#if>
+<#-- ignore the comment for SETTING_UUID_16 because there is no there is no its label on MCC -->
+${settingComment?join(" ")}<#rt>
 </#macro>
 <#t>
 <#macro cmsGenCharPerm charNo>
@@ -248,6 +290,41 @@ ${setting?join("|", "0")}<#rt>
 ${perm?join("|", "0")}<#rt>
 </#macro>
 <#t>
+<#macro cmsGenCharPermComment charNo>
+<#local permComment = []>
+<#if CMS_CHAR_PERM_READ[charNo] == true>
+    <#-- ignore the comment for PERMISSION_READ because there is no its label on MCC -->
+    <#local cms_id = "CMS_BOOL_SVC_" + "${CMS_SVC_NO}" + "_CHAR_" + charNo + "_PERMS_READ_AUTH">
+    <#if cms_id?eval == true>
+        <#local permComment += ["/* Read Authenticated */"]>
+    </#if>
+    <#local cms_id = "CMS_BOOL_SVC_" + "${CMS_SVC_NO}" + "_CHAR_" + charNo + "_PERMS_READ_AUTH_SC">
+    <#if cms_id?eval == true>
+        <#local permComment += ["/* Read Authenticated Secure Connections */"]>
+    </#if>
+    <#local cms_id = "CMS_BOOL_SVC_" + "${CMS_SVC_NO}" + "_CHAR_" + charNo + "_PERMS_READ_ENC">
+    <#if cms_id?eval == true>
+        <#local permComment += ["/* Read Encryption */"]>
+    </#if>
+</#if>
+<#if CMS_CHAR_PERM_WRITE[charNo] == true>
+    <#-- ignore the comment for PERMISSION_WRITE because there is no its label on MCC -->
+    <#local cms_id = "CMS_BOOL_SVC_" + "${CMS_SVC_NO}" + "_CHAR_" + charNo + "_PERMS_WRITE_AUTH">
+    <#if cms_id?eval == true>
+        <#local permComment += ["/* Write Authenticated */"]>
+    </#if>
+    <#local cms_id = "CMS_BOOL_SVC_" + "${CMS_SVC_NO}" + "_CHAR_" + charNo + "_PERMS_WRITE_AUTH_SC">
+    <#if cms_id?eval == true>
+        <#local permComment += ["/* Write Authenticated Secure Connections */"]>
+    </#if>
+    <#local cms_id = "CMS_BOOL_SVC_" + "${CMS_SVC_NO}" + "_CHAR_" + charNo + "_PERMS_WRITE_ENC">
+    <#if cms_id?eval == true>
+        <#local permComment += ["/* Write Encryption */"]>
+    </#if>
+</#if>
+${permComment?join(" ")}<#rt>
+</#macro>
+<#t>
 <#macro cmsGenCccdSetting charNo>
 <#local setting = []>
 <#local cms_id = "CMS_BOOL_SVC_" + "${CMS_SVC_NO}" + "_CHAR_" + charNo + "_CCCD_READ">
@@ -259,6 +336,19 @@ ${perm?join("|", "0")}<#rt>
     <#local setting += ["SETTING_MANUAL_WRITE_RSP"]>
 </#if>
 ${setting?join("|", "", "|")}<#rt>
+</#macro>
+<#t>
+<#macro cmsGenCccdSettingComment charNo>
+<#local settingComment = []>
+<#local cms_id = "CMS_BOOL_SVC_" + "${CMS_SVC_NO}" + "_CHAR_" + charNo + "_CCCD_READ">
+<#if cms_id?eval == true>
+    <#local settingComment += ["/* Manual Read Response */"]>
+</#if>
+<#local cms_id = "CMS_BOOL_SVC_" + "${CMS_SVC_NO}" + "_CHAR_" + charNo + "_CCCD_WRITE">
+<#if cms_id?eval == true>
+    <#local settingComment += ["/* Manual Write Response */"]>
+</#if>
+${settingComment?join(" ")}<#rt>
 </#macro>
 <#t>
 <#macro cmsGenCccdPerm charNo>
@@ -292,6 +382,37 @@ ${setting?join("|", "", "|")}<#rt>
 ${perm?join("|")}<#rt>
 </#macro>
 <#t>
+<#macro cmsGenCccdPermComment charNo>
+<#local permComment = []>
+<#-- ignore the comment for PERMISSION_READ because there is no its label on MCC -->
+<#local cms_id = "CMS_BOOL_SVC_" + "${CMS_SVC_NO}" + "_CHAR_" + charNo + "_CCCD_READ_AUTH">
+<#if cms_id?eval == true>
+    <#local permComment += ["/* Read Authenticated */"]>
+</#if>
+<#local cms_id = "CMS_BOOL_SVC_" + "${CMS_SVC_NO}" + "_CHAR_" + charNo + "_CCCD_READ_AUTH_SC">
+<#if cms_id?eval == true>
+    <#local permComment += ["/* Read Authenticated Secure Connections */"]>
+</#if>
+<#local cms_id = "CMS_BOOL_SVC_" + "${CMS_SVC_NO}" + "_CHAR_" + charNo + "_CCCD_READ_ENC">
+<#if cms_id?eval == true>
+    <#local permComment += ["/* Read Encryption */"]>
+</#if>
+<#-- ignore the comment for PERMISSION_WRITE because there is no its label on MCC -->
+<#local cms_id = "CMS_BOOL_SVC_" + "${CMS_SVC_NO}" + "_CHAR_" + charNo + "_CCCD_WRITE_AUTH">
+<#if cms_id?eval == true>
+    <#local permComment += ["/* Write Authenticated */"]>
+</#if>
+<#local cms_id = "CMS_BOOL_SVC_" + "${CMS_SVC_NO}" + "_CHAR_" + charNo + "_CCCD_WRITE_AUTH_SC">
+<#if cms_id?eval == true>
+    <#local permComment += ["/* Write Authenticated Secure Connections */"]>
+</#if>
+<#local cms_id = "CMS_BOOL_SVC_" + "${CMS_SVC_NO}" + "_CHAR_" + charNo + "_CCCD_WRITE_ENC">
+<#if cms_id?eval == true>
+    <#local permComment += ["/* Write Encryption */"]>
+</#if>
+${permComment?join(" ")}<#rt>
+</#macro>
+<#t>
 /* Attribute list for ${CMS_SVC_NAME_VALUE?capitalize} service */
 static GATTS_Attribute_T s_${CMS_SVC_NAME_VALUE?lower_case}List[] = {
     /* Service Declaration */
@@ -319,8 +440,8 @@ static GATTS_Attribute_T s_${CMS_SVC_NAME_VALUE?lower_case}List[] = {
         (uint8_t *) s_${CMS_SVC_NAME_VALUE?lower_case}Char${i}Val,
         (uint16_t *) & s_${CMS_SVC_NAME_VALUE?lower_case}Char${i}ValLen,
         sizeof(s_${CMS_SVC_NAME_VALUE?lower_case}Char${i}Val),
-        <@cmsGenCharSetting charNo = i/>,
-        <@cmsGenCharPerm charNo = i/><#nt>
+        <@cmsGenCharSetting charNo = i/>,    <@cmsGenCharSettingComment charNo = i/>
+        <@cmsGenCharPerm charNo = i/>    <@cmsGenCharPermComment charNo = i/><#nt>
     },
     <#if CMS_CHAR_PERM_CCC[i] == true>
     /* Client Characteristic Configuration Descriptor */
@@ -329,8 +450,8 @@ static GATTS_Attribute_T s_${CMS_SVC_NAME_VALUE?lower_case}List[] = {
         (uint8_t *) s_${CMS_SVC_NAME_VALUE?lower_case}CccChar${i},
         (uint16_t *) & s_${CMS_SVC_NAME_VALUE?lower_case}CccChar${i}Len,
         sizeof (s_${CMS_SVC_NAME_VALUE?lower_case}CccChar${i}),
-        <@cmsGenCccdSetting charNo = i/>SETTING_CCCD,
-        <@cmsGenCccdPerm charNo = i/><#nt>
+        <@cmsGenCccdSetting charNo = i/>SETTING_CCCD,    <@cmsGenCccdSettingComment charNo = i/>
+        <@cmsGenCccdPerm charNo = i/>    <@cmsGenCccdPermComment charNo = i/><#nt>
     },
     </#if>
     </#list>
@@ -380,7 +501,7 @@ static GATTS_Service_T s_${CMS_SVC_NAME_VALUE?lower_case}Svc =
 // *****************************************************************************
 // *****************************************************************************
 
-uint16_t BLE_${CMS_SVC_NAME_VALUE?upper_case}_Add()
+uint16_t BLE_${CMS_SVC_NAME_VALUE?upper_case}_Add(void)
 {
     return GATTS_AddService(&s_${CMS_SVC_NAME_VALUE?lower_case}Svc, (${CMS_SVC_NAME_VALUE?upper_case}_END_HDL - ${CMS_SVC_NAME_VALUE?upper_case}_START_HDL + 1));
 }

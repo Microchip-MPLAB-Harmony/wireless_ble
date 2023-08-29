@@ -48,7 +48,7 @@
 #include "mba_error_defs.h"
 #include "gatt.h"
 #include "ble_util/byte_stream.h"
-#include "ble_ias/ble_ias.h"
+#include "ble_ias.h"
 
 // *****************************************************************************
 // *****************************************************************************
@@ -63,8 +63,8 @@
 // *****************************************************************************
 // *****************************************************************************
 
-const uint8_t s_svcUuidIas[ATT_UUID_LENGTH_2] =                 {UINT16_TO_BYTES(UUID_IMMEDIATE_ALERT_SERVICE)};
-const uint8_t s_chUuidAlertLevel[ATT_UUID_LENGTH_2] =             {UINT16_TO_BYTES(UUID_ALERT_LEVEL)};
+static const uint8_t s_svcUuidIas[ATT_UUID_LENGTH_2] =                 {UINT16_TO_BYTES(UUID_IMMEDIATE_ALERT_SERVICE)};
+static const uint8_t s_chUuidAlertLevel[ATT_UUID_LENGTH_2] =             {UINT16_TO_BYTES(UUID_ALERT_LEVEL)};
 
 /* Immediate Alert Service Declaration */
 static uint16_t s_svcUuidIasLen = sizeof(s_svcUuidIas);
@@ -126,7 +126,7 @@ static GATTS_Service_T s_svcIas =
 // *****************************************************************************
 // *****************************************************************************
 
-uint16_t BLE_IAS_Add()
+uint16_t BLE_IAS_Add(void)
 {
     return GATTS_AddService(&s_svcIas, (IAS_END_HDL - IAS_START_HDL + 1));
 }

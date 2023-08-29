@@ -38,10 +38,12 @@
     The "BLE_SCM_Init" function shall be called in the "APP_Initialize" function to 
     initialize the this modules in the system.
  *******************************************************************************/
-
+/** @addtogroup BLE_MW BLE Middleware
+ *  @{ */
 
 /**
- * @addtogroup BLE_SCM
+ * @defgroup BLE_SCM BLE Service Change Manager (BLE_SCM)
+ * @brief Handling GATT services change of remote GATT Server
  * @{
  * @brief Header file for the BLE Service Change Manager (ble_scm) module.
  * @note Definitions and prototypes for the BLE Service Change Manager application programming interface.
@@ -60,6 +62,15 @@
 #include "stack_mgr.h"
 #include "ble_dd.h"
 
+// DOM-IGNORE-BEGIN
+#ifdef __cplusplus  // Provide C++ Compatibility
+
+extern "C" {
+
+#endif
+// DOM-IGNORE-END
+
+
 // *****************************************************************************
 // *****************************************************************************
 // Section: Macros
@@ -70,9 +81,9 @@
  * @{ */
  
 /**@defgroup BLE_SCM_DISC_NUM Number of discovering characteristics of GATT service
- * @brief The definition of number of characteristics
+ * @brief The definition of number of characteristics.
  * @{ */
-#define BLE_SCM_GATT_DISC_CHAR_NUM                  0x03    /**< Number of characteristic to discovery of GATT Service. */
+#define BLE_SCM_GATT_DISC_CHAR_NUM                  (0x03U)    /**< Number of characteristic to discovery of GATT Service. */
 /** @} */
 
 /**@} */ //BLE_SCM_DEFINES
@@ -84,10 +95,10 @@
 /**@brief The definition of BLE_SCM module event ID. */
 typedef enum BLE_SCM_EventId_T
 {
-    BLE_SCM_EVT_SVC_CHANGE,                 /**< Receive service change indication from remote. @ref BLE_SCM_EvtServiceChange_T */
-    BLE_SCM_EVT_BONDED_CHAR_INFO,           /**< Characteristic handles information of GATT Service of remote bonded device. Application needs to take care the bonded information. e.g., storing information to persistent storage. @ref BLE_SCM_EvtBondedCharInfo_T. */
-    BLE_SCM_EVT_CONFIGURED,                 /**< Generated when GATT client configure procedures are done. @ref BLE_SCM_EvtConfigured_T. */
-    BLE_SCM_EVT_DISC_COMPLETE,              /**< Generated when discovery of GATT service of remote connection is completed. @ref BLE_SCM_EvtDiscComplete_T. */
+    BLE_SCM_EVT_SVC_CHANGE,                 /**< Receive service change indication from remote. See @ref BLE_SCM_EvtServiceChange_T for event details. */
+    BLE_SCM_EVT_BONDED_CHAR_INFO,           /**< Characteristic handles information of GATT Service of remote bonded device. Application needs to take care the bonded information. e.g., storing information to persistent storage. See @ref BLE_SCM_EvtBondedCharInfo_T for event details. */
+    BLE_SCM_EVT_CONFIGURED,                 /**< Generated when GATT client configure procedures are done. See @ref BLE_SCM_EvtConfigured_T for event details. */
+    BLE_SCM_EVT_DISC_COMPLETE,              /**< Generated when discovery of GATT service of remote connection is completed. See @ref BLE_SCM_EvtDiscComplete_T for event details. */
     BLE_SCM_EVT_END
 }BLE_SCM_EventId_T;
 
@@ -162,27 +173,29 @@ typedef void (*BLE_SCM_EventCb_T)(BLE_SCM_Event_T *p_event);
  * @note This module is required only when GATT client is supported and service change status needs to be taken care at remote.
  * @note This module required BLE_DD supported.
  *
+ * @retval MBA_RES_SUCCESS      Successfully initialize BLE SCM module.
+ * @retval MBA_RES_FAIL         Fail initialize BLE SCM module.
 */
-void BLE_SCM_Init();
+uint16_t BLE_SCM_Init(void);
 
 /**@brief Register BLE_SCM callback.
- * @note This API should be called in the application initialization routine
+ * @note This API should be called in the application initialization routine.
  *
  * @param[in] eventCb           Client callback function.
  *
 */
 void BLE_SCM_EventRegister(BLE_SCM_EventCb_T eventCb);
 
-/**@brief Handle BLE events
- * @note  This function should be called for every BLE event
+/**@brief Handle BLE events.
+ * @note  This function should be called for every BLE event.
  *
  * @param[in] p_stackEvent      Pointer to @ref STACK_Event_T structure buffer.
  *
 */
 void BLE_SCM_BleEventHandler(STACK_Event_T *p_stackEvent);
 
-/**@brief Handle BLE_DD events
- * @note  This function should be called for every BLE_DD event
+/**@brief Handle BLE_DD events.
+ * @note  This function should be called for every BLE_DD event.
  *
  * @param[in] p_event           Pointer to @ref BLE_DD_Event_T structure buffer.
  *
@@ -200,7 +213,15 @@ void BLE_SCM_SetBondedCharInfo(uint16_t connHandle, BLE_DD_CharInfo_T *p_charInf
 
 /**@} */ //BLE_SCM_FUNS
 
+//DOM-IGNORE-BEGIN
+#ifdef __cplusplus
+}
 #endif
+//DOM-IGNORE-END
+
+#endif
+
+/** @} */
 
 /**
   @}

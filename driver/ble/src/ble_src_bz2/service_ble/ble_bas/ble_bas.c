@@ -48,7 +48,7 @@
 #include "mba_error_defs.h"
 #include "gatt.h"
 #include "ble_util/byte_stream.h"
-#include "ble_bas/ble_bas.h"
+#include "ble_bas.h"
 
 // *****************************************************************************
 // *****************************************************************************
@@ -56,8 +56,8 @@
 // *****************************************************************************
 // *****************************************************************************
 
-#define BLE_BAS_BATTERY_LEVEL_0         0x00                    /**< Percentage 0. */
-#define BLE_BAS_BATTERY_LEVEL_100       0x64                    /**< Percentage 100. */
+#define BLE_BAS_BATTERY_LEVEL_0         0x00U                    /**< Percentage 0. */
+#define BLE_BAS_BATTERY_LEVEL_100       0x64U                    /**< Percentage 100. */
 
 // *****************************************************************************
 // *****************************************************************************
@@ -65,8 +65,8 @@
 // *****************************************************************************
 // *****************************************************************************
 
-const uint8_t s_svcUuidBas[ATT_UUID_LENGTH_2] =                 {UINT16_TO_BYTES(UUID_BATTERY_SERVICE)};
-const uint8_t s_chUuidBatLevel[ATT_UUID_LENGTH_2] =             {UINT16_TO_BYTES(UUID_BATTERY_LEVEL)};
+static const uint8_t s_svcUuidBas[ATT_UUID_LENGTH_2] =                 {UINT16_TO_BYTES(UUID_BATTERY_SERVICE)};
+static const uint8_t s_chUuidBatLevel[ATT_UUID_LENGTH_2] =             {UINT16_TO_BYTES(UUID_BATTERY_LEVEL)};
 
 /* Battery Service Declaration */
 static uint16_t s_svcUuidBasLen = sizeof(s_svcUuidBas);
@@ -96,7 +96,7 @@ static GATTS_Attribute_T s_basList[] = {
     {
         (uint8_t *) g_gattUuidPrimSvc,
         (uint8_t *) s_svcUuidBas,
-        (uint16_t *) & s_svcUuidBasLen,
+        (uint16_t *) &s_svcUuidBasLen,
         sizeof (s_svcUuidBas),
         0,
         PERMISSION_READ
@@ -105,7 +105,7 @@ static GATTS_Attribute_T s_basList[] = {
     {
         (uint8_t *) g_gattUuidChar,
         (uint8_t *) s_charBatLevel,
-        (uint16_t *) & s_charBatLevelLen,
+        (uint16_t *) &s_charBatLevelLen,
         sizeof (s_charBatLevel),
         0,
         PERMISSION_READ
@@ -114,7 +114,7 @@ static GATTS_Attribute_T s_basList[] = {
     {
         (uint8_t *) s_chUuidBatLevel,
         (uint8_t *) s_batLevelVal,
-        (uint16_t *) & s_batLevelValLen,
+        (uint16_t *) &s_batLevelValLen,
         sizeof(s_batLevelVal),
         0,
         PERMISSION_READ
@@ -124,7 +124,7 @@ static GATTS_Attribute_T s_basList[] = {
     {
         (uint8_t *) g_descUuidCcc,
         (uint8_t *) s_descCccBatLevel,
-        (uint16_t *) & s_descCccBatLevelLen,
+        (uint16_t *) &s_descCccBatLevelLen,
         sizeof (s_descCccBatLevel),
         (SETTING_CCCD),
         (PERMISSION_READ | PERMISSION_WRITE)
@@ -164,7 +164,7 @@ static GATTS_Service_T s_svcBas =
 // *****************************************************************************
 // *****************************************************************************
 
-uint16_t BLE_BAS_Add()
+uint16_t BLE_BAS_Add(void)
 {
     return GATTS_AddService(&s_svcBas, (BAS_END_HDL - BAS_START_HDL + 1));
 }

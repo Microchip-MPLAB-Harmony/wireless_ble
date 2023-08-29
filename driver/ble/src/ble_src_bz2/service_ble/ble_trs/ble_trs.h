@@ -47,6 +47,15 @@
 #ifndef BLE_TRS_H
 #define BLE_TRS_H
 
+// DOM-IGNORE-BEGIN
+#ifdef __cplusplus  // Provide C++ Compatibility
+
+extern "C" {
+
+#endif
+// DOM-IGNORE-END
+
+
 // *****************************************************************************
 // *****************************************************************************
 // Section: Macros
@@ -119,7 +128,7 @@ typedef struct  BLE_TRS_Uuids_T
  *@return MBA_RES_NO_RESOURCE                Fail to register service.
  *
  */
-uint16_t BLE_TRS_Add();
+uint16_t BLE_TRS_Add(void);
 
 
 /**@brief Add the permission of the characteristic in transparent service.\n
@@ -135,6 +144,11 @@ uint16_t BLE_TRS_Add();
  */
 uint16_t BLE_TRS_PermissionConfig(uint16_t attrHdl, uint8_t permissions);
 
+//DOM-IGNORE-BEGIN
+#ifdef __cplusplus
+}
+#endif
+//DOM-IGNORE-END
 
 #endif
 

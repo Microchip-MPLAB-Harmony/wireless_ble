@@ -48,7 +48,7 @@
 #include "mba_error_defs.h"
 #include "gatt.h"
 #include "ble_util/byte_stream.h"
-#include "ble_hids/ble_hids.h"
+#include "ble_hids.h"
 
 // *****************************************************************************
 // *****************************************************************************
@@ -182,7 +182,6 @@ static const uint8_t s_hidReportMapVal[] = {
     0x05, 0x01,                 // Usage Page (Generic Desktop) */
     0x09, 0x06,                 // Usage (Keyboard) */
     0xA1, 0x01,                 // Collection (Application) */
-    0x85, HID_REPORT_ID_KB,     //   Report Id HID_REPORT_ID_KB (Keyboard) */
     0x75, 0x01,                 //   Report Size (1)
     0x95, 0x08,                 //   Report Count (8)
     0x05, 0x07,                 //   Usage Page (Key Codes)
@@ -350,7 +349,7 @@ static uint8_t s_hidsAttrIndex;
 // Section: Functions
 // *****************************************************************************
 
-uint16_t BLE_HIDS_Add()
+uint16_t BLE_HIDS_Add(void)
 {
     uint16_t result;
 
@@ -407,7 +406,7 @@ uint16_t BLE_HIDS_Add()
     s_hidsList[s_hidsAttrIndex].p_value = (uint8_t *) s_hidReportInputValKB;
     s_hidsList[s_hidsAttrIndex].p_len = (uint16_t *) &s_hidReportInputValKBLen;
     s_hidsList[s_hidsAttrIndex].maxLen = sizeof(s_hidReportInputValKB);
-    s_hidsList[s_hidsAttrIndex].settings = (SETTING_MANUAL_WRITE_RSP|SETTING_MANUAL_READ_RSP|SETTING_VARIABLE_LEN);
+    s_hidsList[s_hidsAttrIndex].settings = (SETTING_MANUAL_READ_RSP|SETTING_VARIABLE_LEN);
     s_hidsList[s_hidsAttrIndex].permissions = (PERMISSION_READ|PERMISSION_WRITE);
     s_hidsAttrIndex++;
 
@@ -633,7 +632,7 @@ uint16_t BLE_HIDS_Add()
     s_hidsList[s_hidsAttrIndex].p_len = (uint16_t *) &s_hidInfoValLen;
     s_hidsList[s_hidsAttrIndex].maxLen = sizeof(s_hidInfoVal);
     s_hidsList[s_hidsAttrIndex].settings = 0;
-    s_hidsList[s_hidsAttrIndex].permissions = PERMISSION_READ;
+    s_hidsList[s_hidsAttrIndex].permissions = PERMISSION_READ | PERMISSION_READ_ENC;
     s_hidsAttrIndex++;
 
     /* HID Control Point */

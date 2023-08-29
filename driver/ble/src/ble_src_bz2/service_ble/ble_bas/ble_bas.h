@@ -47,6 +47,14 @@
 #ifndef BLE_BAS_H
 #define BLE_BAS_H
 
+// DOM-IGNORE-BEGIN
+#ifdef __cplusplus  // Provide C++ Compatibility
+
+extern "C" {
+
+#endif
+// DOM-IGNORE-END
+
 // *****************************************************************************
 // *****************************************************************************
 // Section: Macros
@@ -102,7 +110,7 @@ typedef enum BLE_BAS_AttributeHandle_T
  *@retval MBA_RES_NO_RESOURCE                Fail to register service.
  *
  */
-uint16_t BLE_BAS_Add();
+uint16_t BLE_BAS_Add(void);
 
 /**
  *@brief Set Battery level.
@@ -124,6 +132,12 @@ uint16_t BLE_BAS_SetBatteryLevel(uint8_t batteryLevel);
  *
  */
 uint16_t BLE_BAS_GetBatteryLevel(uint8_t *p_batteryLevel);
+
+//DOM-IGNORE-BEGIN
+#ifdef __cplusplus
+}
+#endif
+//DOM-IGNORE-END
 
 #endif
 

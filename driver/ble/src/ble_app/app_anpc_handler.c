@@ -43,9 +43,7 @@
 // Section: Included Files
 // *****************************************************************************
 // *****************************************************************************
-#include <string.h>
-#include <stdint.h>
-#include "ble_anpc/ble_anpc.h"
+#include "app_anpc_handler.h"
 
 // *****************************************************************************
 // *****************************************************************************
@@ -112,7 +110,7 @@ void APP_AnpcEvtHandler(BLE_ANPC_Event_T *p_event)
         }
         break;
 
-        case BLE_ANPC_EVT_ERR_UNSPECTIFIED_IND:
+        case BLE_ANPC_EVT_ERR_UNSPECIFIED_IND:
         {
             /* TODO: implement your application code.*/
         }

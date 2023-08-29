@@ -35,7 +35,7 @@ profileTrcbpComponent = Module.CreateComponent('PROFILE_TRCBP', 'Transparent Cre
 profileTrcbpComponent.addDependency('BLE_TRCBS_Dependency', 'BLE_TRCBS', 'Transparent Credit Based Service', False, True)
 profileTrcbpComponent.addDependency('BLE_STACK_Dependency', 'BLE_STACK', 'BLE Stack', True, True)
 
-profilePxpComponent = Module.CreateComponent('PROFILE_PXP', 'Promixity Profile', 'Wireless/Drivers/BLE/Profiles', '/driver/ble/config/profiles/pxp.py')
+profilePxpComponent = Module.CreateComponent('PROFILE_PXP', 'Proximity Profile', 'Wireless/Drivers/BLE/Profiles', '/driver/ble/config/profiles/pxp.py')
 profilePxpComponent.addDependency('BLE_STACK_Dependency', 'BLE_STACK', 'BLE Stack', True, True)
 profilePxpComponent.addDependency('BLE_LLS_Dependency', 'BLE_LLS', 'Link Loss Service', False, True)
 profilePxpComponent.addDependency('BLE_IAS_Dependency', 'BLE_IAS', 'Immediate Alert Service', False, True)

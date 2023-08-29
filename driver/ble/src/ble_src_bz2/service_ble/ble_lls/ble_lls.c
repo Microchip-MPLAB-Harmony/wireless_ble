@@ -48,7 +48,7 @@
 #include "mba_error_defs.h"
 #include "gatt.h"
 #include "ble_util/byte_stream.h"
-#include "ble_lls/ble_lls.h"
+#include "ble_lls.h"
 
 // *****************************************************************************
 // *****************************************************************************
@@ -63,8 +63,8 @@
 // *****************************************************************************
 // *****************************************************************************
 
-const uint8_t s_svcUuidLls[ATT_UUID_LENGTH_2] =                 {UINT16_TO_BYTES(UUID_LINKLOSS_SERVICE)};
-const uint8_t s_chUuidLlsAlertLevel[ATT_UUID_LENGTH_2] =        {UINT16_TO_BYTES(UUID_ALERT_LEVEL)};
+static const uint8_t s_svcUuidLls[ATT_UUID_LENGTH_2] =                 {UINT16_TO_BYTES(UUID_LINKLOSS_SERVICE)};
+static const uint8_t s_chUuidLlsAlertLevel[ATT_UUID_LENGTH_2] =        {UINT16_TO_BYTES(UUID_ALERT_LEVEL)};
 
 /* Link Loss Service Declaration */
 static uint16_t s_svcUuidLlsLen = sizeof(s_svcUuidLls);
@@ -126,7 +126,7 @@ static GATTS_Service_T s_svcLls =
 // *****************************************************************************
 // *****************************************************************************
 
-uint16_t BLE_LLS_Add()
+uint16_t BLE_LLS_Add(void)
 {
     return GATTS_AddService(&s_svcLls, (LLS_END_HDL - LLS_START_HDL + 1));
 }

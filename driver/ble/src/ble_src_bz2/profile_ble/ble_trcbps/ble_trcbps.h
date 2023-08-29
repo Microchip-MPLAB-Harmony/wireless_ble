@@ -36,10 +36,12 @@
   Description:
     This file contains the BLE Transparent Credit Based Server functions for application user.
  *******************************************************************************/
-
+/** @addtogroup BLE_PROFILE BLE Profile
+ *  @{ */
 
 /**
- * @addtogroup BLE_TRCBPS
+ * @defgroup BLE_TRCBPS Transparent Credit Based Profile Server Role (TRCBPS)
+ * @brief Transparent Credit Based Profile Server Role (TRCBPS)
  * @{
  * @brief Header file for the BLE Transparent Credit Based Profile Server role library.
  * @note Definitions and prototypes for the BLE Transparent Credit Based profile stack layer application programming interface.
@@ -55,6 +57,14 @@
 #include "gatt.h"
 #include "stack_mgr.h"
 
+
+// DOM-IGNORE-BEGIN
+#ifdef __cplusplus  // Provide C++ Compatibility
+
+extern "C" {
+
+#endif
+// DOM-IGNORE-END
 
 // *****************************************************************************
 // *****************************************************************************
@@ -74,16 +84,16 @@
 /**@defgroup BLE_TRCBPS_L2CAP_ID Definition of unassigned L2CAP ID
  * @brief The definition of unassigned L2CAP ID.
  * @{ */
-#define BLE_TRCBPS_L2CAP_UNASSIGNED_ID                    0xFF    /**< Unassigned BLE L2CAP ID. */
+#define BLE_TRCBPS_L2CAP_UNASSIGNED_ID                    (0xFFU)    /**< Unassigned BLE L2CAP ID. */
 /** @} */
 
 /**@defgroup BLE_TRCBPS_STATUS TRCPBS status
  * @brief The definition of BLE Transparent Credit Based Profile connection status.
  * @{ */
-#define BLE_TRCBPS_STATUS_STANDBY                         0x00    /**< BLE TRCBPS is standby. */
-#define BLE_TRCBPS_STATUS_CONNECTING                      0x01    /**< BLE TRCBPS is connecting. */
-#define BLE_TRCBPS_STATUS_CONNECTED                       0x02    /**< BLE TRCBPS is connected. */
-#define BLE_TRCBPS_STATUS_DISCONNECTING                   0x03    /**< BLE TRCBPS is disconnecting. */
+#define BLE_TRCBPS_STATUS_STANDBY                         (0x00U)    /**< BLE TRCBPS is standby. */
+#define BLE_TRCBPS_STATUS_CONNECTING                      (0x01U)    /**< BLE TRCBPS is connecting. */
+#define BLE_TRCBPS_STATUS_CONNECTED                       (0x02U)    /**< BLE TRCBPS is connected. */
+#define BLE_TRCBPS_STATUS_DISCONNECTING                   (0x03U)    /**< BLE TRCBPS is disconnecting. */
 /** @} */
 
 /**@defgroup BLE_TRCBPS_PARA Definition of TRCBPS parameters
@@ -95,11 +105,11 @@
 #define BLE_TRCBPS_CTRL_MPS                   BLE_L2CAP_MAX_PDU_SIZE                /**< MPS size of control channel. */
 #define BLE_TRCBPS_DATA_MPS                   BLE_L2CAP_MAX_PDU_SIZE                /**< MPS size of data channel. */
 
-#define BLE_TRCBPS_CTRL_MAX_CREDITS           0x0002                                /**< Maximum credit value of control channel. */
-#define BLE_TRCBPS_CTRL_MAX_ACCU_CREDITS      0x0001                                /**< Maximum accumulation credits which will be sent to the peer device of control channel. */
-#define BLE_TRCBPS_DATA_MAX_CREDITS           0x0008                                /**< Maximum credit value of data channel. */
-#define BLE_TRCBPS_DATA_MAX_ACCU_CREDITS      0x0005                                /**< Maximum accumulation credits which will be sent to the peer device of data channel. */
-#define BLE_TRCBPS_PERMISSION                 0x00                                  /**< Permission setting. */
+#define BLE_TRCBPS_CTRL_MAX_CREDITS           (0x0002U)                                /**< Maximum credit value of control channel. */
+#define BLE_TRCBPS_CTRL_MAX_ACCU_CREDITS      (0x0001U)                                /**< Maximum accumulation credits which will be sent to the peer device of control channel. */
+#define BLE_TRCBPS_DATA_MAX_CREDITS           (0x0008U)                                /**< Maximum credit value of data channel. */
+#define BLE_TRCBPS_DATA_MAX_ACCU_CREDITS      (0x0005U)                                /**< Maximum accumulation credits which will be sent to the peer device of data channel. */
+#define BLE_TRCBPS_PERMISSION                 (0x00U)                                  /**< Permission setting. */
 
 /** @} */
 
@@ -113,10 +123,10 @@
 
 
 /**@defgroup BLE_TRCBPS_VENDOR_OPCODE Definition of vendor opcode
- * @brief The definition of BLE Transparent Credit Based Profile vendor command opcodes over control channel
+ * @brief The definition of BLE Transparent Credit Based Profile vendor command opcodes over control channel.
  * @{ */
-#define BLE_TRCBPS_VENDOR_OPCODE_MIN         0x20    /**< Minimum value of Opcode. */
-#define BLE_TRCBPS_VENDOR_OPCODE_MAX         0xFF    /**< Maximum value of Opcode. */
+#define BLE_TRCBPS_VENDOR_OPCODE_MIN         (0x20U)    /**< Minimum value of Opcode. */
+#define BLE_TRCBPS_VENDOR_OPCODE_MAX         (0xFFU)    /**< Maximum value of Opcode. */
 /** @} */
 
 
@@ -234,7 +244,7 @@ void BLE_TRCBPS_EventRegister(BLE_TRCBP_EventCb_T bleTrcbpHandler);
  * 
  * @retval MBA_RES_SUCCESS                   Successfully Initialize BLE Transparent Credit Based Profile.
  * @retval MBA_RES_INVALID_PARA              Invalid MTU parameter usage.
- * @retval MBA_RES_FAIL                      Fail to register SPSM or fail to register the service..
+ * @retval MBA_RES_FAIL                      Fail to register SPSM or fail to register the service.
  *
  */
 uint16_t BLE_TRCBPS_Init(void);
@@ -292,8 +302,8 @@ uint16_t BLE_TRCBPS_SendData(uint16_t connHandle, uint16_t len, uint8_t *p_data)
  *
  * @param[in] connHandle                      Connection handle.
  * @param[in] cmdId                           Vendor command Opcode. See @ref BLE_TRCBPS_VENDOR_OPCODE.
- * @param[in] len                             Length of vendor command
- * @param[in] p_payload                       Pointer to the payload of vendor command
+ * @param[in] len                             Length of vendor command.
+ * @param[in] p_payload                       Pointer to the payload of vendor command.
  *
  * @retval MBA_RES_SUCCESS                    Successfully issue a send vendor command.
  * @retval MBA_RES_OOM                        No available memory.
@@ -306,7 +316,7 @@ uint16_t BLE_TRCBPS_SendVendorCommand(uint16_t connHandle, uint8_t cmdId, uint16
 /**@brief Get the length of queued data in Data pipe by connection handle.
  *
  * @param[in] connHandle                      Connection handle.
- * @param[out] p_dataLength                   Poniter to the length of the queued data
+ * @param[out] p_dataLength                   Poniter to the length of the queued data.
  *
  * @retval MBA_RES_SUCCESS                    Get the length successfully.
  * @retval MBA_RES_INVALID_PARA               The L2CAP link doesn't exist.
@@ -329,7 +339,7 @@ uint16_t BLE_TRCBPS_GetData(uint16_t connHandle, uint8_t *p_data);
 
 
 /**@brief Handle BLE_Stack events.
- *        This API should be called in the application while catching BLE_Stack events
+ *        This API should be called in the application while catching BLE_Stack events.
  *
  * @param[in] p_stackEvent                    Pointer to BLE_Stack events buffer.
  *
@@ -339,7 +349,15 @@ void BLE_TRCBPS_BleEventHandler(STACK_Event_T *p_stackEvent);
 
 /**@} */ //BLE_TRCBPS_FUNS
 
+//DOM-IGNORE-BEGIN
+#ifdef __cplusplus
+}
 #endif
+//DOM-IGNORE-END
+
+#endif
+
+/** @} */
 
 /**
   @}

@@ -48,7 +48,7 @@
 #include "mba_error_defs.h"
 #include "gatt.h"
 #include "ble_util/byte_stream.h"
-#include "ble_tps/ble_tps.h"
+#include "ble_tps.h"
 
 // *****************************************************************************
 // *****************************************************************************
@@ -63,8 +63,8 @@
 // *****************************************************************************
 // *****************************************************************************
 
-const uint8_t s_svcUuidTps[ATT_UUID_LENGTH_2] =                 {UINT16_TO_BYTES(UUID_TXPOWER_SERVICE)};
-const uint8_t s_chUuidTxPowerLevel[ATT_UUID_LENGTH_2] =         {UINT16_TO_BYTES(UUID_TXPOWER_LEVEL)};
+static const uint8_t s_svcUuidTps[ATT_UUID_LENGTH_2] =                 {UINT16_TO_BYTES(UUID_TXPOWER_SERVICE)};
+static const uint8_t s_chUuidTxPowerLevel[ATT_UUID_LENGTH_2] =         {UINT16_TO_BYTES(UUID_TXPOWER_LEVEL)};
 
 /* Tx Power Service Declaration */
 static uint16_t s_svcUuidTpsLen = sizeof(s_svcUuidTps);
@@ -126,7 +126,7 @@ static GATTS_Service_T s_svcTps =
 // *****************************************************************************
 // *****************************************************************************
 
-uint16_t BLE_TPS_Add()
+uint16_t BLE_TPS_Add(void)
 {
     return GATTS_AddService(&s_svcTps, (TPS_END_HDL - TPS_START_HDL + 1));
 }

@@ -49,7 +49,7 @@
 #include "ble_gap.h"
 #include "gatt.h"
 #include "ble_util/byte_stream.h"
-#include "ble_otapc/ble_otapc.h"
+#include "ble_otapc.h"
 
 
 // *****************************************************************************
@@ -104,6 +104,16 @@ typedef enum BLE_OTAPC_CharIndex_T
     OTAPC_CHAR_NUM                                           /**< Total number of OTA characteristics. */
 }BLE_OTAPC_CharIndex_T;
 
+/**@defgroup BLE_OTAPC_STATE OTAPC state
+ * @brief The definition of BLE OTAPC connection state
+ * @{ */
+typedef enum BLE_OTAPC_State_T
+{
+    BLE_OTAPC_STATE_IDLE = 0x00,
+    BLE_OTAPC_STATE_CONNECTED
+} BLE_OTAPC_State_T;
+/** @} */
+
 // *****************************************************************************
 // *****************************************************************************
 // Section: Data Types
@@ -119,6 +129,8 @@ typedef struct BLE_OTAPC_ConnList_T
     uint16_t                    attMtu;
     uint16_t                    maxFragSize;
     uint16_t                    accFragLen;
+    uint8_t                     connState;              /**< @ref BLE_OTAPC_STATE */
+    uint8_t                     fwExtFeature;
 } BLE_OTAPC_ConnList_T;
 
 // *****************************************************************************
@@ -173,7 +185,7 @@ static BLE_OTAPC_ConnList_T *ble_otapc_GetConnListByHandle(uint16_t connHandle)
 
     for(i=0; i<BLE_OTAPC_MAX_CONN_NBR; i++)
     {
-        if (s_otapcConnList[i].connHandle == connHandle)
+        if ((s_otapcConnList[i].connState == BLE_OTAPC_STATE_CONNECTED) && (s_otapcConnList[i].connHandle == connHandle))
         {
             return &s_otapcConnList[i];
         }
@@ -188,8 +200,9 @@ static BLE_OTAPC_ConnList_T *ble_otapc_GetFreeConnList()
 
     for(i=0; i<BLE_OTAPC_MAX_CONN_NBR; i++)
     {
-        if (s_otapcConnList[i].connHandle == 0)
+        if (s_otapcConnList[i].connState == BLE_OTAPC_STATE_IDLE)
         {
+            s_otapcConnList[i].connState = BLE_OTAPC_STATE_CONNECTED;
             s_otapcConnList[i].connIndex = i;
             return &s_otapcConnList[i];
         }
@@ -281,13 +294,23 @@ static void ble_otapc_ProcGattReadResp(GATT_Event_T *p_event)
 
     if (p_event->eventField.onReadResp.charHandle == s_otapcCharInfoList[p_conn->connIndex][OTAPC_INDEX_CHAR_FEATURE].charHandle)
     {
-        if (sp_otapcCbRoutine)
+        if (sp_otapcCbRoutine != NULL)
         {
             BLE_OTAPC_Event_T evt;
 
             evt.eventId = BLE_OTAPC_EVT_FEATURE_IND;
             evt.eventField.evtFeatureInd.connHandle = p_conn->connHandle;
             evt.eventField.evtFeatureInd.suppImgType = p_event->eventField.onReadResp.readValue[0];
+            if (p_event->eventField.onReadResp.attrDataLength > 1)
+			{
+                evt.eventField.evtFeatureInd.fwExtFeaure = p_event->eventField.onReadResp.readValue[1];
+            }
+			else
+			{
+                evt.eventField.evtFeatureInd.fwExtFeaure = 0x00;
+			}
+
+            p_conn->fwExtFeature = evt.eventField.evtFeatureInd.fwExtFeaure;
             
             sp_otapcCbRoutine(&evt);
         }
@@ -308,7 +331,9 @@ static void ble_otapc_ProcGattWriteResp(GATT_Event_T *p_event)
 
     if (p_event->eventField.onWriteResp.charHandle < s_otapcCharInfoList[p_conn->connIndex][OTAPC_INDEX_CHAR_CTRL].charHandle
         || p_event->eventField.onWriteResp.charHandle > s_otapcCharInfoList[p_conn->connIndex][OTAPC_INDEX_CHAR_DATA_CCCD].charHandle)
+    {
         return;
+    }
 
     switch (p_conn->state)
     {
@@ -322,7 +347,7 @@ static void ble_otapc_ProcGattWriteResp(GATT_Event_T *p_event)
         {
             p_conn->state = BLE_OTAPC_STATE_DATA_CCCD_ENABLED;
 
-            if (sp_otapcCbRoutine)
+            if (sp_otapcCbRoutine != NULL)
             {
                 BLE_OTAPC_Event_T evtPara;
 
@@ -419,13 +444,16 @@ static void ble_otapc_ProcGattNotification(GATT_Event_T *p_event)
         evtPara.eventField.evtFragComplInd.result = p_event->eventField.onNotification.receivedValue[0];
 
         if (p_conn->accFragLen == p_conn->maxFragSize)
+        {
             p_conn->accFragLen = 0;
+        }
 
         sp_otapcCbRoutine(&evtPara);
     }
-    
-
-
+    else
+    {
+		//Shall not enter here
+    }
 }
 
 
@@ -457,7 +485,7 @@ static void ble_otapc_ProcGattErrorResp(GATT_Event_T *p_event)
     {
         p_conn->state = BLE_OTAPC_STATE_WAIT_SEC;
     
-        if (sp_otapcCbRoutine)
+        if (sp_otapcCbRoutine != NULL)
         {
             BLE_OTAPC_Event_T evt;
 
@@ -525,9 +553,17 @@ static void ble_otapc_GapEventProcess(BLE_GAP_Event_T *p_event)
             if (p_conn != NULL)
             {
                 if (p_conn->state == BLE_OTAPC_STATE_RETRY_CTRL_CCCD)
+                {
                     ble_otapc_EnableCtrlCccd(p_conn);
+                }
                 else if (p_conn->state == BLE_OTAPC_STATE_RETRY_DATA_CCCD)
+                {
                     ble_otapc_EnableDataCccd(p_conn);
+                }
+                else
+                {
+					//Shall not enter here
+                }
             }
         }
         break;
@@ -537,7 +573,7 @@ static void ble_otapc_GapEventProcess(BLE_GAP_Event_T *p_event)
     }
 }
 
-void ble_otapc_GattEventProcess(GATT_Event_T *p_event)
+static void ble_otapc_GattEventProcess(GATT_Event_T *p_event)
 {
     BLE_OTAPC_ConnList_T *p_conn = NULL;
 
@@ -592,9 +628,17 @@ void ble_otapc_GattEventProcess(GATT_Event_T *p_event)
             if (p_conn != NULL)
             {
                 if (p_conn->state == BLE_OTAPC_STATE_RETRY_CTRL_CCCD)
+                {
                     ble_otapc_EnableCtrlCccd(p_conn);
+                }
                 else if (p_conn->state == BLE_OTAPC_STATE_RETRY_DATA_CCCD)
+                {
                     ble_otapc_EnableDataCccd(p_conn);
+                }
+                else
+                {
+					//Shall not enter here
+                }
             }
             else
             {
@@ -614,7 +658,7 @@ void BLE_OTAPC_EventRegister(BLE_OTAPC_EventCb_T bleOtapcRoutine)
     sp_otapcCbRoutine = bleOtapcRoutine;
 }
 
-uint16_t BLE_OTAPC_Init()
+uint16_t BLE_OTAPC_Init(void)
 {
     BLE_DD_DiscSvc_T disc;
     uint8_t i;
@@ -629,6 +673,7 @@ uint16_t BLE_OTAPC_Init()
 
     disc.svcUuid.uuidLength = ATT_UUID_LENGTH_16;
     memcpy(disc.svcUuid.uuid, svc, ATT_UUID_LENGTH_16);
+    disc.p_discInfo = NULL;
     disc.p_discChars = s_otapcDiscCharList;
     disc.p_charList = s_otapcCharList;
     disc.discCharsNum = OTAPC_CHAR_NUM;
@@ -663,7 +708,9 @@ uint16_t BLE_OTAPC_FeatureDisc(uint16_t connHandle)
     p_conn = ble_otapc_GetConnListByHandle(connHandle);
 
     if (p_conn == NULL)
+    {
         return MBA_RES_INVALID_PARA;
+    }
 
     if (p_conn->state < BLE_OTAPC_STATE_DATA_CCCD_ENABLED)
         return MBA_RES_BAD_STATE;
@@ -681,11 +728,14 @@ uint16_t BLE_OTAPC_UpdateRequest(uint16_t connHandle, BLE_OTAPC_Req_T * p_req)
     p_conn = ble_otapc_GetConnListByHandle(connHandle);
 
     if (p_conn == NULL)
+    {
         return MBA_RES_INVALID_PARA;
+    }
 
     if (p_conn->state < BLE_OTAPC_STATE_DATA_CCCD_ENABLED)
+    {
         return MBA_RES_BAD_STATE;
-
+    }
 
     p_writeParams = OSAL_Malloc(sizeof(GATTC_WriteParams_T));
     if (p_writeParams != NULL)
@@ -698,6 +748,14 @@ uint16_t BLE_OTAPC_UpdateRequest(uint16_t connHandle, BLE_OTAPC_Req_T * p_req)
         U32_TO_STREAM_LE(&p_buf, p_req->fwImageId);
         U32_TO_STREAM_LE(&p_buf, p_req->fwImageVer);
         U8_TO_STREAM(&p_buf, p_req->fwImageEnc);
+
+        if (p_conn->fwExtFeature & BLE_OTAPC_FW_FEATURE_MASK1)
+        {
+            U16_TO_STREAM_LE(&p_buf, p_req->fwImageChksum);
+            U8_TO_STREAM(&p_buf, p_req->fwImageFileType);
+            U16_TO_STREAM_LE(&p_buf, p_req->fwImageCrc16);
+        }
+
         p_writeParams->charLength = p_buf - p_writeParams->charValue;
 
 
@@ -728,10 +786,14 @@ uint16_t BLE_OTAPC_UpdateStart(uint16_t connHandle, uint8_t imgType)
     p_conn = ble_otapc_GetConnListByHandle(connHandle);
 
     if (p_conn == NULL)
+    {
         return MBA_RES_INVALID_PARA;
+    }
 
     if (p_conn->state != BLE_OTAPC_STATE_REQ_ALLOWED)
+    {
         return MBA_RES_BAD_STATE;
+    }
 
 
     p_writeParams = OSAL_Malloc(sizeof(GATTC_WriteParams_T));
@@ -774,10 +836,14 @@ uint16_t BLE_OTAPC_FragmentDist(uint16_t connHandle, uint16_t length, uint8_t *p
 
     if ((p_conn == NULL) || (length > (p_conn->attMtu - ATT_WRITE_HEADER_SIZE))
         || (p_conn->accFragLen + length > p_conn->maxFragSize))
+    {
         return MBA_RES_INVALID_PARA;
+    }
 
     if (p_conn->state != BLE_OTAPC_STATE_REQ_ALLOWED)
+    {
         return MBA_RES_BAD_STATE;
+    }
 
 
     p_writeParams = OSAL_Malloc(sizeof(GATTC_WriteParams_T));
@@ -816,10 +882,14 @@ uint16_t BLE_OTAPC_UpdateComplete(uint16_t connHandle)
     p_conn = ble_otapc_GetConnListByHandle(connHandle);
 
     if (p_conn == NULL)
+    {
         return MBA_RES_INVALID_PARA;
+    }
 
     if (p_conn->state != BLE_OTAPC_STATE_REQ_ALLOWED)
+    {
         return MBA_RES_BAD_STATE;
+    }
 
 
     p_writeParams = OSAL_Malloc(sizeof(GATTC_WriteParams_T));
@@ -859,10 +929,14 @@ uint16_t BLE_OTAPC_DeviceReset(uint16_t connHandle)
     p_conn = ble_otapc_GetConnListByHandle(connHandle);
 
     if (p_conn == NULL)
+    {
         return MBA_RES_INVALID_PARA;
+    }
 
     if (p_conn->state != BLE_OTAPC_STATE_REQ_ALLOWED)
+    {
         return MBA_RES_BAD_STATE;
+    }
 
 
     p_writeParams = OSAL_Malloc(sizeof(GATTC_WriteParams_T));
@@ -903,7 +977,7 @@ void BLE_OTAPC_BleDdEventHandler(BLE_DD_Event_T *p_event)
 
             p_conn = ble_otapc_GetConnListByHandle(p_event->eventField.evtDiscResult.connHandle);
 
-            if (p_conn)
+            if (p_conn != NULL)
             {
                 /* By checking the discovered handles exist or not. */
                 if (s_otapcCharList[p_conn->connIndex].p_charInfo[OTAPC_INDEX_CHAR_FEATURE].charHandle != 0)

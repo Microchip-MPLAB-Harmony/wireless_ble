@@ -57,6 +57,14 @@
 #include <stdbool.h>
 #include "stack_mgr.h"
 
+// DOM-IGNORE-BEGIN
+#ifdef __cplusplus  // Provide C++ Compatibility
+
+extern "C" {
+
+#endif
+// DOM-IGNORE-END
+
 // *****************************************************************************
 // *****************************************************************************
 // Section: Macros
@@ -74,7 +82,7 @@
 /**@defgroup BLE_ANPS_CMD   Command definition
  * @brief The definition of command id.
  * @{ */
-#define BLE_ANPS_CMD_ENABLE_NEW_ALERT               (0x00) /**< Enable new alert notification.*/ 
+#define BLE_ANPS_CMD_ENABLE_NEW_ALERT               (0x00) /**< Enable new alert notification.*/
 #define BLE_ANPS_CMD_ENABLE_UNREAD_ALERT_STAT       (0x01) /**< Enable unread alert status notification.*/
 #define BLE_ANPS_CMD_DISABLE_NEW_ALERT              (0x02) /**< Disable new alert notification.*/
 #define BLE_ANPS_CMD_DISABLE_UNREAD_ALERT_STAT      (0x03) /**< Disable unread alert status notification.*/
@@ -86,23 +94,23 @@
 /**@defgroup BLE_ANPS_CAT_ID    Category Id
  * @brief The definition of category id. 
  * @{ */
-#define BLE_ANPS_CAT_ID_SIMPLE_ALERT                (0x00) /**< Simple Alert. The title of the alert.*/  
+#define BLE_ANPS_CAT_ID_SIMPLE_ALERT                (0x00) /**< Simple Alert. The title of the alert.*/
 #define BLE_ANPS_CAT_ID_EMAIL                       (0x01) /**< Email. Sender name.*/
 #define BLE_ANPS_CAT_ID_NEWS                        (0x02) /**< News. Title of the news feed.*/
 #define BLE_ANPS_CAT_ID_CALL                        (0x03) /**< Call. Caller name or caller ID.*/
 #define BLE_ANPS_CAT_ID_MISSED_CALL                 (0x04) /**< Missed Call. Caller name or caller ID*/
 #define BLE_ANPS_CAT_ID_SMS_MMS                     (0x05) /**< SMS. Sender name or caller ID.*/
 #define BLE_ANPS_CAT_ID_VOICE_MAIL                  (0x06) /**< Voice Mail. Sender name or caller ID.*/
-#define BLE_ANPS_CAT_ID_SCHEDULE                    (0x07) /**< Sechedule. Title of the schedule.*/
+#define BLE_ANPS_CAT_ID_SCHEDULE                    (0x07) /**< Schedule. Title of the schedule.*/
 #define BLE_ANPS_CAT_ID_HIGH_PRIOR_ALERT            (0x08) /**< High Prioritized Alert. Title of alert.*/
 #define BLE_ANPS_CAT_ID_INSTANT_MSG                 (0x09) /**< Instant Messaging. Sender name.*/
 #define BLE_ANPS_CAT_ID_ALL_ALERT                   (0xFF) /**< All alert.*/
 /** @} */
 
-/**@defgroup BLE_ANPS_SUPP_CAT_ID_BIT_MASK      Support category
+/**@defgroup BLE_ANPS_SUPP_CAT_ID_BIT_MASK      Support category mask
  * @brief The definition of category id bit mask.
  * @{ */
-#define BLE_ANPS_SUPP_CAT_SIMPLE_ALERT              (1<<0)   /**< Simple Alert.*/  
+#define BLE_ANPS_SUPP_CAT_SIMPLE_ALERT              (1<<0)   /**< Simple Alert.*/
 #define BLE_ANPS_SUPP_CAT_EMAIL                     (1<<1)   /**< Email.*/
 #define BLE_ANPS_SUPP_CAT_NEWS                      (1<<2)   /**< News.*/
 #define BLE_ANPS_SUPP_CAT_CALL                      (1<<3)   /**< Call.*/
@@ -112,7 +120,7 @@
 #define BLE_ANPS_SUPP_CAT_SCHEDULE                  (1<<7)   /**< Schedule.*/
 #define BLE_ANPS_SUPP_CAT_HIGH_PRIOR_ALERT          (1<<8)   /**< High Prioritized Alert.*/
 #define BLE_ANPS_SUPP_CAT_INSTANT_MSG               (1<<9)   /**< Instant Message.*/
-#define BLE_ANPS_SUPP_CAT_RESERVED                  (0xFC00) /**< Reserved.*/
+#define BLE_ANPS_SUPP_CAT_RESERVED                  (0xFC00U) /**< Reserved.*/
 /** @} */
 
 /**@} */ //BLE_ANPS_DEFINES
@@ -179,11 +187,11 @@ typedef void(*BLE_ANPS_EventCb_T)(BLE_ANPS_Event_T *p_event);
  * @retval MBA_RES_SUCCESS       Successfully init BLE Alert Notification Profile. 
  *
  */
-uint16_t BLE_ANPS_Init();
+uint16_t BLE_ANPS_Init(void);
 
 /**
  *@brief Register BLE Alert Notification profile callback.\n
- *       Application must call this API before starting BLE Alert Notification procedure. 
+ *       Application must call this API before starting BLE Alert Notification procedure.
  *
  *
  *@param[in] bleAnpRoutine       Client callback function.
@@ -219,12 +227,12 @@ uint16_t BLE_ANPS_SetSuppUnreadCat(uint16_t catMask);
  *
  *@param[in] connHandle           The connection handle.
  *@param[in] catId                Category Id. See @ref BLE_ANPS_CAT_ID.
- *@param[in] num                  Number of new alert.  
+ *@param[in] num                  Number of new alert.
  *@param[in] txtStrLen            Text string information length. Length must be less than or equal to (MTU - 5).
- *@param[in] p_txtStr             Text string infomation. 
+ *@param[in] p_txtStr             Text string infomation.
  *
  *@retval MBA_RES_SUCCESS         Successfully send new alert.
- *@retval MBA_RES_OOM             Internal memory allocation failure.            
+ *@retval MBA_RES_OOM             Internal memory allocation failure.
  *@retval MBA_RES_NO_RESOURCE     No available buffer for transmitting new alert.
  *@retval MBA_RES_INVALID_PARA    Invalid parameters.
  */
@@ -239,7 +247,7 @@ uint16_t BLE_ANPS_SendNewAlert(uint16_t connHandle, uint8_t catId, uint8_t num, 
  *@param[in] unreadCnt            Unread count number. 
  *
  *@retval MBA_RES_SUCCESS         Successfully send unread alert status.
- *@retval MBA_RES_OOM             Internal memory allocation failure.            
+ *@retval MBA_RES_OOM             Internal memory allocation failure.
  *@retval MBA_RES_NO_RESOURCE     No available buffer for transmitting unread alert status.
  *@retval MBA_RES_INVALID_PARA    Invalid parameters.
  */
@@ -247,7 +255,7 @@ uint16_t BLE_ANPS_SendUnreadAlertStat(uint16_t connHandle, uint8_t catId, uint8_
 
 
 /**@brief Handle BLE_Stack events.
- *       This API should be called in the application while caching BLE_Stack events
+ *       This API should be called in the application while caching BLE_Stack events.
  *
  * @param[in] p_stackEvent        Pointer to BLE_Stack events buffer.
  *
@@ -257,6 +265,11 @@ void BLE_ANPS_BleEventHandler(STACK_Event_T *p_stackEvent);
 
 /**@} */ //BLE_ANP_FUNS
 
+//DOM-IGNORE-BEGIN
+#ifdef __cplusplus
+}
+#endif
+//DOM-IGNORE-END
 
 #endif
 

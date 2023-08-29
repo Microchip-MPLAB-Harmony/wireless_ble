@@ -47,12 +47,13 @@
 #ifndef BLE_TRCBS_H
 #define BLE_TRCBS_H
 
+// DOM-IGNORE-BEGIN
+#ifdef __cplusplus  // Provide C++ Compatibility
 
-// *****************************************************************************
-// *****************************************************************************
-// Section: Included Files
-// *****************************************************************************
-// *****************************************************************************
+extern "C" {
+
+#endif
+// DOM-IGNORE-END
 
 
 // *****************************************************************************
@@ -120,6 +121,11 @@ typedef enum BLE_TRCB_AttributeHandle_T
  */
 uint16_t BLE_TRCBS_Add(void);
 
+//DOM-IGNORE-BEGIN
+#ifdef __cplusplus
+}
+#endif
+//DOM-IGNORE-END
 
 #endif
 

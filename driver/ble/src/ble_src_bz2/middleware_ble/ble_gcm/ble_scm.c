@@ -52,7 +52,7 @@
 #include "gatt.h"
 #include "ble_smp.h"
 #include "ble_util/byte_stream.h"
-#include "ble_gcm/ble_scm.h"
+#include "ble_scm.h"
 
 
 // *****************************************************************************
@@ -76,7 +76,7 @@ typedef enum DISC_INDEX_GattSvc_T
 /**@brief The definition of configuration procedures in BLE_SCM. */
 typedef enum BLE_SCM_CofigProcedure_T
 {
-    BLE_SCM_CONFIG_NONE,                                    /**< No configuration.*/
+    BLE_SCM_CONFIG_NONE=0x00,                                    /**< No configuration.*/
     BLE_SCM_CONFIG_GATT_ENABLE_INDICATION,                  /**< Enable Service Change Indication of Remote GATT Service. */
     BLE_SCM_CONFIG_GATT_WRITE_FEATURES,                     /**< Write Client Supported Features to Remote GATT Service. */
     BLE_SCM_CONFIG_END
@@ -84,11 +84,17 @@ typedef enum BLE_SCM_CofigProcedure_T
 
 typedef enum BLE_SCM_ConfigStatus_T
 {
-    BLE_SCM_CONFIG_STATUS_SUCCESS,                          /**< Successfully execute the configuration. */
+    BLE_SCM_CONFIG_STATUS_SUCCESS=0x00,                          /**< Successfully execute the configuration. */
     BLE_SCM_CONFIG_STATUS_FAIL,                             /**< Fail to execute the configuration. Try another configuration. */
     BLE_SCM_CONFIG_STATUS_ATT_BUSY,                         /**< ATT protocol is busy. */
     BLE_SCM_CONFIG_STATUS_END
 }BLE_SCM_ConfigStatus_T;
+
+typedef enum BLE_SCM_State_T
+{
+    BLE_SCM_STATE_IDLE = 0x00,                              /**< Default state (Disconnected). */
+    BLE_SCM_STATE_CONNECTED                                 /**< Connected. */
+} BLE_SCM_State_T;
 
 // *****************************************************************************
 // *****************************************************************************
@@ -99,12 +105,13 @@ typedef enum BLE_SCM_ConfigStatus_T
 /**@brief The structure of connection instance of service change manager module. */
 typedef struct BLE_SCM_Conn_T
 {
-    uint16_t                connHandle;                     /**< Connection handle. */
-    uint8_t                 connIndex;                      /**< The index of this connection in connection database array */
-    uint8_t                 configProcedure;                /**< Current configure procedure after discovery complete. */
-    bool                    isGattSvcFound;                 /**< Record GATT service is found or not of the connection. */
-    bool                    isPairingComplete;              /**< Record if paring complete received of the connection. Discovered handle information need to be sent to application when pairing complete. */
-    uint8_t                 queueProcedure;                 /**< Record queued procedure by the ATT protocol. */
+    uint16_t                    connHandle;                     /**< Connection handle. */
+    uint8_t                     connIndex;                      /**< The index of this connection in connection database array */
+    BLE_SCM_CofigProcedure_T    configProcedure;                /**< Current configure procedure after discovery complete. */
+    bool                        isGattSvcFound;                 /**< Record GATT service is found or not of the connection. */
+    bool                        isPairingComplete;              /**< Record if paring complete received of the connection. Discovered handle information need to be sent to application when pairing complete. */
+    uint8_t                     queueProcedure;                 /**< Record queued procedure by the ATT protocol. */
+    BLE_SCM_State_T             state;                          /**< Connection state. */
 } BLE_SCM_Conn_T;
 
 /**@brief The database of service change manager module. */
@@ -119,8 +126,8 @@ typedef struct BLE_SCM_Ctrl_T
 // *****************************************************************************
 // *****************************************************************************
 
-BLE_SCM_EventCb_T           s_scmEventCb;                   /* Events callback function. */
-BLE_SCM_Ctrl_T              s_scmCtrl;                      /* SCM module database. */
+static BLE_SCM_EventCb_T           s_scmEventCb;                   /* Events callback function. */
+static BLE_SCM_Ctrl_T *            sp_scmCtrl;                     /* SCM module database. */
 
 /* Discovery information of GATT Service. */
 static const uint8_t        s_svcUuidGatt[ATT_UUID_LENGTH_2] = {UINT16_TO_BYTES(UUID_SVC_GATT)};
@@ -138,8 +145,8 @@ static BLE_DD_DiscChar_T    *s_gattDiscCharList[] =
 };
 
 /* Database recording discovery response of GATT Service. */
-static BLE_DD_CharInfo_T    s_gattCharInfoList[BLE_GAP_MAX_LINK_NBR][BLE_SCM_GATT_DISC_CHAR_NUM];
-static BLE_DD_CharList_T    s_gattCharList[BLE_GAP_MAX_LINK_NBR];
+static BLE_DD_CharInfo_T ** sp_gattCharInfoList;
+static BLE_DD_CharList_T *  sp_gattCharList;
 
 /**@brief API returned code mapping between SCM and MBA. */
 static const uint16_t       s_scmMbaRetCodeMap[]=
@@ -162,8 +169,25 @@ static const uint16_t       s_scmMbaRetCodeMap[]=
 // *****************************************************************************
 static void ble_scm_InitConn(BLE_SCM_Conn_T *p_conn)
 {
-    memset((uint8_t *)p_conn, 0, sizeof(BLE_SCM_Conn_T));
+    (void)memset((uint8_t *)p_conn, 0, sizeof(BLE_SCM_Conn_T));
 }
+
+static BLE_SCM_Conn_T *ble_scm_GetFreeConn(void)
+{
+    uint8_t i;
+
+    for (i=0; i<BLE_GAP_MAX_LINK_NBR; i++)
+    {
+        if (sp_scmCtrl->conn[i].state == BLE_SCM_STATE_IDLE)
+        {
+            sp_scmCtrl->conn[i].state = BLE_SCM_STATE_CONNECTED;
+            sp_scmCtrl->conn[i].connIndex = i;
+            return &sp_scmCtrl->conn[i];
+        }
+    }
+    return NULL;
+}
+
 
 static BLE_SCM_Conn_T *ble_scm_FindConnByHandle(uint16_t connHandle)
 {
@@ -171,10 +195,10 @@ static BLE_SCM_Conn_T *ble_scm_FindConnByHandle(uint16_t connHandle)
 
     for (i=0; i<BLE_GAP_MAX_LINK_NBR; i++)
     {
-        if (s_scmCtrl.conn[i].connHandle == connHandle)
+        if ((sp_scmCtrl->conn[i].state == BLE_SCM_STATE_CONNECTED) && (sp_scmCtrl->conn[i].connHandle == connHandle))
         {
-            s_scmCtrl.conn[i].connIndex = i;
-            return &s_scmCtrl.conn[i];
+            sp_scmCtrl->conn[i].connIndex = i;
+            return &sp_scmCtrl->conn[i];
         }
     }
     return NULL;
@@ -187,7 +211,7 @@ static BLE_SCM_Conn_T *ble_scm_CreateConn(uint16_t connHandle)
 {
     BLE_SCM_Conn_T *p_conn;
 
-    p_conn = ble_scm_FindConnByHandle(0);
+    p_conn = ble_scm_GetFreeConn();
 
     if (p_conn != NULL)
     {
@@ -198,19 +222,19 @@ static BLE_SCM_Conn_T *ble_scm_CreateConn(uint16_t connHandle)
     return p_conn;
 }
 
-static void ble_scm_InitCharList()
+static void ble_scm_InitCharList(void)
 {
     uint8_t i, j;
 
     for(i=0; i<BLE_GAP_MAX_LINK_NBR; i++)
     {
-        s_gattCharList[i].connHandle = 0;
-        s_gattCharList[i].p_charInfo = (BLE_DD_CharInfo_T *) &(s_gattCharInfoList[i]);
+        sp_gattCharList[i].connHandle = 0;
+        sp_gattCharList[i].p_charInfo = sp_gattCharInfoList[i];
 
         for(j=0; j<BLE_SCM_GATT_DISC_CHAR_NUM; j++)
         {
-            s_gattCharInfoList[i][j].charHandle = 0;
-            s_gattCharInfoList[i][j].property = 0;
+            sp_gattCharInfoList[i][j].charHandle = 0;
+            sp_gattCharInfoList[i][j].property = 0;
         }
     }
 }
@@ -221,15 +245,15 @@ static uint16_t ble_scm_GetScAttrHandle(uint16_t connHandle, uint8_t index)
 
     for (i=0; i<BLE_GAP_MAX_LINK_NBR; i++)
     {
-        if (s_gattCharList[i].connHandle == connHandle)
+        if (sp_gattCharList[i].connHandle == connHandle)
         {
-            if (s_gattCharList[i].p_charInfo[index].charHandle == 0)
+            if (sp_gattCharList[i].p_charInfo[index].charHandle == 0U)
             {
                 break;
             }
             else
             {
-                return s_gattCharList[i].p_charInfo[index].charHandle;
+                return sp_gattCharList[i].p_charInfo[index].charHandle;
             }
         }
     }
@@ -247,7 +271,7 @@ static void ble_scm_GapEventProcess(BLE_GAP_Event_T *p_event)
                 /* Create connection instance if it is not created in BLE_SCM_SetBondedCharInfo(). */
                 if (ble_scm_FindConnByHandle(p_event->eventField.evtConnect.connHandle) == NULL)
                 {
-                    ble_scm_CreateConn(p_event->eventField.evtConnect.connHandle);
+                    (void)ble_scm_CreateConn(p_event->eventField.evtConnect.connHandle);
                 }
             }
         }
@@ -262,7 +286,7 @@ static void ble_scm_GapEventProcess(BLE_GAP_Event_T *p_event)
 
             if (p_conn != NULL)
             {
-                memset(s_gattCharInfoList[p_conn->connIndex], 0, (sizeof(BLE_DD_CharInfo_T)*BLE_SCM_GATT_DISC_CHAR_NUM));
+                (void)memset(sp_gattCharInfoList[p_conn->connIndex], 0, (sizeof(BLE_DD_CharInfo_T)*BLE_SCM_GATT_DISC_CHAR_NUM));
                 ble_scm_InitConn(p_conn);
             }
         }
@@ -297,7 +321,7 @@ static uint16_t ble_scm_SendGattWriteRequest(BLE_SCM_Conn_T *p_conn, uint16_t at
     {
         p_writeParams->charHandle = attrHandle;
         p_writeParams->charLength = attrLength;
-        memcpy(p_writeParams->charValue, p_attrValue, attrLength);
+        (void)memcpy(p_writeParams->charValue, p_attrValue, attrLength);
         p_writeParams->writeType = ATT_WRITE_REQ;
         p_writeParams->valueOffset = 0;
         p_writeParams->flags = 0;
@@ -311,14 +335,15 @@ static uint16_t ble_scm_SendGattWriteRequest(BLE_SCM_Conn_T *p_conn, uint16_t at
     return result;
 }
 
-static uint16_t ble_scm_EnableServiceChangeIndication(BLE_SCM_Conn_T *p_conn)
+static BLE_SCM_ConfigStatus_T ble_scm_EnableServiceChangeIndication(BLE_SCM_Conn_T *p_conn)
 {
-    uint16_t    scCccdHandle, apiStatus, result;
+    BLE_SCM_ConfigStatus_T  result;
+    uint16_t    scCccdHandle, apiStatus;
     uint8_t     cccdValue[] = {UINT16_TO_BYTES(INDICATION)};
 
     scCccdHandle = ble_scm_GetScAttrHandle(p_conn->connHandle, DISC_INDEX_GATT_SC_CCCD);
 
-    if (scCccdHandle != 0)
+    if (scCccdHandle != 0U)
     {
         apiStatus = ble_scm_SendGattWriteRequest(p_conn, scCccdHandle, sizeof(cccdValue), cccdValue);
         result = s_scmMbaRetCodeMap[apiStatus];
@@ -330,14 +355,15 @@ static uint16_t ble_scm_EnableServiceChangeIndication(BLE_SCM_Conn_T *p_conn)
     return result;
 }
 
-static uint16_t ble_scm_WriteClientSupportFeatures(BLE_SCM_Conn_T *p_conn)
+static BLE_SCM_ConfigStatus_T ble_scm_WriteClientSupportFeatures(BLE_SCM_Conn_T *p_conn)
 {
-    uint16_t    csfHandle, apiStatus, result;
+    BLE_SCM_ConfigStatus_T  result;
+    uint16_t    csfHandle, apiStatus;
     uint8_t     feature[] = {GATT_ROBUST_CACHING};
 
     csfHandle = ble_scm_GetScAttrHandle(p_conn->connHandle, DISC_INDEX_GATT_CSF_CHAR);
 
-    if (csfHandle != 0)
+    if (csfHandle != 0U)
     {
         apiStatus = ble_scm_SendGattWriteRequest(p_conn, csfHandle, sizeof(feature), feature);
         result = s_scmMbaRetCodeMap[apiStatus];
@@ -349,11 +375,11 @@ static uint16_t ble_scm_WriteClientSupportFeatures(BLE_SCM_Conn_T *p_conn)
     return result;
 }
 
-static void ble_scm_ConfigProcedureStateMachine(BLE_SCM_Conn_T *p_conn, uint8_t procedure)
+static void ble_scm_ConfigProcedureStateMachine(BLE_SCM_Conn_T *p_conn, BLE_SCM_CofigProcedure_T procedure)
 {
     if (procedure == BLE_SCM_CONFIG_GATT_ENABLE_INDICATION)
     {
-        uint16_t result;
+        BLE_SCM_ConfigStatus_T result;
 
         result = ble_scm_EnableServiceChangeIndication(p_conn);
 
@@ -373,7 +399,7 @@ static void ble_scm_ConfigProcedureStateMachine(BLE_SCM_Conn_T *p_conn, uint8_t 
 
     if (procedure == BLE_SCM_CONFIG_GATT_WRITE_FEATURES)
     {
-        uint16_t result;
+        BLE_SCM_ConfigStatus_T result;
 
         result = ble_scm_WriteClientSupportFeatures(p_conn);
 
@@ -424,7 +450,7 @@ static void ble_scm_GattEventProcess(GATT_Event_T *p_event)
                 }
                 else
                 {
-                    if (p_conn->configProcedure)
+                    if (p_conn->configProcedure != BLE_SCM_CONFIG_NONE)
                     {
                         ble_scm_ConfigProcedureStateMachine(p_conn, (p_conn->configProcedure+1));
                     }
@@ -509,7 +535,7 @@ static void ble_scm_SmpEventProcess(BLE_SMP_Event_T *p_event)
 
                             scmEvent.eventId = BLE_SCM_EVT_BONDED_CHAR_INFO;
                             scmEvent.eventField.evtBondedCharInfo.connHandle = p_event->eventField.evtPairingComplete.connHandle;
-                            memcpy(scmEvent.eventField.evtBondedCharInfo.charInfo, s_gattCharInfoList[p_conn->connIndex], sizeof(BLE_DD_CharInfo_T)*BLE_SCM_GATT_DISC_CHAR_NUM);
+                            (void)memcpy(scmEvent.eventField.evtBondedCharInfo.charInfo, sp_gattCharInfoList[p_conn->connIndex], sizeof(BLE_DD_CharInfo_T)*BLE_SCM_GATT_DISC_CHAR_NUM);
                             s_scmEventCb(&scmEvent);
                         }
                     }
@@ -523,21 +549,68 @@ static void ble_scm_SmpEventProcess(BLE_SMP_Event_T *p_event)
     }
 }
 
-void BLE_SCM_Init()
+uint16_t BLE_SCM_Init(void)
 {
     BLE_DD_DiscSvc_T gattDisc;
 
-    memset((uint8_t *)&s_scmCtrl, 0, sizeof(BLE_SCM_Ctrl_T));
+    if (sp_scmCtrl == NULL)
+    {
+        sp_scmCtrl = OSAL_Malloc(sizeof(BLE_SCM_Ctrl_T));
+
+        if (sp_scmCtrl == NULL)
+        {
+            return MBA_RES_OOM;
+        }
+    }
+
+    if (sp_gattCharList == NULL)
+    {
+        sp_gattCharList = OSAL_Malloc(sizeof(BLE_DD_CharList_T) *BLE_GAP_MAX_LINK_NBR);
+
+        if (sp_gattCharList == NULL)
+        {
+            return MBA_RES_OOM;
+        }
+    }
+
+    if (sp_gattCharInfoList == NULL)
+    {
+        sp_gattCharInfoList = OSAL_Malloc(sizeof(BLE_DD_CharInfo_T *) * BLE_GAP_MAX_LINK_NBR);
+        
+        if (sp_gattCharInfoList == NULL)
+        {
+            return MBA_RES_OOM;
+        }        
+
+        (void)memset(sp_gattCharInfoList, 0x00, sizeof(BLE_DD_CharInfo_T *) * BLE_GAP_MAX_LINK_NBR);
+    }
+
+    for (uint8_t i = 0; i < BLE_GAP_MAX_LINK_NBR; i++)
+    {
+        if (sp_gattCharInfoList[i] == NULL)
+        {
+            sp_gattCharInfoList[i] = OSAL_Malloc(sizeof(BLE_DD_CharInfo_T) * BLE_SCM_GATT_DISC_CHAR_NUM);
+
+            if (sp_gattCharInfoList[i] == NULL)
+            {
+                return MBA_RES_OOM;
+            }
+        }
+    }
+
+
+    (void)memset((uint8_t *)sp_scmCtrl, 0, sizeof(BLE_SCM_Ctrl_T));
 
     ble_scm_InitCharList();
 
     /* Register GATT service discovery */
     gattDisc.svcUuid.uuidLength = ATT_UUID_LENGTH_2;
-    memcpy(gattDisc.svcUuid.uuid, s_svcUuidGatt, ATT_UUID_LENGTH_2);
+    (void)memcpy(gattDisc.svcUuid.uuid, s_svcUuidGatt, ATT_UUID_LENGTH_2);
+    gattDisc.p_discInfo = NULL;
     gattDisc.p_discChars = s_gattDiscCharList;
-    gattDisc.p_charList = s_gattCharList;
+    gattDisc.p_charList = sp_gattCharList;
     gattDisc.discCharsNum = BLE_SCM_GATT_DISC_CHAR_NUM;
-    BLE_DD_ServiceDiscoveryRegister(&gattDisc);
+    return BLE_DD_ServiceDiscoveryRegister(&gattDisc);
 }
 
 void BLE_SCM_EventRegister(BLE_SCM_EventCb_T eventCb)
@@ -586,7 +659,7 @@ void BLE_SCM_BleDdEventHandler(BLE_DD_Event_T *p_event)
             if (p_conn != NULL)
             {
                 /* By checking the discovered handles exist or not. */
-                if (ble_scm_GetScAttrHandle(p_event->eventField.evtDiscResult.connHandle, DISC_INDEX_GATT_SC_CHAR) != 0)
+                if (ble_scm_GetScAttrHandle(p_event->eventField.evtDiscResult.connHandle, DISC_INDEX_GATT_SC_CHAR) != 0U)
                 {
                     p_conn->isGattSvcFound = true;
 
@@ -602,7 +675,7 @@ void BLE_SCM_BleDdEventHandler(BLE_DD_Event_T *p_event)
                         {
                             scmEvent.eventId = BLE_SCM_EVT_BONDED_CHAR_INFO;
                             scmEvent.eventField.evtBondedCharInfo.connHandle = p_event->eventField.evtDiscResult.connHandle;
-                            memcpy(scmEvent.eventField.evtBondedCharInfo.charInfo, s_gattCharInfoList[p_conn->connIndex], sizeof(BLE_DD_CharInfo_T)*BLE_SCM_GATT_DISC_CHAR_NUM);
+                            (void)memcpy(scmEvent.eventField.evtBondedCharInfo.charInfo, sp_gattCharInfoList[p_conn->connIndex], sizeof(BLE_DD_CharInfo_T)*BLE_SCM_GATT_DISC_CHAR_NUM);
                             s_scmEventCb(&scmEvent);
                         }
                     }
@@ -636,7 +709,7 @@ void BLE_SCM_SetBondedCharInfo(uint16_t connHandle, BLE_DD_CharInfo_T *p_charInf
 
     if (p_conn != NULL)
     {
-        memcpy(s_gattCharInfoList[p_conn->connIndex], p_charInfo, (sizeof(BLE_DD_CharInfo_T)*BLE_SCM_GATT_DISC_CHAR_NUM));
+        (void)memcpy(sp_gattCharInfoList[p_conn->connIndex], p_charInfo, (sizeof(BLE_DD_CharInfo_T)*BLE_SCM_GATT_DISC_CHAR_NUM));
         p_conn->isGattSvcFound = true;
     }
 }

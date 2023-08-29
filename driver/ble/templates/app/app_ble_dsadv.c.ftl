@@ -40,6 +40,7 @@
 
 #include "app_ble.h"
 #include "device_deep_sleep.h"
+#include "app_ble_dsadv.h"
 
 
 
@@ -76,9 +77,13 @@ bool APP_BleDsadvIsEnable(void)
 
     DEVICE_GetDeepSleepWakeUpSrc(&wakeSrc);
     if (wakeSrc == DEVICE_DEEP_SLEEP_WAKE_NONE)
+    {
         return false;
+    }
     else
+    {
         return true;
+    }
 }
 
 void APP_BleDsadvStart(bool flag)

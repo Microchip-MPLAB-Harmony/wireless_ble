@@ -68,6 +68,14 @@
 // *****************************************************************************
 #include <stdint.h>
 
+// DOM-IGNORE-BEGIN
+#ifdef __cplusplus  // Provide C++ Compatibility
+
+extern "C" {
+
+#endif
+// DOM-IGNORE-END
+
 // *****************************************************************************
 // *****************************************************************************
 // Section: Macros
@@ -116,7 +124,13 @@ typedef enum BLE_${CMS_SVC_NAME_VALUE?upper_case}_AttributeHandle_T
  *@return MBA_RES_NO_RESOURCE                Fail to register service.
  *
  */
-uint16_t BLE_${CMS_SVC_NAME_VALUE?upper_case}_Add();
+uint16_t BLE_${CMS_SVC_NAME_VALUE?upper_case}_Add(void);
+
+//DOM-IGNORE-BEGIN
+#ifdef __cplusplus
+}
+#endif
+//DOM-IGNORE-END
 
 
 #endif

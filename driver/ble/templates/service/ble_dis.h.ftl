@@ -47,66 +47,74 @@
 #ifndef BLE_DIS_H
 #define BLE_DIS_H
 
+// DOM-IGNORE-BEGIN
+#ifdef __cplusplus  // Provide C++ Compatibility
+
+extern "C" {
+
+#endif
+// DOM-IGNORE-END
+
 // *****************************************************************************
 // *****************************************************************************
 // Section: Macros
 // *****************************************************************************
 // *****************************************************************************
 <#if DIS_MANU_NAME_ENABLE == true>
-#define DIS_MANU_NAME_ENABLE
+#define DIS_MANU_NAME_ENABLE      /* Manufacturer Name */
 <#else>
-//#define DIS_MANU_NAME_ENABLE
+//#define DIS_MANU_NAME_ENABLE      /* Manufacturer Name */
 </#if>
 <#if DIS_MODEL_NUM_ENABLE == true>
-#define DIS_MODEL_NUM_ENABLE
+#define DIS_MODEL_NUM_ENABLE      /* Model Name */
 <#else>
-//#define DIS_MODEL_NUM_ENABLE
+//#define DIS_MODEL_NUM_ENABLE      /* Model Name */
 </#if>
 <#if DIS_SERIAL_NUM_ENABLE == true>
-#define DIS_SERIAL_NUM_ENABLE
+#define DIS_SERIAL_NUM_ENABLE     /* Serial Name */
 <#else>
-//#define DIS_SERIAL_NUM_ENABLE
+//#define DIS_SERIAL_NUM_ENABLE     /* Serial Name */
 </#if>
 <#if DIS_HW_REV_ENABLE == true>
-#define DIS_HW_REV_ENABLE
+#define DIS_HW_REV_ENABLE         /* Hardware Revision */
 <#else>
-//#define DIS_HW_REV_ENABLE
+//#define DIS_HW_REV_ENABLE         /* Hardware Revision */
 </#if>
 <#if DIS_FW_REV_ENABLE == true>
-#define DIS_FW_REV_ENABLE
+#define DIS_FW_REV_ENABLE         /* Firmware Revision */
 <#else>
-//#define DIS_FW_REV_ENABLE
+//#define DIS_FW_REV_ENABLE         /* Firmware Revision */
 </#if>
 <#if DIS_SW_REV_ENABLE == true>
-#define DIS_SW_REV_ENABLE
+#define DIS_SW_REV_ENABLE         /* Software Revision */
 <#else>
-//#define DIS_SW_REV_ENABLE
+//#define DIS_SW_REV_ENABLE         /* Software Revision */
 </#if>
 <#if DIS_SYSTEM_ID_ENABLE == true>
-#define DIS_SYSTEM_ID_ENABLE
+#define DIS_SYSTEM_ID_ENABLE      /* System Id */
 <#else>
-//#define DIS_SYSTEM_ID_ENABLE
+//#define DIS_SYSTEM_ID_ENABLE      /* System Id */
 </#if>
 <#if DIS_IEEE_ENABLE == true>
-#define DIS_IEEE_ENABLE
+#define DIS_IEEE_ENABLE           /* IEEE 11073-20601 */
 <#else>
-//#define DIS_IEEE_ENABLE
+//#define DIS_IEEE_ENABLE           /* IEEE 11073-20601 */
 </#if>
 <#if DIS_PNP_ID_ENABLE == true>
-#define DIS_PNP_ID_ENABLE
+#define DIS_PNP_ID_ENABLE         /* PnP ID */
 <#else>
-//#define DIS_PNP_ID_ENABLE
+//#define DIS_PNP_ID_ENABLE         /* PnP ID */
 </#if>
 
-#define DIS_MANU_NAME                                  "${DIS_MANU_NAME_STRING}"
-#define DIS_MODEL_NUM                                  "${DIS_MODEL_NUM_STRING}"
-#define DIS_SERIAL_NUM                                 "${DIS_SERIAL_NUM_STRING}"
-#define DIS_HW_REVISION                                "${DIS_HW_REV_STRING}"
-#define DIS_FW_REVISION                                "${DIS_FW_REV_STRING}"
-#define DIS_SW_REVISION                                "${DIS_SW_REV_STRING}"
-#define DIS_SYSTEM_ID                                  "${DIS_SYSTEM_ID_STRING}"
-#define DIS_IEEE_11073_20601                           "${DIS_IEEE_STRING}"
-#define DIS_PNP_ID                                     "${DIS_PNP_ID_STRING}"
+#define DIS_MANU_NAME                                  "${DIS_MANU_NAME_STRING}"    /* Manufacture Name */
+#define DIS_MODEL_NUM                                  "${DIS_MODEL_NUM_STRING}"    /* Model Number */
+#define DIS_SERIAL_NUM                                 "${DIS_SERIAL_NUM_STRING}"    /* Serial Number */
+#define DIS_HW_REVISION                                "${DIS_HW_REV_STRING}"    /* Hardware Revision */
+#define DIS_FW_REVISION                                "${DIS_FW_REV_STRING}"    /* Firmware Revision */
+#define DIS_SW_REVISION                                "${DIS_SW_REV_STRING}"    /* Software Revision */
+#define DIS_SYSTEM_ID                                  "${DIS_SYSTEM_ID_STRING}"    /* System Id */
+#define DIS_IEEE_11073_20601                           "${DIS_IEEE_STRING}"    /* IEEE 11073-20601 Data */
+#define DIS_PNP_ID                                     "${DIS_PNP_ID_STRING}"    /* PnP Id */
 
 #define UUID_DEVICE_INFO_SERVICE                        0x180A      /**< Device Information Service. */
 
@@ -181,8 +189,13 @@ typedef enum BLE_DIS_AttributeHandle_T
  *@return MBA_RES_NO_RESOURCE                Fail to register service.
  *
  */
-uint16_t BLE_DIS_Add();
+uint16_t BLE_DIS_Add(void);
 
+//DOM-IGNORE-BEGIN
+#ifdef __cplusplus
+}
+#endif
+//DOM-IGNORE-END
 
 #endif
 

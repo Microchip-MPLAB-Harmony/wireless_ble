@@ -53,7 +53,7 @@
 #include "ble_util/mw_assert.h"
 #include "ble_util/byte_stream.h"
 #include "ble_trcbs/ble_trcbs.h"
-#include "ble_trcbps/ble_trcbps.h"
+#include "ble_trcbps.h"
 
 
 // *****************************************************************************
@@ -76,7 +76,7 @@
 #define BLE_TRCBPS_MAX_CONNLIST_NBR                         (BLE_TRCBPS_MAX_CONN_NBR * BLE_TRCBPS_MAX_CHAN_NBR)   /**< Maximum connection list number */
 /** @} */
 
-#define BLE_TRCB_CTRL_PSM                                   0x0080                /**< PSM value of control channel. */
+#define BLE_TRCB_CTRL_PSM                                   (0x0080U)                /**< PSM value of control channel. */
 
 #define BLE_TRCBPS_SET_FLAG(x, y)    ((x) |= (1 << (y)))
 #define BLE_TRCBPS_CLR_FLAG(x, y)    ((x) &= ~(1 << (y)))
@@ -157,9 +157,9 @@ static void ble_trcbps_InitConnList(BLE_TRCBPS_ConnList_T *p_conn, bool clearQue
 {
     if ((clearQueue) && (p_conn != NULL))
     {
-        while (p_conn->queueIn.usedNum)
+        while (p_conn->queueIn.usedNum != 0U)
         {
-            if (p_conn->queueIn.packetList[p_conn->queueIn.readIndex].p_packet)
+            if (p_conn->queueIn.packetList[p_conn->queueIn.readIndex].p_packet != NULL)
             {
                 OSAL_Free(p_conn->queueIn.packetList[p_conn->queueIn.readIndex].p_packet);
                 p_conn->queueIn.packetList[p_conn->queueIn.readIndex].p_packet = NULL;
@@ -176,7 +176,7 @@ static void ble_trcbps_InitConnList(BLE_TRCBPS_ConnList_T *p_conn, bool clearQue
         }
     }
 
-    memset((uint8_t *)p_conn, 0, sizeof(BLE_TRCBPS_ConnList_T));
+    (void)memset((uint8_t *)p_conn, 0, sizeof(BLE_TRCBPS_ConnList_T));
 
     BLE_TRCBPS_CLR_FLAG(s_trcbpFlag, p_conn->leL2capId);
 
@@ -283,7 +283,7 @@ static void ble_trcbps_ConveyConnStatusEvt(BLE_TRCBPS_EvtConnStatus_T *connStatu
 
     evtPara.eventId = BLE_TRCBPS_EVT_CONNECTION_STATUS;
 
-    memcpy((uint8_t *)&evtPara.eventField.connStatus, (uint8_t *)connStatusPara, sizeof(BLE_TRCBPS_EvtConnStatus_T));
+    (void)memcpy((uint8_t *)&evtPara.eventField.connStatus, (uint8_t *)connStatusPara, sizeof(BLE_TRCBPS_EvtConnStatus_T));
 
     /*
     if ((status == BLE_TRCBPS_STATUS_CONNECTING) && (leL2capId != BLE_TRCBPS_L2CAP_UNASSIGNED_ID))
@@ -292,7 +292,7 @@ static void ble_trcbps_ConveyConnStatusEvt(BLE_TRCBPS_EvtConnStatus_T *connStatu
     }
     */
 
-    if (s_bleTrcbpProcess)
+    if (s_bleTrcbpProcess != NULL)
     {
         s_bleTrcbpProcess(&evtPara);
     }
@@ -307,7 +307,7 @@ static void ble_trcbp_ConveyRcvDataEvt(BLE_TRCBPS_ConnList_T *p_conn)
     evtPara.eventField.onReceiveData.chanType = ble_trcbps_CovertSpsmToType(p_conn->spsm);
     evtPara.eventField.onReceiveData.leL2capId = p_conn->leL2capId;
 
-    if (s_bleTrcbpProcess)
+    if (s_bleTrcbpProcess != NULL)
     {
         s_bleTrcbpProcess(&evtPara);
     }
@@ -336,14 +336,14 @@ static void ble_trcbps_RcvData(BLE_TRCBPS_ConnList_T *p_conn, BLE_L2CAP_Event_T 
         {
             BLE_TRCBPS_Event_T evtPara;
             evtPara.eventId = BLE_TRCBPS_EVT_ERR_NO_MEM;
-            if (s_bleTrcbpProcess)
+            if (s_bleTrcbpProcess != NULL)
             {
                 s_bleTrcbpProcess(&evtPara);
             }
             return;
         }
 
-        memcpy(p_buffer, p_event->eventField.evtCbSduInd.payload, p_event->eventField.evtCbSduInd.length);
+        (void)memcpy(p_buffer, p_event->eventField.evtCbSduInd.payload, p_event->eventField.evtCbSduInd.length);
 
         p_conn->queueIn.packetList[p_conn->queueIn.writeIndex].leL2capId= p_conn->leL2capId;
         p_conn->queueIn.packetList[p_conn->queueIn.writeIndex].length = p_event->eventField.evtCbSduInd.length;
@@ -367,7 +367,7 @@ static void ble_trcbps_RcvData(BLE_TRCBPS_ConnList_T *p_conn, BLE_L2CAP_Event_T 
 
 static bool ble_trcbps_CheckQueuedTask(void)
 {
-    if (s_trcbpFlag)
+    if (s_trcbpFlag != 0U)
     {
         return true;
     }
@@ -385,12 +385,12 @@ static bool ble_trcbps_CheckQueuedTask(void)
     return false;
 }
 
-void ble_trcbps_ProcessQueuedTask(void)
+static void ble_trcbps_ProcessQueuedTask(void)
 {
     uint8_t i;
     uint16_t ret;
 
-    if (s_trcbpFlag)
+    if (s_trcbpFlag != 0U)
     {
         for (i = 0; i < BLE_TRCBPS_MAX_CONNLIST_NBR; i++)
         {
@@ -502,7 +502,7 @@ uint16_t BLE_TRCBPS_ConnReq(uint16_t connHandle)
     {
         BLE_TRCBPS_EvtConnStatus_T connStatusPara;
 
-        memset((uint8_t *)&connStatusPara, 0, sizeof(BLE_TRCBPS_EvtConnStatus_T));
+        (void)memset((uint8_t *)&connStatusPara, 0, sizeof(BLE_TRCBPS_EvtConnStatus_T));
 
         p_conn->connHandle = connHandle;
         p_conn->state = BLE_TRCBPS_STATUS_CONNECTING;
@@ -543,7 +543,7 @@ uint16_t BLE_TRCBPS_DisconnectReq(uint16_t connHandle)
     {
         BLE_TRCBPS_EvtConnStatus_T connStatusPara;
 
-        memset((uint8_t *)&connStatusPara, 0, sizeof(BLE_TRCBPS_EvtConnStatus_T));
+        (void)memset((uint8_t *)&connStatusPara, 0, sizeof(BLE_TRCBPS_EvtConnStatus_T));
 
         p_conn->state = BLE_TRCBPS_STATUS_DISCONNECTING;
 
@@ -575,7 +575,7 @@ uint16_t BLE_TRCBPS_SendData(uint16_t connHandle, uint16_t len, uint8_t *p_data)
     }
     if (p_conn->state == BLE_TRCBPS_STATUS_CONNECTED)
     {
-        if (p_conn->peerCredits)
+        if (p_conn->peerCredits != 0U)
         {
             uint16_t ret;
 
@@ -628,9 +628,9 @@ uint16_t BLE_TRCBPS_SendVendorCommand(uint16_t connHandle, uint8_t cmdId, uint16
         uint16_t ret;
 
         p_hvParams->charHandle = BLE_TRCB_HDL_CHARVAL_CTRL;
-        p_hvParams->charLength = (len + 1);
+        p_hvParams->charLength = (len + 1U);
         p_hvParams->charValue[0] = cmdId;
-        memcpy(&p_hvParams->charValue[1], p_payload, len);
+        (void)memcpy(&p_hvParams->charValue[1], p_payload, len);
         p_hvParams->sendType = ATT_HANDLE_VALUE_NTF;
         ret = GATTS_SendHandleValue(p_conn->connHandle, p_hvParams);
 
@@ -656,7 +656,7 @@ uint16_t BLE_TRCBPS_GetDataLength(uint16_t connHandle, uint16_t *p_dataLength)
         return MBA_RES_INVALID_PARA;
     }
 
-    if (p_conn->queueIn.usedNum > 0)
+    if (p_conn->queueIn.usedNum > 0U)
     {
         *p_dataLength = p_conn->queueIn.packetList[p_conn->queueIn.readIndex].length;
     }
@@ -675,7 +675,7 @@ uint16_t BLE_TRCBPS_GetData(uint16_t connHandle, uint8_t *p_data)
         return MBA_RES_INVALID_PARA;
     }
 
-    if (p_conn->queueIn.usedNum > 0)
+    if (p_conn->queueIn.usedNum > 0U)
     {
         uint8_t maxBufNum;
         uint16_t maxAccuCredit;
@@ -691,9 +691,9 @@ uint16_t BLE_TRCBPS_GetData(uint16_t connHandle, uint8_t *p_data)
             maxAccuCredit = BLE_TRCBPS_DATA_MAX_ACCU_CREDITS;
         }
 
-        if (p_conn->queueIn.packetList[p_conn->queueIn.readIndex].p_packet)
+        if (p_conn->queueIn.packetList[p_conn->queueIn.readIndex].p_packet != NULL)
         {
-            memcpy(p_data, p_conn->queueIn.packetList[p_conn->queueIn.readIndex].p_packet, p_conn->queueIn.packetList[p_conn->queueIn.readIndex].length);
+            (void)memcpy(p_data, p_conn->queueIn.packetList[p_conn->queueIn.readIndex].p_packet, p_conn->queueIn.packetList[p_conn->queueIn.readIndex].length);
 
             OSAL_Free(p_conn->queueIn.packetList[p_conn->queueIn.readIndex].p_packet);
             p_conn->queueIn.packetList[p_conn->queueIn.readIndex].p_packet = NULL;
@@ -740,7 +740,7 @@ static void ble_trcbps_CtrlValue(BLE_TRCBPS_ConnList_T *p_conn, uint16_t length,
 {
     BLE_TRCBPS_Event_T evtPara;
 
-    memset((uint8_t *) &evtPara, 0, sizeof(evtPara));
+    (void)memset((uint8_t *) &evtPara, 0, sizeof(evtPara));
 
     if ((p_value[0] >= BLE_TRCBPS_VENDOR_OPCODE_MIN) && (p_value[0] <= BLE_TRCBPS_VENDOR_OPCODE_MAX)
         && s_bleTrcbpProcess)
@@ -761,12 +761,12 @@ static uint8_t ble_trcbps_CtrlCccd(BLE_TRCBPS_ConnList_T *p_conn, uint8_t *p_val
 
     BUF_LE_TO_U16(&cccd, p_value);
     
-    if ((cccd != 0) && (cccd != BLE_TRCBPS_CCCD_NOTIFY))
+    if ((cccd != 0U) && (cccd != BLE_TRCBPS_CCCD_NOTIFY))
     {
         return ATT_ERRCODE_APPLICATION_ERROR;
     }
 
-    memset((uint8_t *)&connStatusPara, 0, sizeof(BLE_TRCBPS_EvtConnStatus_T));
+    (void)memset((uint8_t *)&connStatusPara, 0, sizeof(BLE_TRCBPS_EvtConnStatus_T));
 
     connStatusPara.connHandle = p_conn->connHandle;
     connStatusPara.chanType = BLE_TRCBPS_CTRL_CHAN;
@@ -806,7 +806,7 @@ static void ble_trcbps_GattsWriteProcess(GATT_Event_T *p_event)
 
     if (p_event->eventField.onWrite.writeType == ATT_PREPARE_WRITE_REQ)
     {
-        error = ATT_ERRCODE_APPLICATION_ERROR;
+        error = ATT_ERRCODE_REQUEST_NOT_SUPPORT;
     }
 
     if (!error)
@@ -841,7 +841,7 @@ static void ble_trcbps_GattsWriteProcess(GATT_Event_T *p_event)
             {
                 BLE_TRCBPS_Event_T evtPara;
                 evtPara.eventId = BLE_TRCBPS_EVT_ERR_NO_MEM;
-                if (s_bleTrcbpProcess)
+                if (s_bleTrcbpProcess != NULL)
                 {
                     s_bleTrcbpProcess(&evtPara);
                 }
@@ -863,7 +863,7 @@ static void ble_trcbps_GattsWriteProcess(GATT_Event_T *p_event)
             {
                 BLE_TRCBPS_Event_T evtPara;
                 evtPara.eventId = BLE_TRCBPS_EVT_ERR_NO_MEM;
-                if (s_bleTrcbpProcess)
+                if (s_bleTrcbpProcess != NULL)
                 {
                     s_bleTrcbpProcess(&evtPara);
                 }
@@ -883,7 +883,7 @@ static void ble_trcbps_GattsWriteProcess(GATT_Event_T *p_event)
     }
 }
 
-void ble_trcbps_GattEventProcess(GATT_Event_T *p_event)
+static void ble_trcbps_GattEventProcess(GATT_Event_T *p_event)
 {
     BLE_TRCBPS_ConnList_T *p_conn = NULL;
 
@@ -898,7 +898,9 @@ void ble_trcbps_GattEventProcess(GATT_Event_T *p_event)
         {
             p_conn = ble_trcbps_GetConnListByHandle(p_event->eventField.onUpdateMTU.connHandle);
             if (p_conn == NULL)
+            {
                 break;
+            }
 
             p_conn->attMtu = p_event->eventField.onUpdateMTU.exchangedMTU;
         }
@@ -915,7 +917,7 @@ void ble_trcbps_GattEventProcess(GATT_Event_T *p_event)
     }
 }
 
-void ble_trcbps_GapEventProcess(BLE_GAP_Event_T *p_event)
+static void ble_trcbps_GapEventProcess(BLE_GAP_Event_T *p_event)
 {
     switch(p_event->eventId)
     {
@@ -933,6 +935,7 @@ void ble_trcbps_GapEventProcess(BLE_GAP_Event_T *p_event)
                 ble_trcbps_InitConnList(p_conn, true);
             }
         }
+        break;
 
         case BLE_GAP_EVT_TX_BUF_AVAILABLE:
         {
@@ -980,7 +983,7 @@ static void ble_trcbps_L2capEventProcess(BLE_L2CAP_Event_T *p_event)
             {
                 BLE_TRCBPS_EvtConnStatus_T connStatusPara;
 
-                memset((uint8_t *)&connStatusPara, 0, sizeof(BLE_TRCBPS_EvtConnStatus_T));
+                (void)memset((uint8_t *)&connStatusPara, 0, sizeof(BLE_TRCBPS_EvtConnStatus_T));
 
                 p_conn->connHandle = p_event->eventField.evtCbConnInd.connHandle;
                 p_conn->leL2capId =p_event->eventField.evtCbConnInd.leL2capId;
@@ -1012,7 +1015,7 @@ static void ble_trcbps_L2capEventProcess(BLE_L2CAP_Event_T *p_event)
             {
                 BLE_TRCBPS_EvtConnStatus_T connStatusPara;
 
-                memset((uint8_t *)&connStatusPara, 0, sizeof(BLE_TRCBPS_EvtConnStatus_T));
+                (void)memset((uint8_t *)&connStatusPara, 0, sizeof(BLE_TRCBPS_EvtConnStatus_T));
 
                 connStatusPara.connHandle = p_conn->connHandle;
                 connStatusPara.chanType= ble_trcbps_CovertSpsmToType(p_conn->spsm);
@@ -1064,7 +1067,7 @@ static void ble_trcbps_L2capEventProcess(BLE_L2CAP_Event_T *p_event)
             {
                 BLE_TRCBPS_EvtConnStatus_T connStatusPara;
 
-                memset((uint8_t *)&connStatusPara, 0, sizeof(BLE_TRCBPS_EvtConnStatus_T));
+                (void)memset((uint8_t *)&connStatusPara, 0, sizeof(BLE_TRCBPS_EvtConnStatus_T));
 
                 connStatusPara.connHandle = p_conn->connHandle;
                 connStatusPara.chanType = ble_trcbps_CovertSpsmToType(p_conn->spsm);

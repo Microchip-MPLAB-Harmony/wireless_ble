@@ -47,6 +47,14 @@
 #ifndef BLE_DIS_H
 #define BLE_DIS_H
 
+// DOM-IGNORE-BEGIN
+#ifdef __cplusplus  // Provide C++ Compatibility
+
+extern "C" {
+
+#endif
+// DOM-IGNORE-END
+
 // *****************************************************************************
 // *****************************************************************************
 // Section: Macros
@@ -146,8 +154,13 @@ typedef enum BLE_DIS_AttributeHandle_T
  *@return MBA_RES_NO_RESOURCE                Fail to register service.
  *
  */
-uint16_t BLE_DIS_Add();
+uint16_t BLE_DIS_Add(void);
 
+//DOM-IGNORE-BEGIN
+#ifdef __cplusplus
+}
+#endif
+//DOM-IGNORE-END
 
 #endif
 

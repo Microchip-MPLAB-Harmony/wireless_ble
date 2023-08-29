@@ -47,6 +47,14 @@
 #ifndef BLE_ANS_H
 #define BLE_ANS_H
 
+// DOM-IGNORE-BEGIN
+#ifdef __cplusplus  // Provide C++ Compatibility
+
+extern "C" {
+
+#endif
+// DOM-IGNORE-END
+
 // *****************************************************************************
 // *****************************************************************************
 // Section: Macros
@@ -99,7 +107,14 @@ typedef enum BLE_ANS_AttributeHandle_T
  *@return MBA_RES_NO_RESOURCE                Fail to register service.
  *
  */
-uint16_t BLE_ANS_Add();
+uint16_t BLE_ANS_Add(void);
+
+//DOM-IGNORE-BEGIN
+#ifdef __cplusplus
+}
+#endif
+//DOM-IGNORE-END
+
 #endif
 /**
   @}

@@ -41,15 +41,14 @@
     are defined here for convenience.
 *******************************************************************************/
 
-#ifndef _APP_HOGPS_HANDLER_H
-#define _APP_HOGPS_HANDLER_H
+#ifndef APP_HOGPS_HANDLER_H
+#define APP_HOGPS_HANDLER_H
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Included Files
 // *****************************************************************************
 // *****************************************************************************
-
 #include <stdint.h>
 #include <string.h>
 #include "ble_hogps/ble_hogps.h"
@@ -88,14 +87,14 @@ extern "C" {
 */
 void APP_HogpsEvtHandler(BLE_HOGPS_Event_T *p_event);
 
-
-#endif /* _APP_HOGPS_HANDLER_H */
-
 //DOM-IGNORE-BEGIN
 #ifdef __cplusplus
 }
 #endif
 //DOM-IGNORE-END
+
+#endif /* APP_HOGPS_HANDLER_H */
+
 
 /*******************************************************************************
  End of File

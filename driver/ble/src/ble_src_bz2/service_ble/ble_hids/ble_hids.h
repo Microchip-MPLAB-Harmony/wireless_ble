@@ -55,6 +55,14 @@
 
 #include "ble_bas/ble_bas.h"
 
+// DOM-IGNORE-BEGIN
+#ifdef __cplusplus  // Provide C++ Compatibility
+
+extern "C" {
+
+#endif
+// DOM-IGNORE-END
+
 // *****************************************************************************
 // *****************************************************************************
 // Section: Macros
@@ -94,7 +102,7 @@
 /**@defgroup BLE_HIDS_REP_ID BLE_HIDS_REP_ID
  * @brief Report ID definitions of BLE Human Interface Device Service.
  * @{ */
-#define HID_REPORT_ID_KB                                    0x01            /**< HID Report ID: Keyboard. */
+#define HID_REPORT_ID_KB                                    0x00            /**< HID Report ID: Keyboard. */
 #define HID_REPORT_ID_MB                                    0x02            /**< HID Report ID: Mouse buttons. */
 #define HID_REPORT_ID_MM                                    0x03            /**< HID Report ID: Mouse motion. */
 /** @} */
@@ -128,7 +136,7 @@
 /**@defgroup BLE_HIDS_ASSIGN_HANDLE BLE_HIDS_ASSIGN_HANDLE
  * @brief Assigned attribute handles of BLE Human Interface Device Service.
  * @{ */
-#define HIDS_START_HDL                                      0x0190          /**< The start attribute handle of Human Interface Device service. */
+#define HIDS_START_HDL                                      0x0050          /**< The start attribute handle of Human Interface Device service. */
 /** @} */
 
 /**@brief Definition of BLE Human Interface Device Service attribute handle */
@@ -212,7 +220,13 @@ typedef enum BLE_HIDS_AttributeHandle_T
  *@return MBA_RES_NO_RESOURCE                Fail to register service.
  *
  */
-uint16_t BLE_HIDS_Add();
+uint16_t BLE_HIDS_Add(void);
+
+//DOM-IGNORE-BEGIN
+#ifdef __cplusplus
+}
+#endif
+//DOM-IGNORE-END
 
 #endif
 

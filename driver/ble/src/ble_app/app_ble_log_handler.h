@@ -41,8 +41,8 @@
     are defined here for convenience.
 *******************************************************************************/
 
-#ifndef _APP_BLE_LOG_HANDLER_H
-#define _APP_BLE_LOG_HANDLER_H
+#ifndef APP_BLE_LOG_HANDLER_H
+#define APP_BLE_LOG_HANDLER_H
 
 // *****************************************************************************
 // *****************************************************************************
@@ -88,13 +88,15 @@ extern "C" {
 void APP_BleLogOutput(uint8_t logType, uint16_t packetLength, uint8_t *p_logPacket);
 
 
-#endif /* _APP_BLE_LOG_HANDLER_H */
-
 //DOM-IGNORE-BEGIN
 #ifdef __cplusplus
 }
 #endif
 //DOM-IGNORE-END
+
+
+#endif /* APP_BLE_LOG_HANDLER_H */
+
 
 /*******************************************************************************
  End of File

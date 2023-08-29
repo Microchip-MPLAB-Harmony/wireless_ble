@@ -83,6 +83,14 @@
 #include "ble_tps/ble_tps.h"
 #endif
 
+// DOM-IGNORE-BEGIN
+#ifdef __cplusplus  // Provide C++ Compatibility
+
+extern "C" {
+
+#endif
+// DOM-IGNORE-END
+
 // *****************************************************************************
 // *****************************************************************************
 // Section: Macros
@@ -128,7 +136,7 @@ typedef enum BLE_PXPR_EventId_T
 /**@brief Data structure for @ref BLE_PXPR_EVT_LLS_ALERT_LEVEL_WRITE_IND, @ref BLE_PXPR_EVT_IAS_ALERT_LEVEL_WRITE_IND event. */
 typedef struct BLE_PXPR_EvtAlertLevelWriteInd_T
 {
-    uint16_t                            connHandle;       /**< The connection handle to request writing alert level */
+    uint16_t                            connHandle;       /**< The connection handle to request writing alert level. */
     BLE_PXPR_AlertLevel_T               alertLevel;       /**< The level that the request wants to write. See @ref BLE_PXPR_AlertLevel_T for the detail. */
 } BLE_PXPR_EvtAlertLevelWriteInd_T;
 
@@ -136,8 +144,8 @@ typedef struct BLE_PXPR_EvtAlertLevelWriteInd_T
 /**@brief Union of BLE PXP Reporter callback event data types.*/
 typedef union
 {
-    BLE_PXPR_EvtAlertLevelWriteInd_T    evtLlsAlertLevelWriteInd;       /**< Handle @ref BLE_PXPR_EVT_LLS_ALERT_LEVEL_WRITE_IND */
-    BLE_PXPR_EvtAlertLevelWriteInd_T    evtIasAlertLevelWriteInd;       /**< Handle @ref BLE_PXPR_EVT_IAS_ALERT_LEVEL_WRITE_IND */
+    BLE_PXPR_EvtAlertLevelWriteInd_T    evtLlsAlertLevelWriteInd;       /**< Handle @ref BLE_PXPR_EVT_LLS_ALERT_LEVEL_WRITE_IND. */
+    BLE_PXPR_EvtAlertLevelWriteInd_T    evtIasAlertLevelWriteInd;       /**< Handle @ref BLE_PXPR_EVT_IAS_ALERT_LEVEL_WRITE_IND. */
 } BLE_PXPR_EventField_T;
 
 
@@ -145,7 +153,7 @@ typedef union
 typedef struct  BLE_PXPR_Event_T
 {
     BLE_PXPR_EventId_T                  eventId;            /**< Event ID. See @ref BLE_PXPR_EventId_T.  */
-    BLE_PXPR_EventField_T               eventField;         /**< Event field */
+    BLE_PXPR_EventField_T               eventField;         /**< Event field. */
 } BLE_PXPR_Event_T;
 
 
@@ -205,7 +213,7 @@ void BLE_PXPR_SetTxPowerLevel(int8_t level);
 
 
 /**@brief Handle BLE_Stack events.
- *       This API should be called in the application while caching BLE_Stack events
+ *       This API should be called in the application while caching BLE_Stack events.
  *
  * @param[in] p_stackEvent          Pointer to BLE_Stack events buffer.
  *
@@ -215,6 +223,11 @@ void BLE_PXPR_BleEventHandler(STACK_Event_T *p_stackEvent);
 
 /**@} */ //BLE_PXPR_FUNS
 
+//DOM-IGNORE-BEGIN
+#ifdef __cplusplus
+}
+#endif
+//DOM-IGNORE-END
 
 #endif
 

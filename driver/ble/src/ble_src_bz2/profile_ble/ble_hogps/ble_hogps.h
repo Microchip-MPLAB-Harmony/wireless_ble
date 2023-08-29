@@ -58,6 +58,14 @@
 #include "stack_mgr.h"
 #include "ble_hids/ble_hids.h"
 
+// DOM-IGNORE-BEGIN
+#ifdef __cplusplus  // Provide C++ Compatibility
+
+extern "C" {
+
+#endif
+// DOM-IGNORE-END
+
 // *****************************************************************************
 // *****************************************************************************
 // Section: Macros
@@ -144,23 +152,23 @@ typedef struct BLE_HOGPS_EvtBootReportWrite_T
 /**@brief Union of BLE HID over GATT profile server role callback event data types. */
 typedef union
 {
-    BLE_HOGPS_EvtBootModeEnter_T        evtBootModeEnter;               /**< Handle @ref BLE_HOGPS_EVT_BOOT_MODE_ENTER_IND */
-    BLE_HOGPS_EvtReportModeEnter_T      evtReportModeEnter;             /**< Handle @ref BLE_HOGPS_EVT_REPORT_MODE_ENTER_IND */
-    BLE_HOGPS_EvtHostSuspendEnter_T     evtHostSuspendEnter;            /**< Handle @ref BLE_HOGPS_EVT_HOST_SUSPEND_ENTER_IND */
-    BLE_HOGPS_EvtHostSuspendExit_T      evtHostSuspendExit;             /**< Handle @ref BLE_HOGPS_EVT_HOST_SUSPEND_EXIT_IND */
-    BLE_HOGPS_EvtReportWrite_T          evtInputReportWrite;            /**< Handle @ref BLE_HOGPS_EVT_INPUT_REPORT_WRITE_IND */
-    BLE_HOGPS_EvtReportWrite_T          evtOutputReportWrite;           /**< Handle @ref BLE_HOGPS_EVT_OUTPUT_REPORT_WRITE_IND */
-    BLE_HOGPS_EvtReportWrite_T          evtFeatureReportWrite;          /**< Handle @ref BLE_HOGPS_EVT_FEATURE_REPORT_WRITE_IND */
-    BLE_HOGPS_EvtBootReportWrite_T      evtBootKbOutputReportWrite;     /**< Handle @ref BLE_HOGPS_EVT_BOOT_KB_INPUT_REPORT_WRITE_IND */
-    BLE_HOGPS_EvtBootReportWrite_T      evtBootKbInputReportWrite;      /**< Handle @ref BLE_HOGPS_EVT_BOOT_KB_OUTPUT_REPORT_WRITE_IND */
-    BLE_HOGPS_EvtBootReportWrite_T      evtBootMouseInputReportWrite;   /**< Handle @ref BLE_HOGPS_EVT_BOOT_M_INPUT_REPORT_WRITE_IND */
+    BLE_HOGPS_EvtBootModeEnter_T        evtBootModeEnter;               /**< Handle @ref BLE_HOGPS_EVT_BOOT_MODE_ENTER_IND. */
+    BLE_HOGPS_EvtReportModeEnter_T      evtReportModeEnter;             /**< Handle @ref BLE_HOGPS_EVT_REPORT_MODE_ENTER_IND. */
+    BLE_HOGPS_EvtHostSuspendEnter_T     evtHostSuspendEnter;            /**< Handle @ref BLE_HOGPS_EVT_HOST_SUSPEND_ENTER_IND. */
+    BLE_HOGPS_EvtHostSuspendExit_T      evtHostSuspendExit;             /**< Handle @ref BLE_HOGPS_EVT_HOST_SUSPEND_EXIT_IND. */
+    BLE_HOGPS_EvtReportWrite_T          evtInputReportWrite;            /**< Handle @ref BLE_HOGPS_EVT_INPUT_REPORT_WRITE_IND.*/
+    BLE_HOGPS_EvtReportWrite_T          evtOutputReportWrite;           /**< Handle @ref BLE_HOGPS_EVT_OUTPUT_REPORT_WRITE_IND. */
+    BLE_HOGPS_EvtReportWrite_T          evtFeatureReportWrite;          /**< Handle @ref BLE_HOGPS_EVT_FEATURE_REPORT_WRITE_IND. */
+    BLE_HOGPS_EvtBootReportWrite_T      evtBootKbOutputReportWrite;     /**< Handle @ref BLE_HOGPS_EVT_BOOT_KB_INPUT_REPORT_WRITE_IND. */
+    BLE_HOGPS_EvtBootReportWrite_T      evtBootKbInputReportWrite;      /**< Handle @ref BLE_HOGPS_EVT_BOOT_KB_OUTPUT_REPORT_WRITE_IND. */
+    BLE_HOGPS_EvtBootReportWrite_T      evtBootMouseInputReportWrite;   /**< Handle @ref BLE_HOGPS_EVT_BOOT_M_INPUT_REPORT_WRITE_IND. */
 } BLE_HOGPS_EventField_T;
 
 /**@brief BLE HID over GATT profile server role callback event.*/
 typedef struct  BLE_HOGPS_Event_T
 {
     BLE_HOGPS_EventId_T                 eventId;            /**< Event ID. See @ref BLE_HOGPS_EventId_T.  */
-    BLE_HOGPS_EventField_T              eventField;         /**< Event field */
+    BLE_HOGPS_EventField_T              eventField;         /**< Event field. */
 } BLE_HOGPS_Event_T;
 
 
@@ -198,7 +206,7 @@ uint16_t BLE_HOGPS_Init(void);
 void BLE_HOGPS_EventRegister(BLE_HOGPS_EventCb_T routine);
 
 /**@brief Handle BLE_Stack events.
- *        This API should be called in the application while caching BLE_Stack events
+ *        This API should be called in the application while caching BLE_Stack events.
  *
  * @param[in] p_stackEvent          Pointer to BLE_Stack events buffer.
  *
@@ -344,6 +352,14 @@ uint16_t BLE_HOGPS_SendBootMouseInputReport(uint16_t connHandle, uint8_t buttons
 uint16_t BLE_HOGPS_SendBatteryLevel(uint16_t connHandle);
 
 /**@} */ //BLE_HOGPS_FUNS
+
+
+//DOM-IGNORE-BEGIN
+#ifdef __cplusplus
+}
+#endif
+//DOM-IGNORE-END
+
 
 #endif
 

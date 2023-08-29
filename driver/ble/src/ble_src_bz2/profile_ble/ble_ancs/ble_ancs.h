@@ -36,10 +36,11 @@
   Description:
     This file contains the BLE ANCS for application user.
  *******************************************************************************/
+/** @addtogroup BLE_PROFILE BLE Profile
+ *  @{ */
 
-
-/**
- * @addtogroup BLE_ANCS
+/** 
+ * @defgroup BLE_ANCS BLE ANCS
  * @{
  * @brief Header file for the BLE ANCS.
  * @note Definitions and prototypes for the BLE ANCS stack layer application programming interface.
@@ -57,6 +58,15 @@
 #include "ble_gcm/ble_dd.h"
 #include "gatt.h"
 
+// DOM-IGNORE-BEGIN
+#ifdef __cplusplus  // Provide C++ Compatibility
+
+extern "C" {
+
+#endif
+// DOM-IGNORE-END
+
+
 // *****************************************************************************
 // *****************************************************************************
 // Section: Macros
@@ -68,16 +78,25 @@
 /**@defgroup BLE_ANCS_DECODE_LEN    ANCS length definition
  * @brief The definition of maximum length for decoded attribute. 
  * @{ */
-#define BLE_ANCS_MAX_PACKET_BUFFER_SIZE     1024        /**< Maximum length of buffer for reassembled packet. */
-#define BLE_ANCS_MAX_APPID_LEN              32          /**< Maximum length of App Identifier. */      
-#define BLE_ANCS_MAX_TITLE_LEN              32          /**< Maximum length of Title. */
-#define BLE_ANCS_MAX_SUB_TITLE_LEN          32          /**< Maximum length of Subtitle. */
-#define BLE_ANCS_MAX_MESSAGE_LEN            512         /**< Maximum length of Message. */
-#define BLE_ANCS_MAX_MESSAGE_SIZE_LEN       5           /**< Maximum length of Message Size. */      
-#define BLE_ANCS_MAX_DATE_LEN               18          /**< Maximum length of Date Size. */   
-#define BLE_ANCS_MAX_POS_ACTION_LABEL_LEN   8           /**< Maximum length of Positive Action content. */      
-#define BLE_ANCS_MAX_NEG_ACTION_LABEL_LEN   8           /**< Maximum length of Negative action content. */  
-#define BLE_ANCS_MAX_APP_NAME_LEN           16          /**< Maximum length of Application Name. */  
+#define BLE_ANCS_MAX_PACKET_BUFFER_SIZE     (1024U)        /**< Maximum length of buffer for reassembled packet. */
+#define BLE_ANCS_MAX_APPID_LEN              (32U)          /**< Maximum length of App Identifier. */      
+#define BLE_ANCS_MAX_TITLE_LEN              (32U)          /**< Maximum length of Title. */
+#define BLE_ANCS_MAX_SUB_TITLE_LEN          (32U)          /**< Maximum length of Subtitle. */
+#define BLE_ANCS_MAX_MESSAGE_LEN            (512U)         /**< Maximum length of Message. */
+#define BLE_ANCS_MAX_MESSAGE_SIZE_LEN       (5U)           /**< Maximum length of Message Size. */      
+#define BLE_ANCS_MAX_DATE_LEN               (18U)          /**< Maximum length of Date Size. */   
+#define BLE_ANCS_MAX_POS_ACTION_LABEL_LEN   (8U)           /**< Maximum length of Positive Action content. */      
+#define BLE_ANCS_MAX_NEG_ACTION_LABEL_LEN   (8U)           /**< Maximum length of Negative action content. */  
+#define BLE_ANCS_MAX_APP_NAME_LEN           (16U)          /**< Maximum length of Application Name. */  
+/** @} */
+
+/**@defgroup ANCS_ERROR_CODES  ANCS error code
+ * @brief The definition of ANCS Error Codes
+ * @{ */
+#define ANCS_ERRCODE_UNKNOWN_COMMAND        0xA0       /**< The commandID was not recognized by the NP.*/
+#define ANCS_ERRCODE_INVALID_COMMAND        0xA1       /**< The command was improperly formatted.*/
+#define ANCS_ERRCODE_INVALID_PARAMETER      0xA2       /**< One of the parameters does not refer to an existing object on the NP.*/
+#define ANCS_ERRCODE_ACTION_FAILED          0xA3       /**< The action was not performed.*/
 /** @} */
        
 /**@} */ //BLE_ANCS_DEFINES     
@@ -125,12 +144,13 @@ typedef enum BLE_ANCS_EventId_T
     BLE_ANCS_EVT_APP_ATTR_IND,                          /**< App attribute received. See @ref BLE_ANCS_EvtAppAttrInd_T for event details.*/
     BLE_ANCS_EVT_ERR_UNSPECIFIED_IND,                   /**< Profile internal unspecified error occurs. */
     BLE_ANCS_EVT_ERR_NO_MEM_IND,                        /**< Profile internal error occurs due to insufficient heap memory. */
+    BLE_ANCS_EVT_ERR_IND,                               /**< Profile writing to the Control Point characteristic, an NC may receive the following ANCS-specific error codes. */
 } BLE_ANCS_EventId_T;
 
 /**@brief NotificationAttributeID for iOS Get Notification Attributes. */
 typedef enum BLE_ANCS_NtfyAttrId_T
 {
-    BLE_ANCS_NTFY_ATTR_ID_APP_IDENTIFIER = 0,           /**< Identifies that the attribute data is of an "App Identifier" type. */
+    BLE_ANCS_NTFY_ATTR_ID_APP_IDENTIFIER = 0x00U,           /**< Identifies that the attribute data is of an "App Identifier" type. */
     BLE_ANCS_NTFY_ATTR_ID_TITLE,                        /**< Identifies that the attribute data is a "Title". */
     BLE_ANCS_NTFY_ATTR_ID_SUBTITLE,                     /**< Identifies that the attribute data is a "Subtitle". */
     BLE_ANCS_NTFY_ATTR_ID_MESSAGE,                      /**< Identifies that the attribute data is a "Message". */
@@ -138,7 +158,7 @@ typedef enum BLE_ANCS_NtfyAttrId_T
     BLE_ANCS_NTFY_ATTR_ID_DATE,                         /**< Identifies that the attribute data is a "Date". */
     BLE_ANCS_NTFY_ATTR_ID_POSITIVE_ACTION_LABEL,        /**< The notification has a "Positive action" that can be executed associated with it. */
     BLE_ANCS_NTFY_ATTR_ID_NEGATIVE_ACTION_LABEL,        /**< The notification has a "Negative action" that can be executed associated with it. */
-    BLE_ANCS_NTFY_ATTR_ID_MAX							/**< Undefined notification attribute id. */
+    BLE_ANCS_NTFY_ATTR_ID_MAX                           /**< Undefined notification attribute id. */
 } BLE_ANCS_NtfyAttrId_T;
 
 /**@} */ //BLE_ANPC_ENUMS
@@ -155,16 +175,16 @@ typedef enum BLE_ANCS_NtfyAttrId_T
 typedef struct {
     uint8_t                     appId           : 1;    /**< Set true if App Identifier is enabled. */
     uint8_t                     title           : 1;    /**< Set true if Title is enabled. */
-    uint8_t                     subtitle        : 1;    /**< Set true if Sub Title is enabled. */      
+    uint8_t                     subtitle        : 1;    /**< Set true if Sub Title is enabled. */
     uint8_t                     msg             : 1;    /**< Set true if Message is enabled. */
     uint8_t                     msgSize         : 1;    /**< Set true if Message Size is enabled. */
     uint8_t                     date            : 1;    /**< Set true if Date is enabled. */
     uint8_t                     positiveAction  : 1;    /**< Set true if Positive Action is enabled. */
-    uint8_t                     negativeAction  : 1;    /**< Set true if Negative Action is enabled. */    
-} BLE_ANCS_NtfyAttrsMask_T;       
+    uint8_t                     negativeAction  : 1;    /**< Set true if Negative Action is enabled. */
+} BLE_ANCS_NtfyAttrsMask_T;
 
 /**@brief The structure contains iOS app attributes id. */
-typedef struct {                
+typedef struct {
     uint8_t                     displayName     : 1;    /**< Set true if Display name is enable. */
     uint8_t                     reserved        : 7;    /**< Reserved. */
 } BLE_ANCS_AppAttrsMask_T;
@@ -183,30 +203,30 @@ typedef struct
 /**@brief The structure contains iOS notification attributes decoded information. */
 typedef struct
 {
-    BLE_ANCS_NtfyAttrsMask_T    bitmask;                        /**< Notification attribute bitmask. It's used to indicate whether the following filed is enabled or not. */                               
-    uint32_t                    ntfyId;                         /**< Notification UID. */                        
-    uint8_t                     appId[BLE_ANCS_MAX_APPID_LEN];  /**< Valid if App Identifier is enabled. */   
-    uint8_t                     *p_title;                       /**< Valid if Title is enabled. */   
-    uint8_t                     *p_subtitle;                    /**< Valid if Sub Title is enabled. */   
-    uint8_t                     *p_msg;                         /**< Valid if Message is enabled. */   
-    uint16_t                    msgSize;                        /**< Valid if Message Size is enabled. */      
-    uint8_t                     date[BLE_ANCS_MAX_DATE_LEN];    /**< Valid if Date is enabled. */      
-    uint8_t                     positiveAction[BLE_ANCS_MAX_POS_ACTION_LABEL_LEN]; /**< Valid if Positive Action is enabled. */           
-    uint8_t                     negativeAction[BLE_ANCS_MAX_NEG_ACTION_LABEL_LEN]; /**< Valid if Negative Action is enabled. */   
-    
+    BLE_ANCS_NtfyAttrsMask_T    bitmask;                        /**< Notification attribute bitmask. It's used to indicate whether the following filed is enabled or not. */
+    uint32_t                    ntfyId;                         /**< Notification UID. */
+    uint8_t                     appId[BLE_ANCS_MAX_APPID_LEN];  /**< Valid if App Identifier is enabled. */
+    uint8_t                     *p_title;                       /**< Valid if Title is enabled. */
+    uint8_t                     *p_subtitle;                    /**< Valid if Sub Title is enabled. */
+    uint8_t                     *p_msg;                         /**< Valid if Message is enabled. */
+    uint16_t                    msgSize;                        /**< Valid if Message Size is enabled. */
+    uint8_t                     date[BLE_ANCS_MAX_DATE_LEN];    /**< Valid if Date is enabled. */
+    uint8_t                     positiveAction[BLE_ANCS_MAX_POS_ACTION_LABEL_LEN]; /**< Valid if Positive Action is enabled. */
+    uint8_t                     negativeAction[BLE_ANCS_MAX_NEG_ACTION_LABEL_LEN]; /**< Valid if Negative Action is enabled. */
+
 } BLE_ANCS_DecodeNtfyAttrs_T;
 
 /**@brief The structure contains iOS app attributes decoded information. */
 typedef struct
 {
-    uint8_t                     appId[BLE_ANCS_MAX_APPID_LEN];          /**< App Identifier. */   
-    uint8_t                     displayName[BLE_ANCS_MAX_APP_NAME_LEN]; /**< Display Name. */       
+    uint8_t                     appId[BLE_ANCS_MAX_APPID_LEN];          /**< App Identifier. */
+    uint8_t                     displayName[BLE_ANCS_MAX_APP_NAME_LEN]; /**< Display Name. */
 } BLE_ANCS_DecodeAppAttrs_T;
 
 /**@brief Data structure for @ref BLE_ANCS_EVT_NTFY_ADDED_IND, @ref BLE_ANCS_EVT_NTFY_MODIFIED_IND, @ref BLE_ANCS_EVT_NTFY_REMOVED_IND event. */
 typedef struct
 {
-    uint16_t                    connHandle;             /**< Connection handle associated with this connection. */        
+    uint16_t                    connHandle;             /**< Connection handle associated with this connection. */
     uint32_t                    ntfyId;                 /**< Notification UID. A 32-bit numerical value that is the unique identifier (UID) for the iOS notification. */
     BLE_ANCS_NtfyEvtFlagMask_T  ntfyEvtFlagMask;        /**< Bitmask to signal whether a special condition applies to the notification. For example, "Silent" or "Important". */
     BLE_ANCS_CategoryId_T       categoryId;             /**< Classification of the notification type. For example, email or location. */
@@ -216,16 +236,16 @@ typedef struct
 /**@brief Data structure for @ref BLE_ANCS_EVT_NTFY_ATTR_IND event. */
 typedef struct
 {
-    uint16_t                    connHandle;             /**< Connection handle associated with this connection. */   
+    uint16_t                    connHandle;             /**< Connection handle associated with this connection. */
     BLE_ANCS_DecodeNtfyAttrs_T  *p_data;                /**< Decoded iOS notification attribute information. See @ref BLE_ANCS_DecodeNtfyAttrs_T.*/
-} BLE_ANCS_EvtNtfyAttrInd_T;                        
-                                                        
-/**@brief Data structure for @ref BLE_ANCS_EVT_APP_ATTR_IND event. */                                                       
+} BLE_ANCS_EvtNtfyAttrInd_T;
+
+/**@brief Data structure for @ref BLE_ANCS_EVT_APP_ATTR_IND event. */
 typedef struct           
-{                                                       
-    uint16_t                    connHandle;             /**< Connection handle associated with this connection. */  
+{
+    uint16_t                    connHandle;             /**< Connection handle associated with this connection. */
     BLE_ANCS_DecodeAppAttrs_T   *p_data;                /**< Decoded app attribute information. See @ref BLE_ANCS_DecodeAppAttrs_T.*/
-} BLE_ANCS_EvtAppAttrInd_T; 
+} BLE_ANCS_EvtAppAttrInd_T;
 
 /**@brief Data structure for @ref BLE_ANCS_EVT_DISC_COMPLETE_IND event. */
 typedef struct BLE_ANCS_EvtDiscComplete_T
@@ -234,18 +254,25 @@ typedef struct BLE_ANCS_EvtDiscComplete_T
 }BLE_ANCS_EvtDiscComplete_T;
 
 /**@brief Data structure for @ref BLE_ANCS_EVT_ERR_ATTR_BUF_IND event. */
-typedef struct                 
-{                                                     
+typedef struct
+{
     uint16_t                    connHandle;             /**< Connection handle associated with this connection. */
     uint8_t                     attrId;                 /**< Attribute ID. See @ref BLE_ANCS_NtfyAttrId_T. */
-    uint16_t                    len;                    /**< length of the attribute. */                                                                                           
+    uint16_t                    len;                    /**< length of the attribute. */
 } BLE_ANCS_EvtErrAttrBufInd_T;
 
 /**@brief Data structure for @ref BLE_ANCS_EVT_ERR_RECOMPOSE_BUF_IND event. */
-typedef struct                 
-{                                                     
+typedef struct
+{
     uint16_t                    connHandle;             /**< Connection handle associated with this connection. */
 } BLE_ANCS_EvtErrRecomposeBufInd_T;
+
+/**@brief Data structure for @ref BLE_ANCS_EVT_ERR_IND event. */
+typedef struct
+{
+    uint16_t    				connHandle;        		/**< Connection handle associated with this connection. */
+    uint8_t     				errCode;           		/**< Reason why the request has generated an error response. See @ref ANCS_ERROR_CODES.*/
+} BLE_ANCS_EvtErrInd_T;
 
 /**@brief Union of BLE ANCS callback event data types. */
 typedef union
@@ -256,6 +283,7 @@ typedef union
     BLE_ANCS_EvtNtfyInd_T              evtNtfyInd;                  /**< Handle @ref BLE_ANCS_EVT_NTFY_ADDED_IND, @ref BLE_ANCS_EVT_NTFY_MODIFIED_IND, @ref BLE_ANCS_EVT_NTFY_REMOVED_IND. */
     BLE_ANCS_EvtNtfyAttrInd_T          evtNtfyAttrInd;              /**< Handle @ref BLE_ANCS_EVT_NTFY_ATTR_IND. */
     BLE_ANCS_EvtAppAttrInd_T           evtAppAttrInd;               /**< Handle @ref BLE_ANCS_EVT_APP_ATTR_IND. */
+    BLE_ANCS_EvtErrInd_T               evtErrInd;               	/**< Handle @ref BLE_ANCS_EVT_ERR_IND. */
 } BLE_ANCS_EventField_T;
 
 /**@brief BLE ANCS callback event. */
@@ -280,13 +308,13 @@ typedef void(*BLE_ANCS_EventCb_T)(BLE_ANCS_Event_T *p_event);
 
 /**@brief Initialize ANCS profile.
  *
- * @retval MBA_RES_SUCCESS                  Initialize BLE ANCS profile successfully. 
+ * @retval MBA_RES_SUCCESS                  Initialize BLE ANCS profile successfully.
  * @retval MBA_RES_FAIL                     Fail to initialize BLE ANCS profile.
  *
  */
-uint16_t BLE_ANCS_Init();
+uint16_t BLE_ANCS_Init(void);
 
-/**@brief Register BLE ANCS callback. 
+/**@brief Register BLE ANCS callback.
  *
  * @param[in] bleAncsHandler                Client callback function.
  *
@@ -295,7 +323,7 @@ void BLE_ANCS_EventRegister(BLE_ANCS_EventCb_T bleAncsHandler);
 
 
 /**@brief Handle BLE_Stack events.
- *        This API should be called in the application while caching BLE_Stack events
+ *        This API should be called in the application while caching BLE_Stack events.
  *
  * @param[in] p_stackEvent                  Pointer to BLE_Stack events buffer.
  *
@@ -303,7 +331,7 @@ void BLE_ANCS_EventRegister(BLE_ANCS_EventCb_T bleAncsHandler);
 void BLE_ANCS_BleEventHandler(STACK_Event_T *p_stackEvent);
 
 /**@brief Handle BLE_DD (Database Discovery middleware) events.
- *        This API should be called in the application while caching BLE_DD events
+ *        This API should be called in the application while caching BLE_DD events.
  *
  * @param[in] p_event                       Pointer to BLE_DD events buffer.
  *
@@ -329,11 +357,11 @@ uint16_t BLE_ANCS_GetNtfyAttr(uint16_t connHandle, uint32_t ntfyId, BLE_ANCS_Ntf
 
 /**@brief This API triggers ANCS client role (Notification Consumer) to retrieve a specific app attributes installed on the iOS device (Notification Provider).
  *
- * @param[in] connHandle                    The connection handle.  
+ * @param[in] connHandle                    The connection handle.
  * @param[in] p_appId                       Pointer to App Identifier(string with NULL-terminated) would like to get. App Identifier could be retrieved when receiving @ref BLE_ANCS_EVT_NTFY_ATTR_IND event.
- * @param[in] bitmask                       Bitmask value of App Attribute . Set true to enable retrieving, otherwise set to false.  See @ref BLE_ANCS_AppAttrsMask_T
- *   
- * @retval MBA_RES_SUCCESS                  Successfully issue a Get App Attributes command.   
+ * @param[in] bitmask                       Bitmask value of App Attribute . Set true to enable retrieving, otherwise set to false.  See @ref BLE_ANCS_AppAttrsMask_T.
+ *
+ * @retval MBA_RES_SUCCESS                  Successfully issue a Get App Attributes command.
  * @retval MBA_RES_FAIL                     Operation is not permitted.
  * @retval MBA_RES_OOM                      Internal memory allocation failure.
  * @retval MBA_RES_INVALID_PARA             Invalid parameters. One of the following reasons:\n
@@ -347,8 +375,8 @@ uint16_t BLE_ANCS_GetAppAttr(uint16_t connHandle, uint8_t *p_appId, BLE_ANCS_App
 /**@brief Perform a predetermined action on a specific iOS notification.
  *
  * @param[in] connHandle                    The connection handle.
- * @param[in] ntfyId                        A 32-bit numerical value representing the UID of the iOS notification on which the client wants to perform an action.  
- *                                          The ntfyId could be retrieved when receiving @ref BLE_ANCS_EVT_NTFY_ADDED_IND or @ref BLE_ANCS_EVT_NTFY_MODIFIED_IND or @ref BLE_ANCS_EVT_NTFY_REMOVED_IND. events.
+ * @param[in] ntfyId                        A 32-bit numerical value representing the UID of the iOS notification on which the client wants to perform an action.
+ *                                          The ntfyId could be retrieved when receiving @ref BLE_ANCS_EVT_NTFY_ADDED_IND or @ref BLE_ANCS_EVT_NTFY_MODIFIED_IND or @ref BLE_ANCS_EVT_NTFY_REMOVED_IND events.
  * @param[in] actId                         The desired action the NC wants to be performed on the iOS notification. See @ref BLE_ANCS_ActionId_T.
  *
  * @retval MBA_RES_SUCCESS                  Successfully issue a Perform Notification Action command.
@@ -363,7 +391,16 @@ uint16_t BLE_ANCS_GetAppAttr(uint16_t connHandle, uint8_t *p_appId, BLE_ANCS_App
 uint16_t BLE_ANCS_PerformNtfyAction(uint16_t connHandle, uint32_t ntfyId, BLE_ANCS_ActionId_T actId);
 /**@} */ //BLE_ANCS_FUNS
 
+
+//DOM-IGNORE-BEGIN
+#ifdef __cplusplus
+}
 #endif
+//DOM-IGNORE-END
+
+#endif
+
+/** @} */
 
 /**
   @}

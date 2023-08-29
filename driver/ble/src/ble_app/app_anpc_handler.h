@@ -41,8 +41,8 @@
     are defined here for convenience.
 *******************************************************************************/
 
-#ifndef _APP_ANPC_HANDLER_H
-#define _APP_ANPC_HANDLER_H
+#ifndef APP_ANPC_HANDLER_H
+#define APP_ANPC_HANDLER_H
 
 // *****************************************************************************
 // *****************************************************************************
@@ -88,14 +88,14 @@ extern "C" {
 */
 void APP_AnpcEvtHandler(BLE_ANPC_Event_T *p_event);
 
-
-#endif /* _APP_ANPC_HANDLER_H */
-
 //DOM-IGNORE-BEGIN
 #ifdef __cplusplus
 }
 #endif
 //DOM-IGNORE-END
+
+#endif /* APP_ANPC_HANDLER_H */
+
 
 /*******************************************************************************
  End of File

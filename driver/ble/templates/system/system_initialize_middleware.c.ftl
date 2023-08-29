@@ -4,26 +4,29 @@
     // Retrieve BLE calibration data
     btSysCfg.addrValid = IB_GetBdAddr(&btSysCfg.devAddr[0]);
     btSysCfg.rssiOffsetValid =IB_GetRssiOffset(&btSysCfg.rssiOffset);
-<#if USE_CUSTOM_ANT_GAIN>
-    btSysCfg.antennaGainValid = true;
-    btSysCfg.antennaGain = CUSTOM_ANT_GAIN;
-<#else>
-    btSysCfg.antennaGainValid = IB_GetAntennaGain(&btSysCfg.antennaGain);
-</#if>
 
-<#if APP_BLE_DEV == "Buckland">
+    if (!IB_GetAntennaGain(&btSysCfg.antennaGain))
+    {
+        btSysCfg.antennaGain = ${BLE_ANTENNA_GAIN};
+    }
+
+    <#if APP_BLE_DEVICE == "pic32cx_bz3">
+    btSysCfg.adcTimingValid =IB_GetAdcTiming(&btSysCfg.adcTiming08, &btSysCfg.adcTiming51);
+    </#if>
+
     //Configure BLE option
+<#if BLE_SYS_CTRL_ONLY_EN == false>
+    btOption.hciMode = false;
+<#else>
+    btOption.hciMode = true;
+</#if>
     btOption.cmnMemSize = EXT_COMMON_MEMORY_SIZE;
+<#if APP_BLE_DEVICE == "pic32cx_bz2">
+    btOption.p_cmnMemAddr = s_btMem;
+<#else>
+    //Configure BLE option
     btOption.p_cmnMemAddr = OSAL_Malloc(btOption.cmnMemSize);
 </#if>
 
     // Initialize BLE Stack
-    <#if APP_BLE_DEV == "Chimera">
-    BT_SYS_Init(&bleRequestQueueHandle, &osalAPIList, NULL, &btSysCfg);
-    </#if>    
-    <#if APP_BLE_DEV == "Buckland">
     BT_SYS_Init(&bleRequestQueueHandle, &osalAPIList, &btOption, &btSysCfg);
-    </#if>
-    
-
-

@@ -47,12 +47,13 @@
 #ifndef BLE_TRCBS_H
 #define BLE_TRCBS_H
 
+// DOM-IGNORE-BEGIN
+#ifdef __cplusplus  // Provide C++ Compatibility
 
-// *****************************************************************************
-// *****************************************************************************
-// Section: Included Files
-// *****************************************************************************
-// *****************************************************************************
+extern "C" {
+
+#endif
+// DOM-IGNORE-END
 
 
 // *****************************************************************************
@@ -65,9 +66,9 @@
 /**@defgroup UUID UUID
  * @brief The definition of UUID
  * @{ */
-#define UUID_MCHP_PROPRIETARY_SERVICE_TRCB_16                      ${CHECKED_TRCBS_SERVICE_UUID}
-#define UUID_MCHP_TRCB_L2CAP_PSM_16                                ${CHECKED_TRCBS_PSM_UUID}
-#define UUID_MCHP_TRCB_CTRL_16                                     ${CHECKED_TRCBS_CTRL_UUID}
+#define UUID_MCHP_PROPRIETARY_SERVICE_TRCB_16                      ${CHECKED_TRCBS_SERVICE_UUID}    /* Service UUID */
+#define UUID_MCHP_TRCB_L2CAP_PSM_16                                ${CHECKED_TRCBS_PSM_UUID}    /* PSM UUID */
+#define UUID_MCHP_TRCB_CTRL_16                                     ${CHECKED_TRCBS_CTRL_UUID}    /* CTRL UUID */
 /** @} */
 
 /**@defgroup BLE_TRCB_ASSIGN_HANDLE BLE_TRCB_ASSIGN_HANDLE
@@ -120,6 +121,11 @@ typedef enum BLE_TRCB_AttributeHandle_T
  */
 uint16_t BLE_TRCBS_Add(void);
 
+//DOM-IGNORE-BEGIN
+#ifdef __cplusplus
+}
+#endif
+//DOM-IGNORE-END
 
 #endif
 

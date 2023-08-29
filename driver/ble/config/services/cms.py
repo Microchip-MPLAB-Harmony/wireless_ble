@@ -118,6 +118,41 @@ def cmsCharReadWriteVisible(symbol, event):
     
         if prop.getValue() == False:
             symbol.setVisible(False)
+            
+def cmsCharMaxLength(symbol, event):
+    id = event["id"]
+    
+    if event["value"] == True:
+        symbol.setVisible(True)
+        
+        if id.find("WRITE") != -1:
+            symbol.setReadOnly(False)
+    else:
+        value = False
+        comp = symbol.getComponent()
+        
+        #"CMS_BOOL_SVC_" + str(count) + "_CHAR_" + str(charCount) + "_PROP_READ"
+        if id.find("READ") != -1:
+            value = comp.getSymbolValue(id.replace("READ","WRITE_REQ")) or comp.getSymbolValue(id.replace("READ","WRITE_CMD"))
+        elif id.find("CMD") != -1: #"CMS_BOOL_SVC_" + str(count) + "_CHAR_" + str(charCount) + "_PROP_WRITE_CMD"
+            value = comp.getSymbolValue(id.replace("WRITE_CMD","READ")) or comp.getSymbolValue(id.replace("CMD","REQ"))
+        else: #"CMS_BOOL_SVC_" + str(count) + "_CHAR_" + str(charCount) + "_PROP_WRITE_REQ"
+            value = comp.getSymbolValue(id.replace("WRITE_REQ","READ")) or comp.getSymbolValue(id.replace("REQ","CMD"))
+        
+        if value == False:
+            symbol.setVisible(False)
+
+        if id.find("READ") != -1:
+            return
+        #"CMS_BOOL_SVC_" + str(count) + "_CHAR_" + str(charCount) + "_PROP_WRITE_CMD"
+        #"CMS_BOOL_SVC_" + str(count) + "_CHAR_" + str(charCount) + "_PROP_WRITE_REQ"
+        if id.find("CMD") != -1:
+            value = comp.getSymbolValue(id.replace("CMD","REQ"))
+        else:
+            value = comp.getSymbolValue(id.replace("REQ","CMD"))
+    
+        if value == False:
+            symbol.setReadOnly(True)
 
 def cmsCccdVisible(symbol, event):
     if event["value"] == True:
@@ -306,6 +341,7 @@ def instantiateComponent(serviceCmsComponent):
 
             charConf = serviceCmsComponent.createStringSymbol("CMS_STR_SVC_" + str(count) + "_CHAR_" + str(charCount) + "_VALUE_C" ,  charValueMenu)
             charConf.setVisible(False)
+            charConf.setDefaultValue("0x00")
             charConf.setDependencies(cmsGenCChar, ["CMS_STR_SVC_" + str(count) + "_CHAR_" + str(charCount) + "_VALUE"])
             charConf = serviceCmsComponent.createStringSymbol("CMS_STR_SVC_" + str(count) + "_CHAR_" + str(charCount) + "_VALUE",  charValueMenu)
             charConf.setLabel("Default Value")
@@ -325,7 +361,8 @@ def instantiateComponent(serviceCmsComponent):
             charConf.setMax(247)
             charConf.setDefaultValue(1)
             charConf.setVisible(False)
-            charConf.setDependencies(cmsCharReadWriteVisible, ["CMS_BOOL_SVC_" + str(count) + "_CHAR_" + str(charCount) + "_PROP_WRITE_CMD", "CMS_BOOL_SVC_" + str(count) + "_CHAR_" + str(charCount) + "_PROP_WRITE_REQ"])
+            charConf.setReadOnly(True)
+            charConf.setDependencies(cmsCharMaxLength, ["CMS_BOOL_SVC_" + str(count) + "_CHAR_" + str(charCount) + "_PROP_READ", "CMS_BOOL_SVC_" + str(count) + "_CHAR_" + str(charCount) + "_PROP_WRITE_CMD", "CMS_BOOL_SVC_" + str(count) + "_CHAR_" + str(charCount) + "_PROP_WRITE_REQ"])
 
 
 

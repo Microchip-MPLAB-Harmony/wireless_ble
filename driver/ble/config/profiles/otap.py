@@ -10,6 +10,18 @@ pic32cx_bz3_family = {'PIC32CX5109BZ31032',
                       'WBZ351',
                       'WBZ350',
                       }
+                      
+def bleOtapDfuEnable(symbol, event):
+    global otapMenuServer
+    if otapMenuServer.getValue() == True:
+        if Database.getSymbolValue("BLE_STACK_LIB", "BOOL_BLE_UTIL_DFU") == True:
+            symbol.setVisible(False)
+        else:
+            symbol.setVisible(True)
+    else:
+        symbol.setVisible(False)
+
+
 
 def bleOtapEnable(symbol, event):
     symbol.setEnabled(event["value"])
@@ -47,6 +59,7 @@ def instantiateComponent(profileOtapComponent):
         srcPath = "ble_src_bz2"
     else:
         srcPath = "ble_src_bz3"
+
     #################################################################
     ##################      Client Role Settings      ###############
     #################################################################
@@ -65,6 +78,11 @@ def instantiateComponent(profileOtapComponent):
     otapMenuServer.setLabel('Enable Server Role')
     otapMenuServer.setDefaultValue(True)
     otapMenuServer.setDependencies(otapServerConfig, ["OTAP_BOOL_SERVER"])
+    
+    # DFU module message
+    otapCmt = profileOtapComponent.createCommentSymbol("OTAP_CMT_DFU", None)
+    otapCmt.setLabel("**** DFU module must be enabled. ****")
+    otapCmt.setDependencies(bleOtapDfuEnable, ["OTAP_BOOL_SERVER", "BLE_STACK_LIB.BOOL_BLE_UTIL_DFU"])
 
     #################################################################
     ##################        Add Source File         ###############
@@ -80,31 +98,7 @@ def instantiateComponent(profileOtapComponent):
     bleOtapsSourceFile.setEnabled(True)
     bleOtapsSourceFile.setMarkup(True)
     bleOtapsSourceFile.setDependencies(bleOtapEnable, ["OTAP_BOOL_SERVER"])
-
-    # Add mdu_dfu.h file - static file
-    bleMduDfuHeaderFile = profileOtapComponent.createFileSymbol(None, None)
-    bleMduDfuHeaderFile.setSourcePath('driver/ble/src/' + srcPath + '/middleware_ble/ble_util/mw_dfu.h')
-    bleMduDfuHeaderFile.setOutputName('mw_dfu.h')
-    bleMduDfuHeaderFile.setOverwrite(True)
-    bleMduDfuHeaderFile.setDestPath('ble/middleware_ble/ble_util/')
-    bleMduDfuHeaderFile.setProjectPath('config/' + configName + '/ble/middleware_ble/ble_util/')
-    bleMduDfuHeaderFile.setType('HEADER')
-    bleMduDfuHeaderFile.setEnabled(True)
-    bleMduDfuHeaderFile.setMarkup(True)
-    bleMduDfuHeaderFile.setDependencies(bleOtapEnable, ["OTAP_BOOL_SERVER"])
-
-    # Add mdu_dfu.c file - static file
-    bleMduDfuSourceFile = profileOtapComponent.createFileSymbol(None, None)
-    bleMduDfuSourceFile.setSourcePath('driver/ble/src/' + srcPath + '/middleware_ble/ble_util/mw_dfu.c')
-    bleMduDfuSourceFile.setOutputName('mw_dfu.c')
-    bleMduDfuSourceFile.setOverwrite(True)
-    bleMduDfuSourceFile.setDestPath('ble/middleware_ble/ble_util/')
-    bleMduDfuSourceFile.setProjectPath('config/' + configName + '/ble/middleware_ble/ble_util/')
-    bleMduDfuSourceFile.setType('SOURCE')
-    bleMduDfuSourceFile.setEnabled(True)
-    bleMduDfuSourceFile.setMarkup(True)
-    bleMduDfuSourceFile.setDependencies(bleOtapEnable, ["OTAP_BOOL_SERVER"])
-
+    
     # Add ble_otaps.h file - static file
     bleOtapsHeaderFile = profileOtapComponent.createFileSymbol(None, None)
     bleOtapsHeaderFile.setSourcePath('driver/ble/src/' + srcPath + '/profile_ble/ble_otaps/ble_otaps.h')

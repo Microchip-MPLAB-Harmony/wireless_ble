@@ -49,7 +49,7 @@
 #include "ble_gap.h"
 #include "gatt.h"
 #include "ble_util/byte_stream.h"
-#include "ble_pxpm/ble_pxpm.h"
+#include "ble_pxpm.h"
 
 
 // *****************************************************************************
@@ -62,12 +62,6 @@
  * @{ */
 #define BLE_PXPM_MAX_CONN_NBR                  BLE_GAP_MAX_LINK_NBR    /**< Maximum allowing conncetion numbers for Proximity profile client role. */
 /** @} */
-
-#define BLE_PXPM_UUID_IMMEDIATE_ALERT_SVC       0x1802
-#define BLE_PXPM_UUID_LINKLOSS_SVC              0x1803
-#define BLE_PXPM_UUID_TXPOWER_SVC               0x1804
-#define BLE_PXPM_UUID_ALERT_LEVEL               0x2A06
-#define BLE_PXPM_UUID_TXPOWER_LEVEL             0x2A07
 // *****************************************************************************
 // *****************************************************************************
 // Section: Local Variables
@@ -82,27 +76,38 @@ typedef enum BLE_PXPM_CharAlertLevelIndex_T
 
 typedef enum BLE_PXPM_CharTxPowerLevelIndex_T
 {
-    PXPM_INDEX_CHARTXPWRLV = 0x00,
+    PXPM_INDEX_CHARTXPWRLV = 0x00U,
     PXPM_INDEX_CHARTXPWRLVCCCD,
     PXPM_INDEX_CHARTXPWRLVCPFD,
     PXPM_CHARTXPWRLV_CHAR_NUM
 } BLE_PXPM_CharTxPowerLevelIndex_T;
 
+typedef enum BLE_PXPM_State_T
+{
+    BLE_PXPM_STATE_IDLE = 0x00,
+    BLE_PXPM_STATE_CONNECTED
+} BLE_PXPM_State_T;
+
 typedef struct BLE_PXPM_ConnList_T
 {
-    int8_t      connIndex;
-    uint16_t    connHandle;
+    int8_t              connIndex;
+    BLE_PXPM_State_T    state;
+    uint16_t            connHandle;
 } BLE_PXPM_ConnList_T;
 
 static BLE_PXPM_EventCb_T       sp_pxpmCbRoutine;
 
 static BLE_PXPM_ConnList_T      s_pxpmConnList[BLE_PXPM_MAX_CONN_NBR];
 
+static BLE_DD_DiscInfo_T        s_pxpmLlsDiscInfo[BLE_PXPM_MAX_CONN_NBR];
+
 static BLE_DD_CharInfo_T        s_pxpmLlsCharInfoList[BLE_PXPM_MAX_CONN_NBR][PXPM_CHARALERTLV_CHAR_NUM];
 #ifdef BLE_PXPM_IAS_ENABLE
+static BLE_DD_DiscInfo_T        s_pxpmIasDiscInfo[BLE_PXPM_MAX_CONN_NBR];
 static BLE_DD_CharInfo_T        s_pxpmIasCharInfoList[BLE_PXPM_MAX_CONN_NBR][PXPM_CHARALERTLV_CHAR_NUM];
 #endif
 #ifdef BLE_PXPM_TPS_ENABLE
+static BLE_DD_DiscInfo_T        s_pxpmTpsDiscInfo[BLE_PXPM_MAX_CONN_NBR];
 static BLE_DD_CharInfo_T        s_pxpmTpsCharInfoList[BLE_PXPM_MAX_CONN_NBR][PXPM_CHARTXPWRLV_CHAR_NUM];
 #endif
 
@@ -158,7 +163,7 @@ static BLE_DD_CharList_T        s_pxpmTpsCharList[BLE_PXPM_MAX_CONN_NBR];
 
 static void ble_pxpm_InitConnList(uint8_t connIndex)
 {
-    memset((uint8_t *)&s_pxpmConnList[connIndex], 0, sizeof(BLE_PXPM_ConnList_T));
+    (void)memset((uint8_t *)&s_pxpmConnList[connIndex], 0, sizeof(BLE_PXPM_ConnList_T));
 }
 
 static BLE_PXPM_ConnList_T *ble_pxpm_GetConnListByHandle(uint16_t connHandle)
@@ -167,7 +172,7 @@ static BLE_PXPM_ConnList_T *ble_pxpm_GetConnListByHandle(uint16_t connHandle)
 
     for(i=0; i<BLE_PXPM_MAX_CONN_NBR; i++)
     {
-        if (s_pxpmConnList[i].connHandle == connHandle)
+        if ((s_pxpmConnList[i].state == BLE_PXPM_STATE_CONNECTED) && (s_pxpmConnList[i].connHandle == connHandle))
         {
             return &s_pxpmConnList[i];
         }
@@ -181,8 +186,9 @@ static BLE_PXPM_ConnList_T *ble_pxpm_GetFreeConnList(void)
 
     for(i=0; i<BLE_PXPM_MAX_CONN_NBR; i++)
     {
-        if (s_pxpmConnList[i].connHandle == 0)
+        if (s_pxpmConnList[i].state == BLE_PXPM_STATE_IDLE)
         {
+            s_pxpmConnList[i].state = BLE_PXPM_STATE_CONNECTED;
             s_pxpmConnList[i].connIndex = i;
             return &s_pxpmConnList[i];
         }
@@ -192,28 +198,30 @@ static BLE_PXPM_ConnList_T *ble_pxpm_GetFreeConnList(void)
 
 static void ble_pxpm_ConveyEvent(uint8_t eventId, uint8_t *p_eventField, uint8_t eventFieldLen)
 {
-    if(sp_pxpmCbRoutine)
+    if(sp_pxpmCbRoutine != NULL)
     {
         BLE_PXPM_Event_T evtPara;
 
         evtPara.eventId = eventId;
-        memcpy((uint8_t *)&evtPara.eventField, p_eventField, eventFieldLen);
+        (void)memcpy((uint8_t *)&evtPara.eventField, p_eventField, eventFieldLen);
         sp_pxpmCbRoutine(&evtPara);
     }
 }
 
 static void ble_pxpm_InitLlsCharList(uint8_t connIndex)
 {
-    memset(&s_pxpmLlsCharList[connIndex], 0x0, sizeof(BLE_DD_CharList_T));
-    memset(s_pxpmLlsCharInfoList[connIndex], 0x0, sizeof(BLE_DD_CharInfo_T) * PXPM_CHARALERTLV_CHAR_NUM);
+    (void)memset(&s_pxpmLlsDiscInfo[connIndex], 0x0, sizeof(BLE_DD_DiscInfo_T));
+    (void)memset((uint8_t *)&s_pxpmLlsCharList[connIndex], 0x0, sizeof(BLE_DD_CharList_T));
+    (void)memset((uint8_t *)s_pxpmLlsCharInfoList[connIndex], 0x0, sizeof(BLE_DD_CharInfo_T) * PXPM_CHARALERTLV_CHAR_NUM);
     s_pxpmLlsCharList[connIndex].p_charInfo = s_pxpmLlsCharInfoList[connIndex];
 }
 
 #ifdef BLE_PXPM_IAS_ENABLE
 static void ble_pxpm_InitIasCharList(uint8_t connIndex)
 {
-    memset(&s_pxpmIasCharList[connIndex], 0x0, sizeof(BLE_DD_CharList_T));
-    memset(s_pxpmIasCharInfoList[connIndex], 0x0, sizeof(BLE_DD_CharInfo_T) * PXPM_CHARALERTLV_CHAR_NUM);
+    (void)memset(&s_pxpmIasDiscInfo[connIndex], 0x0, sizeof(BLE_DD_DiscInfo_T));
+    (void)memset((uint8_t *)&s_pxpmIasCharList[connIndex], 0x0, sizeof(BLE_DD_CharList_T));
+    (void)memset((uint8_t *)s_pxpmIasCharInfoList[connIndex], 0x0, sizeof(BLE_DD_CharInfo_T) * PXPM_CHARALERTLV_CHAR_NUM);
     s_pxpmIasCharList[connIndex].p_charInfo = s_pxpmIasCharInfoList[connIndex];
 }
 #endif
@@ -221,8 +229,9 @@ static void ble_pxpm_InitIasCharList(uint8_t connIndex)
 #ifdef BLE_PXPM_TPS_ENABLE
 static void ble_pxpm_InitTpsCharList(uint8_t connIndex)
 {
-    memset(&s_pxpmTpsCharList[connIndex], 0x0, sizeof(BLE_DD_CharList_T));
-    memset(s_pxpmTpsCharInfoList[connIndex], 0x0, sizeof(BLE_DD_CharInfo_T) * PXPM_CHARTXPWRLV_CHAR_NUM);
+    (void)memset(&s_pxpmTpsDiscInfo[connIndex], 0x0, sizeof(BLE_DD_DiscInfo_T));
+    (void)memset((uint8_t *)&s_pxpmTpsCharList[connIndex], 0x0, sizeof(BLE_DD_CharList_T));
+    (void)memset(s_pxpmTpsCharInfoList[connIndex], 0x0, sizeof(BLE_DD_CharInfo_T) * PXPM_CHARTXPWRLV_CHAR_NUM);
     s_pxpmTpsCharList[connIndex].p_charInfo = s_pxpmTpsCharInfoList[connIndex];
 }
 #endif
@@ -232,7 +241,17 @@ static uint16_t ble_pxpm_InitAlertLvSvcDiscRegister(const uint8_t * p_uuid, BLE_
     BLE_DD_DiscSvc_T pxpDisc;
 
     pxpDisc.svcUuid.uuidLength = ATT_UUID_LENGTH_2;
-    memcpy(pxpDisc.svcUuid.uuid, p_uuid, ATT_UUID_LENGTH_2);
+    (void)memcpy(pxpDisc.svcUuid.uuid, p_uuid, ATT_UUID_LENGTH_2);
+    if (*(uint16_t *)pxpDisc.svcUuid.uuid == BLE_PXPM_UUID_LINKLOSS_SVC)
+    {
+        pxpDisc.p_discInfo = s_pxpmLlsDiscInfo;
+    }
+#ifdef BLE_PXPM_IAS_ENABLE
+    else
+    {
+        pxpDisc.p_discInfo = s_pxpmIasDiscInfo;
+    }
+#endif
     pxpDisc.p_discChars = pxpmDiscAlertLvCharList;
     pxpDisc.p_charList = p_charList;
     pxpDisc.discCharsNum = PXPM_CHARALERTLV_CHAR_NUM;
@@ -245,7 +264,8 @@ static uint16_t ble_pxpm_InitTxPwrLvSvcDiscRegister(const uint8_t * p_uuid, BLE_
     BLE_DD_DiscSvc_T pxpDisc;
 
     pxpDisc.svcUuid.uuidLength = ATT_UUID_LENGTH_2;
-    memcpy(pxpDisc.svcUuid.uuid, p_uuid, ATT_UUID_LENGTH_2);
+    (void)memcpy(pxpDisc.svcUuid.uuid, p_uuid, ATT_UUID_LENGTH_2);
+    pxpDisc.p_discInfo = s_pxpmTpsDiscInfo;
     pxpDisc.p_discChars = pxpmDiscTxPwrLvCharList;
     pxpDisc.p_charList = p_charList;
     pxpDisc.discCharsNum = PXPM_CHARTXPWRLV_CHAR_NUM;
@@ -256,8 +276,28 @@ static uint16_t ble_pxpm_InitTxPwrLvSvcDiscRegister(const uint8_t * p_uuid, BLE_
 static void ble_pxpm_ProcDiscComplete(BLE_DD_Event_T * p_event)
 {
     BLE_PXPM_EvtDiscComplete_T evtDiscCmlt;
-
+    BLE_PXPM_ConnList_T *p_conn = ble_pxpm_GetConnListByHandle(p_event->eventField.evtDiscResult.connHandle);
+    if(p_conn == NULL)
+    {
+        ble_pxpm_ConveyEvent(BLE_PXPM_EVT_ERR_UNSPECIFIED_IND, NULL, 0);
+        return;
+    }
+    if (s_pxpmLlsCharList[p_conn->connIndex].p_charInfo[PXPM_INDEX_CHARALERTLV].charHandle == 0)
+    {
+        return;
+    }
     evtDiscCmlt.connHandle = p_event->eventField.evtDiscResult.connHandle;
+    evtDiscCmlt.llsStartHandle = s_pxpmLlsDiscInfo[p_conn->connIndex].svcStartHandle;
+    evtDiscCmlt.llsEndHandle   = s_pxpmLlsDiscInfo[p_conn->connIndex].svcEndHandle;
+
+#ifdef BLE_PXPM_IAS_ENABLE
+    evtDiscCmlt.iasStartHandle = s_pxpmIasDiscInfo[p_conn->connIndex].svcStartHandle;
+    evtDiscCmlt.iasEndHandle   = s_pxpmIasDiscInfo[p_conn->connIndex].svcEndHandle;
+#endif
+#ifdef BLE_PXPM_TPS_ENABLE
+    evtDiscCmlt.tpsStartHandle = s_pxpmTpsDiscInfo[p_conn->connIndex].svcStartHandle;
+    evtDiscCmlt.tpsEndHandle   = s_pxpmTpsDiscInfo[p_conn->connIndex].svcEndHandle;
+#endif
     ble_pxpm_ConveyEvent(BLE_PXPM_EVT_DISC_COMPLETE_IND, (uint8_t *) &evtDiscCmlt, sizeof(BLE_PXPM_EvtDiscComplete_T));
 }
 
@@ -295,6 +335,10 @@ static void ble_pxpm_ProcReadResponse(GATT_Event_T *p_event)
         ble_pxpm_ConveyEvent(BLE_PXPM_EVT_TPS_TX_POWER_LEVEL_IND, (uint8_t *) &evt, sizeof(BLE_PXPM_EvtTpsTxPwrLvInd_T));
     }
     #endif
+    else
+    {
+        //Shall not enter here
+    }
 }
 
 static void ble_pxpm_ProcWriteResponse(GATT_Event_T *p_event)
@@ -420,14 +464,20 @@ uint16_t BLE_PXPM_Init(void)
     }
 
     if(ble_pxpm_InitAlertLvSvcDiscRegister(pxpmDiscLlsUuid, s_pxpmLlsCharList) != MBA_RES_SUCCESS)
+    {
         return MBA_RES_FAIL;
+    }
     #ifdef BLE_PXPM_IAS_ENABLE
     if(ble_pxpm_InitAlertLvSvcDiscRegister(pxpmDiscIasUuid, s_pxpmIasCharList) != MBA_RES_SUCCESS)
+    {
         return MBA_RES_FAIL;
+    }
     #endif
     #ifdef BLE_PXPM_TPS_ENABLE
     if(ble_pxpm_InitTxPwrLvSvcDiscRegister(pxpmDiscTpsUuid, s_pxpmTpsCharList) != MBA_RES_SUCCESS)
+    {
         return MBA_RES_FAIL;
+    }
     #endif
     return MBA_RES_SUCCESS;
 }
@@ -520,6 +570,110 @@ uint16_t BLE_PXPM_ReadTpsTxPowerLevel(uint16_t connHandle)
     return GATTC_Read(connHandle, s_pxpmTpsCharList[p_conn->connIndex].p_charInfo[PXPM_INDEX_CHARTXPWRLV].charHandle, 0);
 }
 #endif
+
+uint16_t BLE_PXPM_GetCharList(uint16_t connHandle, uint16_t svcUuid, uint16_t charUuid, BLE_PXPM_CharList_T *p_charList)
+{
+    uint8_t             num;
+    uint16_t            desUuid;
+    BLE_PXPM_ConnList_T *p_conn = ble_pxpm_GetConnListByHandle(connHandle);
+
+    if ((p_conn == NULL) || (p_charList == NULL) ||
+        (svcUuid < BLE_PXPM_UUID_IMMEDIATE_ALERT_SVC) ||
+        (svcUuid > BLE_PXPM_UUID_TXPOWER_SVC) ||
+        (charUuid < BLE_PXPM_UUID_ALERT_LEVEL) ||
+        (charUuid > BLE_PXPM_UUID_TXPOWER_LEVEL)
+       )
+    {
+        return MBA_RES_INVALID_PARA;
+    } 
+    (void)memset(p_charList, 0, sizeof(BLE_PXPM_CharList_T));
+    switch(svcUuid)
+    {
+#ifdef BLE_PXPM_IAS_ENABLE
+        case BLE_PXPM_UUID_IMMEDIATE_ALERT_SVC:
+        {
+            for (num = 0; num < PXPM_CHARALERTLV_CHAR_NUM; num++)
+            {
+                BUF_LE_TO_U16(&desUuid, pxpmDiscAlertLvCharList[num]->p_uuid->uuid);
+                if ((desUuid == charUuid) &&
+                    ((pxpmDiscAlertLvCharList[num]->settings & CHAR_SET_DESCRIPTOR) != CHAR_SET_DESCRIPTOR))
+                {
+                    p_charList->attrHandle = s_pxpmIasCharList[p_conn->connIndex].p_charInfo[num].attrHandle;
+                    p_charList->property   = s_pxpmIasCharList[p_conn->connIndex].p_charInfo[num].property;
+                    p_charList->charHandle = s_pxpmIasCharList[p_conn->connIndex].p_charInfo[num].charHandle;
+                    break;
+                }
+            }
+        }
+        break;
+#endif
+        case BLE_PXPM_UUID_LINKLOSS_SVC:
+        {
+            for (num = 0; num < PXPM_CHARALERTLV_CHAR_NUM; num++)
+            {
+                BUF_LE_TO_U16(&desUuid, pxpmDiscAlertLvCharList[num]->p_uuid->uuid);
+                if ((desUuid == charUuid) &&
+                    ((pxpmDiscAlertLvCharList[num]->settings & CHAR_SET_DESCRIPTOR) != CHAR_SET_DESCRIPTOR))
+                {
+                    p_charList->attrHandle = s_pxpmLlsCharList[p_conn->connIndex].p_charInfo[num].attrHandle;
+                    p_charList->property   = s_pxpmLlsCharList[p_conn->connIndex].p_charInfo[num].property;
+                    p_charList->charHandle = s_pxpmLlsCharList[p_conn->connIndex].p_charInfo[num].charHandle;
+                    break;
+                }
+            }
+        }
+        break;
+#ifdef BLE_PXPM_TPS_ENABLE
+        case BLE_PXPM_UUID_TXPOWER_SVC:
+        {
+            for (num = 0; num < PXPM_CHARTXPWRLV_CHAR_NUM; num++)
+            {
+                BUF_LE_TO_U16(&desUuid, pxpmDiscTxPwrLvCharList[num]->p_uuid->uuid);
+                if ((desUuid == charUuid) &&
+                    ((pxpmDiscTxPwrLvCharList[num]->settings & CHAR_SET_DESCRIPTOR) != CHAR_SET_DESCRIPTOR))
+                {
+                    p_charList->attrHandle = s_pxpmTpsCharList[p_conn->connIndex].p_charInfo[num].attrHandle;
+                    p_charList->property   = s_pxpmTpsCharList[p_conn->connIndex].p_charInfo[num].property;
+                    p_charList->charHandle = s_pxpmTpsCharList[p_conn->connIndex].p_charInfo[num].charHandle;
+                    break;
+                }
+            }
+        }
+        break;
+#endif
+        default:
+        break;
+    }
+    return MBA_RES_SUCCESS;
+}
+
+uint16_t BLE_PXPM_GetDescList(uint16_t connHandle, BLE_PXPM_DescList_T *p_descList)
+{
+#ifdef BLE_PXPM_TPS_ENABLE
+    uint8_t             num;
+#endif
+    uint8_t             descNum = 0;
+    BLE_PXPM_ConnList_T *p_conn = ble_pxpm_GetConnListByHandle(connHandle);
+
+    if ((p_conn == NULL) || (p_descList == NULL))
+    {
+        return MBA_RES_INVALID_PARA;
+    } 
+    (void)memset(p_descList, 0, sizeof(BLE_PXPM_DescList_T));
+#ifdef BLE_PXPM_TPS_ENABLE
+    for (num = 0; num < PXPM_CHARTXPWRLV_CHAR_NUM; num++)
+    {
+        if ((pxpmDiscTxPwrLvCharList[num]->settings & CHAR_SET_DESCRIPTOR) && (s_pxpmTpsCharList[p_conn->connIndex].p_charInfo[num].charHandle != 0))
+        {
+            p_descList->descInfo[descNum].attrHandle = s_pxpmTpsCharList[p_conn->connIndex].p_charInfo[num].charHandle;
+            VARIABLE_COPY_TO_BUF(&p_descList->descInfo[descNum].uuid, pxpmDiscTxPwrLvCharList[num]->p_uuid->uuid, pxpmDiscTxPwrLvCharList[num]->p_uuid->uuidLength);
+            descNum++;
+        }
+    }
+#endif
+    p_descList->num = descNum;
+    return MBA_RES_SUCCESS;
+}
 
 void BLE_PXPM_BleDdEventHandler(BLE_DD_Event_T *p_event)
 {

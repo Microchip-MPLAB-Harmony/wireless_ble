@@ -35,15 +35,15 @@ profileTrcbpComponent = Module.CreateComponent('PROFILE_TRCBP', 'Transparent Cre
 profileTrcbpComponent.addDependency('BLE_TRCBS_Dependency', 'BLE_TRCBS', 'Transparent Credit Based Service', False, True)
 profileTrcbpComponent.addDependency('BLE_STACK_Dependency', 'BLE_STACK', 'BLE Stack', True, True)
 
-profilePxpComponent = Module.CreateComponent('PROFILE_PXP', 'Promixity Profile', 'Wireless/Drivers/BLE/Profiles', '/driver/ble/config/profiles/pxp.py')
+profilePxpComponent = Module.CreateComponent('PROFILE_PXP', 'Proximity Profile', 'Wireless/Drivers/BLE/Profiles', '/driver/ble/config/profiles/pxp.py')
 profilePxpComponent.addDependency('BLE_STACK_Dependency', 'BLE_STACK', 'BLE Stack', True, True)
 profilePxpComponent.addDependency('BLE_LLS_Dependency', 'BLE_LLS', 'Link Loss Service', False, True)
 profilePxpComponent.addDependency('BLE_IAS_Dependency', 'BLE_IAS', 'Immediate Alert Service', False, True)
 profilePxpComponent.addDependency('BLE_TPS_Dependency', 'BLE_TPS', 'TX Power Service', False, True)
 
-#profileOtapComponent = Module.CreateComponent('PROFILE_OTAP', 'Over-The-Air Profile', 'Wireless/Drivers/BLE/Profiles', '/driver/ble/config/profiles/otap.py')
-#profileOtapComponent.addDependency('BLE_OTAS_Dependency', 'BLE_OTAS', 'Over-The-Air Service', False, True)
-#profileOtapComponent.addDependency('BLE_STACK_Dependency', 'BLE_STACK', 'BLE Stack', True, True)
+profileOtapComponent = Module.CreateComponent('PROFILE_OTAP', 'Over-The-Air Profile', 'Wireless/Drivers/BLE/Profiles', '/driver/ble/config/profiles/otap.py')
+profileOtapComponent.addDependency('BLE_OTAS_Dependency', 'BLE_OTAS', 'Over-The-Air Service', False, True)
+profileOtapComponent.addDependency('BLE_STACK_Dependency', 'BLE_STACK', 'BLE Stack', True, True)
 
 profileAnpComponent = Module.CreateComponent('PROFILE_ANP', 'Alert Notification Profile', 'Wireless/Drivers/BLE/Profiles', '/driver/ble/config/profiles/anp.py')
 profileAnpComponent.addDependency('BLE_ANS_Dependency', 'BLE_ANS', 'Alert Notification Service', False, True)

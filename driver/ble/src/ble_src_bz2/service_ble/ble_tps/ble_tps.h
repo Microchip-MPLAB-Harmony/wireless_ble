@@ -47,6 +47,14 @@
 #ifndef BLE_TPS_H
 #define BLE_TPS_H
 
+// DOM-IGNORE-BEGIN
+#ifdef __cplusplus  // Provide C++ Compatibility
+
+extern "C" {
+
+#endif
+// DOM-IGNORE-END
+
 // *****************************************************************************
 // *****************************************************************************
 // Section: Macros
@@ -100,8 +108,13 @@ typedef enum BLE_TPS_AttributeHandle_T
  *@retval MBA_RES_FAIL          Fail to register the service. The assigned attribute handles in the service conflict or \n
  *                              the start handle of the service is smaller than @ref GATTS_APP_SVC_START_HDL.
  */
-uint16_t BLE_TPS_Add();
+uint16_t BLE_TPS_Add(void);
 
+//DOM-IGNORE-BEGIN
+#ifdef __cplusplus
+}
+#endif
+//DOM-IGNORE-END
 
 #endif
 

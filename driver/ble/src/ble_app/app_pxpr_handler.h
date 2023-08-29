@@ -41,8 +41,8 @@
     are defined here for convenience.
 *******************************************************************************/
 
-#ifndef _APP_PXPR_HANDLER_H
-#define _APP_PXPR_HANDLER_H
+#ifndef APP_PXPR_HANDLER_H
+#define APP_PXPR_HANDLER_H
 
 // *****************************************************************************
 // *****************************************************************************
@@ -89,13 +89,15 @@ extern "C" {
 void APP_PxprEvtHandler(BLE_PXPR_Event_T *p_event);
 
 
-#endif /* _APP_PXPR_HANDLER_H */
-
 //DOM-IGNORE-BEGIN
 #ifdef __cplusplus
 }
 #endif
 //DOM-IGNORE-END
+
+
+#endif /* APP_PXPR_HANDLER_H */
+
 
 /*******************************************************************************
  End of File

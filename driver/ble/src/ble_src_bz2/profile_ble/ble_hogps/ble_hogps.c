@@ -49,7 +49,7 @@
 #include "ble_gap.h"
 #include "gatt.h"
 #include "ble_util/byte_stream.h"
-#include "ble_hogps/ble_hogps.h"
+#include "ble_hogps.h"
 
 // *****************************************************************************
 // *****************************************************************************
@@ -118,9 +118,9 @@ static BLE_HOGPS_Database_T     s_hogpsDb;              /* Database. */
 // *****************************************************************************
 // *****************************************************************************
 
-static void ble_hogps_init_db()
+static void ble_hogps_init_db(void)
 {
-    memset((uint8_t *)&s_hogpsDb, 0x00, sizeof(BLE_HOGPS_Database_T));
+    (void)memset((uint8_t *)&s_hogpsDb, 0x00, sizeof(BLE_HOGPS_Database_T));
     #ifdef HIDS_KEYBOARD_SUPPORT
     s_hogpsDb.charLengthKbInputReport = HID_REPORT_LENGTH_KB_INPUT;
     #endif
@@ -138,7 +138,7 @@ static void ble_hogps_init_db()
 
 static void ble_hogps_ConveyEvent(BLE_HOGPS_Event_T *p_event)
 {
-    if (sp_hogpsCbRoutine)
+    if (sp_hogpsCbRoutine != NULL)
     {
         sp_hogpsCbRoutine(p_event);
     }
@@ -188,95 +188,122 @@ static void ble_hogps_GapEventProcess(BLE_GAP_Event_T *p_event)
     }
 }
 
+static void ble_hogps_SendReadResponse(GATT_EvtRead_T *p_readEvt, uint16_t len, uint8_t *p_value)
+{
+    GATTS_SendReadRespParams_T readResponse;
+    
+    readResponse.attrLength = len - p_readEvt->readOffset;
+    (void)memcpy(readResponse.attrValue, p_value + p_readEvt->readOffset, readResponse.attrLength);
+    readResponse.responseType = (p_readEvt->readType == ATT_READ_REQ) ? ATT_READ_RSP : ATT_READ_BLOB_RSP;
+
+    GATTS_SendReadResponse(p_readEvt->connHandle, &readResponse);
+}
+
+static void ble_hogps_SendReadByTypeResponse(GATT_EvtRead_T *p_readEvt, uint16_t len, uint8_t *p_value)
+{
+    GATTS_SendReadByTypeRespParams_T readResponse;
+    uint8_t *p_buf;
+    
+    readResponse.allPairsLength = len + sizeof(p_readEvt->attrHandle);
+    readResponse.eachPairLength = len + sizeof(p_readEvt->attrHandle);
+
+    p_buf = readResponse.attrDataList;
+    U16_TO_STREAM_LE(&p_buf, p_readEvt->attrHandle);
+    VARIABLE_COPY_TO_STREAM(&p_buf, p_value, len);
+
+
+    GATTS_SendReadByTypeResponse(p_readEvt->connHandle, &readResponse);
+}
+
+
 static void ble_hogps_GattEventProcess(GATT_Event_T *p_event)
 {
     switch (p_event->eventId)
     {
         case GATTS_EVT_READ:
         {
-            GATTS_SendReadRespParams_T readResponse;
-
-            if (p_event->eventField.onRead.readType == ATT_READ_REQ)
-            {
-                readResponse.responseType = ATT_READ_RSP;
-            }
-            else
-            {
-                readResponse.responseType = ATT_READ_BLOB_RSP;
-            }
+            uint16_t valueLen = 0;
+            uint8_t *p_value;
 
             #ifdef HIDS_BOOT_PROTOCOL_MODE_SUPPORT
             if (p_event->eventField.onRead.attrHandle == HIDS_HDL_CHARVAL_HID_PROTOCOL_MODE)
             {
-                readResponse.attrLength = 0x01;
-                readResponse.attrValue[0] = s_hogpsConnParams.protocolMode;
-                GATTS_SendReadResponse(p_event->eventField.onRead.connHandle, &readResponse);
+                valueLen = 0x01;
+                p_value = &s_hogpsConnParams.protocolMode;
             }
             #endif
             #ifdef HIDS_KEYBOARD_SUPPORT
             if (p_event->eventField.onRead.attrHandle == HIDS_HDL_CHARVAL_KB_INPUT_REPORT)
             {
-                readResponse.attrLength = s_hogpsDb.charLengthKbInputReport;
-                memcpy(readResponse.attrValue, s_hogpsDb.charValKbInputReport, s_hogpsDb.charLengthKbInputReport);
-                GATTS_SendReadResponse(p_event->eventField.onRead.connHandle, &readResponse);
+                valueLen = s_hogpsDb.charLengthKbInputReport;
+                p_value = (uint8_t *)&s_hogpsDb.charValKbInputReport;
             }
             #endif
             #ifdef HIDS_MOUSE_SUPPORT
             if (p_event->eventField.onRead.attrHandle == HIDS_HDL_CHARVAL_MB_INPUT_REPORT)
             {
-                readResponse.attrLength = s_hogpsDb.charLengthMbInputReport;
-                memcpy(readResponse.attrValue, s_hogpsDb.charValMbInputReport, s_hogpsDb.charLengthMbInputReport);
-                GATTS_SendReadResponse(p_event->eventField.onRead.connHandle, &readResponse);
+                valueLen = s_hogpsDb.charLengthMbInputReport;
+                p_value = s_hogpsDb.charValMbInputReport;
             }
             else if (p_event->eventField.onRead.attrHandle == HIDS_HDL_CHARVAL_MM_INPUT_REPORT)
             {
-                readResponse.attrLength = s_hogpsDb.charLengthMmInputReport;
-                memcpy(readResponse.attrValue, s_hogpsDb.charValMmInputReport, s_hogpsDb.charLengthMmInputReport);
-                GATTS_SendReadResponse(p_event->eventField.onRead.connHandle, &readResponse);
+                valueLen = s_hogpsDb.charLengthMmInputReport;
+                p_value = s_hogpsDb.charValMmInputReport;
+            }
+            else
+            {
+                //Shall not enter here
             }
             #endif
             #ifdef HIDS_KEYBOARD_SUPPORT
             if (p_event->eventField.onRead.attrHandle == HIDS_HDL_CHARVAL_KB_OUTPUT_REPORT)
             {
-                readResponse.attrLength = s_hogpsDb.charLengthKbOutputReport;
-                memcpy(readResponse.attrValue, s_hogpsDb.charValKbOutputReport, s_hogpsDb.charLengthKbOutputReport);
-                GATTS_SendReadResponse(p_event->eventField.onRead.connHandle, &readResponse);
+                valueLen = s_hogpsDb.charLengthKbOutputReport;
+                p_value = s_hogpsDb.charValKbOutputReport;
             }
             #endif
             #if defined(HIDS_KEYBOARD_SUPPORT) && defined (HIDS_BOOT_PROTOCOL_MODE_SUPPORT)
             if (p_event->eventField.onRead.attrHandle == HIDS_HDL_CHARVAL_BOOT_KB_INPUT_REPORT)
             {
-                readResponse.attrLength = s_hogpsDb.charLengthBootKbInputReport;
-                memcpy(readResponse.attrValue, s_hogpsDb.charValBootKbInputReport, s_hogpsDb.charLengthBootKbInputReport);
-                GATTS_SendReadResponse(p_event->eventField.onRead.connHandle, &readResponse);
+                valueLen = s_hogpsDb.charLengthBootKbInputReport;
+                p_value = s_hogpsDb.charValBootKbInputReport;
             }
             else if (p_event->eventField.onRead.attrHandle == HIDS_HDL_CHARVAL_BOOT_KB_OUTPUT_REPORT)
             {
-                readResponse.attrLength = s_hogpsDb.charLengthBootKbOutputReport;
-                memcpy(readResponse.attrValue, s_hogpsDb.charValBootKbOutputReport, s_hogpsDb.charLengthBootKbOutputReport);
-                GATTS_SendReadResponse(p_event->eventField.onRead.connHandle, &readResponse);
+                valueLen = s_hogpsDb.charLengthBootKbOutputReport;
+                p_value = s_hogpsDb.charValBootKbOutputReport;
+            }
+            else
+            {
+                //Shall not enter here
             }
             #endif
             #if defined(HIDS_MOUSE_SUPPORT) && defined (HIDS_BOOT_PROTOCOL_MODE_SUPPORT)
             if (p_event->eventField.onRead.attrHandle == HIDS_HDL_CHARVAL_BOOT_M_INPUT_REPORT)
             {
-                readResponse.attrLength = s_hogpsDb.charLengthBootMInputReport;
-                memcpy(readResponse.attrValue, s_hogpsDb.charValBootMInputReport, s_hogpsDb.charLengthBootMInputReport);
-                GATTS_SendReadResponse(p_event->eventField.onRead.connHandle, &readResponse);
+                valueLen = s_hogpsDb.charLengthBootMInputReport;
+                p_value = s_hogpsDb.charValBootMInputReport;
             }
             #endif
+
+            if (valueLen > 0)
+            {
+                if (p_event->eventField.onRead.readType == ATT_READ_BY_TYPE_REQ)
+                {
+                    ble_hogps_SendReadByTypeResponse(&p_event->eventField.onRead, valueLen, p_value);
+                }
+                else
+                {
+                    ble_hogps_SendReadResponse(&p_event->eventField.onRead, valueLen, p_value);
+                }
+            }
+
         }
         break;
 
         case GATTS_EVT_WRITE:
         {
-            GATTS_SendWriteRespParams_T writeResp;
-            GATTS_SendErrRespParams_T   errorResp;
-
             /* Only write characteristic value procedure is mandatory in HID */
-            writeResp.responseType = ATT_WRITE_RSP;
-            errorResp.reqOpcode = ATT_WRITE_REQ;
-            errorResp.attrHandle = p_event->eventField.onWrite.attrHandle;
 
             if (p_event->eventField.onWrite.attrHandle == HIDS_HDL_CHARVAL_HID_CTRL)
             {
@@ -286,19 +313,23 @@ static void ble_hogps_GattEventProcess(GATT_Event_T *p_event)
                 {
                     if (p_event->eventField.onWrite.writeValue[0] == HID_HOST_SUSPEND_ENTER)
                     {
-                        /* Enter boot mode */
-                        s_hogpsConnParams.protocolMode = HID_MODE_BOOT_PROTOCOL;
+                        /* Enter suspend mode */
+                        s_hogpsConnParams.suspendStatus = HID_HOST_SUSPEND_ENTER;
                         hogpsEvent.eventId = BLE_HOGPS_EVT_HOST_SUSPEND_ENTER_IND;
                         hogpsEvent.eventField.evtHostSuspendEnter.connHandle = p_event->eventField.onWrite.connHandle;
                         ble_hogps_ConveyEvent(&hogpsEvent);
                     }
                     else if (p_event->eventField.onWrite.writeValue[0] == HID_HOST_SUSPEND_EXIT)
                     {
-                        /* Enter report mode */
-                        s_hogpsConnParams.protocolMode = HID_MODE_REPORT_PROTOCOL;
+                        /* Exit suspend mode */
+                        s_hogpsConnParams.suspendStatus = HID_HOST_SUSPEND_EXIT;
                         hogpsEvent.eventId = BLE_HOGPS_EVT_HOST_SUSPEND_EXIT_IND;
                         hogpsEvent.eventField.evtHostSuspendExit.connHandle = p_event->eventField.onWrite.connHandle;
                         ble_hogps_ConveyEvent(&hogpsEvent);
+                    }
+                    else
+                    {
+                        //Shall not enter here
                     }
                 }
             }
@@ -325,138 +356,71 @@ static void ble_hogps_GattEventProcess(GATT_Event_T *p_event)
                         hogpsEvent.eventField.evtReportModeEnter.connHandle = p_event->eventField.onWrite.connHandle;
                         ble_hogps_ConveyEvent(&hogpsEvent);
                     }
+                    else
+                    {
+                        //Shall not enter here
+                    }
                 }
             }
             #endif
             #ifdef HIDS_KEYBOARD_SUPPORT
             else if (p_event->eventField.onWrite.attrHandle == HIDS_HDL_CHARVAL_KB_INPUT_REPORT)
             {
-                if (p_event->eventField.onWrite.writeDataLength <= HID_REPORT_LENGTH_KB_INPUT)
-                {
-                    s_hogpsDb.charLengthKbInputReport = p_event->eventField.onWrite.writeDataLength;
-                    memcpy(s_hogpsDb.charValKbInputReport, p_event->eventField.onWrite.writeValue, p_event->eventField.onWrite.writeDataLength);
-                    GATTS_SendWriteResponse(p_event->eventField.onWrite.connHandle, &writeResp);
-                }
-                else
-                {
-                    errorResp.errorCode = ATT_ERRCODE_INVALID_ATTRIBUTE_VALUE_LENGTH;
-                    GATTS_SendErrorResponse(p_event->eventField.onWrite.connHandle, &errorResp);
-                }
+                s_hogpsDb.charLengthKbInputReport = p_event->eventField.onWrite.writeDataLength;
+                (void)memcpy(s_hogpsDb.charValKbInputReport, p_event->eventField.onWrite.writeValue, p_event->eventField.onWrite.writeDataLength);
                 ble_hogps_GenerateReportModeWriteEvent(p_event, BLE_HOGPS_EVT_INPUT_REPORT_WRITE_IND, HID_REPORT_ID_KB);
             }
             #endif
             #ifdef HIDS_MOUSE_SUPPORT
             else if (p_event->eventField.onWrite.attrHandle == HIDS_HDL_CHARVAL_MB_INPUT_REPORT)
             {
-                if (p_event->eventField.onWrite.writeDataLength <= HID_REPORT_LENGTH_MB_INPUT)
-                {
-                    s_hogpsDb.charLengthMbInputReport = p_event->eventField.onWrite.writeDataLength;
-                    memcpy(s_hogpsDb.charValMbInputReport, p_event->eventField.onWrite.writeValue, p_event->eventField.onWrite.writeDataLength);
-                    GATTS_SendWriteResponse(p_event->eventField.onWrite.connHandle, &writeResp);
-                }
-                else
-                {
-                    errorResp.errorCode = ATT_ERRCODE_INVALID_ATTRIBUTE_VALUE_LENGTH;
-                    GATTS_SendErrorResponse(p_event->eventField.onWrite.connHandle, &errorResp);
-                }
+                s_hogpsDb.charLengthMbInputReport = p_event->eventField.onWrite.writeDataLength;
+                (void)memcpy(s_hogpsDb.charValMbInputReport, p_event->eventField.onWrite.writeValue, p_event->eventField.onWrite.writeDataLength);
                 ble_hogps_GenerateReportModeWriteEvent(p_event, BLE_HOGPS_EVT_INPUT_REPORT_WRITE_IND, HID_REPORT_ID_MB);
             }
             else if (p_event->eventField.onWrite.attrHandle == HIDS_HDL_CHARVAL_MM_INPUT_REPORT)
             {
-                if (p_event->eventField.onWrite.writeDataLength <= HID_REPORT_LENGTH_MM_INPUT)
-                {
-                    s_hogpsDb.charLengthMmInputReport = p_event->eventField.onWrite.writeDataLength;
-                    memcpy(s_hogpsDb.charValMmInputReport, p_event->eventField.onWrite.writeValue, p_event->eventField.onWrite.writeDataLength);
-                    GATTS_SendWriteResponse(p_event->eventField.onWrite.connHandle, &writeResp);
-                }
-                else
-                {
-                    errorResp.errorCode = ATT_ERRCODE_INVALID_ATTRIBUTE_VALUE_LENGTH;
-                    GATTS_SendErrorResponse(p_event->eventField.onWrite.connHandle, &errorResp);
-                }
+                s_hogpsDb.charLengthMmInputReport = p_event->eventField.onWrite.writeDataLength;
+                (void)memcpy(s_hogpsDb.charValMmInputReport, p_event->eventField.onWrite.writeValue, p_event->eventField.onWrite.writeDataLength);
                 ble_hogps_GenerateReportModeWriteEvent(p_event, BLE_HOGPS_EVT_INPUT_REPORT_WRITE_IND, HID_REPORT_ID_MM);
             }
             #endif
             #ifdef HIDS_KEYBOARD_SUPPORT
             else if (p_event->eventField.onWrite.attrHandle == HIDS_HDL_CHARVAL_KB_OUTPUT_REPORT)
             {
-                if (p_event->eventField.onWrite.writeDataLength <= HID_REPORT_LENGTH_KB_OUTPUT)
-                {
-                    s_hogpsDb.charLengthKbOutputReport = p_event->eventField.onWrite.writeDataLength;
-                    memcpy(s_hogpsDb.charValKbOutputReport, p_event->eventField.onWrite.writeValue, p_event->eventField.onWrite.writeDataLength);
-                    if (p_event->eventField.onWrite.writeType != ATT_WRITE_CMD)
-                    {
-                        GATTS_SendWriteResponse(p_event->eventField.onWrite.connHandle, &writeResp);
-                    }
-                }
-                else
-                {
-                    if (p_event->eventField.onWrite.writeType != ATT_WRITE_CMD)
-                    {
-                        errorResp.errorCode = ATT_ERRCODE_INVALID_ATTRIBUTE_VALUE_LENGTH;
-                        GATTS_SendErrorResponse(p_event->eventField.onWrite.connHandle, &errorResp);
-                    }
-                }
+                s_hogpsDb.charLengthKbOutputReport = p_event->eventField.onWrite.writeDataLength;
+                (void)memcpy(s_hogpsDb.charValKbOutputReport, p_event->eventField.onWrite.writeValue, p_event->eventField.onWrite.writeDataLength);
                 ble_hogps_GenerateReportModeWriteEvent(p_event, BLE_HOGPS_EVT_OUTPUT_REPORT_WRITE_IND, HID_REPORT_ID_KB);
             }
             #endif
             #if defined(HIDS_KEYBOARD_SUPPORT) && defined (HIDS_BOOT_PROTOCOL_MODE_SUPPORT)
             else if (p_event->eventField.onWrite.attrHandle == HIDS_HDL_CHARVAL_BOOT_KB_INPUT_REPORT)
             {
-                if (p_event->eventField.onWrite.writeDataLength <= HID_REPORT_LENGTH_BOOT_KB_INPUT)
-                {
-                    s_hogpsDb.charLengthBootKbInputReport = p_event->eventField.onWrite.writeDataLength;
-                    memcpy(s_hogpsDb.charValBootKbInputReport, p_event->eventField.onWrite.writeValue, p_event->eventField.onWrite.writeDataLength);
-                    GATTS_SendWriteResponse(p_event->eventField.onWrite.connHandle, &writeResp);
-                }
-                else
-                {
-                    errorResp.errorCode = ATT_ERRCODE_INVALID_ATTRIBUTE_VALUE_LENGTH;
-                    GATTS_SendErrorResponse(p_event->eventField.onWrite.connHandle, &errorResp);
-                }
+                s_hogpsDb.charLengthBootKbInputReport = p_event->eventField.onWrite.writeDataLength;
+                (void)memcpy(s_hogpsDb.charValBootKbInputReport, p_event->eventField.onWrite.writeValue, p_event->eventField.onWrite.writeDataLength);
                 ble_hogps_GenerateBootModeWriteEvent(p_event, BLE_HOGPS_EVT_BOOT_KB_INPUT_REPORT_WRITE_IND);
             }
             #endif
             #if defined(HIDS_KEYBOARD_SUPPORT) && defined (HIDS_BOOT_PROTOCOL_MODE_SUPPORT)
             else if (p_event->eventField.onWrite.attrHandle == HIDS_HDL_CHARVAL_BOOT_KB_OUTPUT_REPORT)
             {
-                if (p_event->eventField.onWrite.writeDataLength <= HID_REPORT_LENGTH_BOOT_KB_OUTPUT)
-                {
-                    s_hogpsDb.charLengthBootKbOutputReport = p_event->eventField.onWrite.writeDataLength;
-                    memcpy(s_hogpsDb.charValBootKbOutputReport, p_event->eventField.onWrite.writeValue, p_event->eventField.onWrite.writeDataLength);
-                    if (p_event->eventField.onWrite.writeType != ATT_WRITE_CMD)
-                    {
-                        GATTS_SendWriteResponse(p_event->eventField.onWrite.connHandle, &writeResp);
-                    }
-                }
-                else
-                {
-                    if (p_event->eventField.onWrite.writeType != ATT_WRITE_CMD)
-                    {
-                        errorResp.errorCode = ATT_ERRCODE_INVALID_ATTRIBUTE_VALUE_LENGTH;
-                        GATTS_SendErrorResponse(p_event->eventField.onWrite.connHandle, &errorResp);
-                    }
-                }
+                s_hogpsDb.charLengthBootKbOutputReport = p_event->eventField.onWrite.writeDataLength;
+                (void)memcpy(s_hogpsDb.charValBootKbOutputReport, p_event->eventField.onWrite.writeValue, p_event->eventField.onWrite.writeDataLength);
                 ble_hogps_GenerateBootModeWriteEvent(p_event, BLE_HOGPS_EVT_BOOT_KB_OUTPUT_REPORT_WRITE_IND);
             }
             #endif
             #if defined(HIDS_MOUSE_SUPPORT) && defined (HIDS_BOOT_PROTOCOL_MODE_SUPPORT)
             else if (p_event->eventField.onWrite.attrHandle == HIDS_HDL_CHARVAL_BOOT_M_INPUT_REPORT)
             {
-                if (p_event->eventField.onWrite.writeDataLength <= HID_REPORT_LENGTH_BOOT_M_INPUT)
-                {
-                    s_hogpsDb.charLengthBootMInputReport = p_event->eventField.onWrite.writeDataLength;
-                    memcpy(s_hogpsDb.charValBootMInputReport, p_event->eventField.onWrite.writeValue, p_event->eventField.onWrite.writeDataLength);
-                    GATTS_SendWriteResponse(p_event->eventField.onWrite.connHandle, &writeResp);
-                }
-                else
-                {
-                    errorResp.errorCode = ATT_ERRCODE_INVALID_ATTRIBUTE_VALUE_LENGTH;
-                    GATTS_SendErrorResponse(p_event->eventField.onWrite.connHandle, &errorResp);
-                }
+                s_hogpsDb.charLengthBootMInputReport = p_event->eventField.onWrite.writeDataLength;
+                (void)memcpy(s_hogpsDb.charValBootMInputReport, p_event->eventField.onWrite.writeValue, p_event->eventField.onWrite.writeDataLength);
                 ble_hogps_GenerateBootModeWriteEvent(p_event, BLE_HOGPS_EVT_BOOT_M_INPUT_REPORT_WRITE_IND);
             }
             #endif
+            else
+            {
+                //Shall not enter here
+            }
         }
         break;
 
@@ -501,7 +465,7 @@ void BLE_HOGPS_BleEventHandler(STACK_Event_T *p_stackEvent)
 #ifdef HIDS_KEYBOARD_SUPPORT
 uint16_t BLE_HOGPS_SetKeyboardInputReport(uint8_t *p_keyCodeArray)
 {
-    memcpy(s_hogpsDb.charValKbInputReport, p_keyCodeArray, HID_REPORT_LENGTH_KB_INPUT);
+    (void)memcpy(s_hogpsDb.charValKbInputReport, p_keyCodeArray, HID_REPORT_LENGTH_KB_INPUT);
     s_hogpsDb.charValKbInputReport[1] = 0x00;       // Constant (padding)
     return MBA_RES_SUCCESS;
 }
@@ -517,8 +481,8 @@ uint16_t BLE_HOGPS_SetMouseButtonInputReport(uint8_t buttons, int8_t wheel, int8
 
 uint16_t BLE_HOGPS_SetMouseMotionInputReport(int16_t xAxis, int16_t yAxis)
 {
-    s_hogpsDb.charValMmInputReport[0] = (uint8_t)(xAxis>>4);
-    s_hogpsDb.charValMmInputReport[1] = (((xAxis&0x000F)<<4)|yAxis>>8);
+    s_hogpsDb.charValMmInputReport[0] = (uint8_t)((uint8_t)xAxis>>4);
+    s_hogpsDb.charValMmInputReport[1] = (((xAxis&0x000FU)<<4U)|yAxis>>8);
     s_hogpsDb.charValMmInputReport[2] = (uint8_t)yAxis;
     return MBA_RES_SUCCESS;
 }
@@ -534,7 +498,7 @@ uint16_t BLE_HOGPS_SetKeyboardOutputReport(uint8_t ledValue)
 #if defined(HIDS_KEYBOARD_SUPPORT) && defined (HIDS_BOOT_PROTOCOL_MODE_SUPPORT)
 uint16_t BLE_HOGPS_SetBootKeyboardInputReport(uint8_t *p_keyCodeArray)
 {
-    memcpy(s_hogpsDb.charValBootKbInputReport, p_keyCodeArray, HID_REPORT_LENGTH_BOOT_KB_INPUT);
+    (void)memcpy(s_hogpsDb.charValBootKbInputReport, p_keyCodeArray, HID_REPORT_LENGTH_BOOT_KB_INPUT);
     return MBA_RES_SUCCESS;
 }
 
@@ -571,7 +535,7 @@ uint16_t BLE_HOGPS_SendKeyboardInputReport(uint16_t connHandle, uint8_t *p_keyCo
 
     hvParams.charHandle = HIDS_HDL_CHARVAL_KB_INPUT_REPORT;
     hvParams.charLength = HID_REPORT_LENGTH_KB_INPUT;
-    memcpy(hvParams.charValue, s_hogpsDb.charValKbInputReport, HID_REPORT_LENGTH_KB_INPUT);
+    (void)memcpy(hvParams.charValue, s_hogpsDb.charValKbInputReport, HID_REPORT_LENGTH_KB_INPUT);
     hvParams.sendType = ATT_HANDLE_VALUE_NTF;
     return GATTS_SendHandleValue(connHandle, &hvParams);
 }
@@ -595,7 +559,7 @@ uint16_t BLE_HOGPS_SendMouseButtonInputReport(uint16_t connHandle, uint8_t butto
 
     hvParams.charHandle = HIDS_HDL_CHARVAL_MB_INPUT_REPORT;
     hvParams.charLength = HID_REPORT_LENGTH_MB_INPUT;
-    memcpy(hvParams.charValue, s_hogpsDb.charValMbInputReport, HID_REPORT_LENGTH_MB_INPUT);
+    (void)memcpy(hvParams.charValue, s_hogpsDb.charValMbInputReport, HID_REPORT_LENGTH_MB_INPUT);
     hvParams.sendType = ATT_HANDLE_VALUE_NTF;
     return GATTS_SendHandleValue(connHandle, &hvParams);
 }
@@ -617,7 +581,7 @@ uint16_t BLE_HOGPS_SendMouseMotionInputReport(uint16_t connHandle, int16_t xAxis
 
     hvParams.charHandle = HIDS_HDL_CHARVAL_MM_INPUT_REPORT;
     hvParams.charLength = HID_REPORT_LENGTH_MM_INPUT;
-    memcpy(hvParams.charValue, s_hogpsDb.charValMmInputReport, HID_REPORT_LENGTH_MM_INPUT);
+    (void)memcpy(hvParams.charValue, s_hogpsDb.charValMmInputReport, HID_REPORT_LENGTH_MM_INPUT);
     hvParams.sendType = ATT_HANDLE_VALUE_NTF;
     return GATTS_SendHandleValue(connHandle, &hvParams);
 }
@@ -641,7 +605,7 @@ uint16_t BLE_HOGPS_SendBootKeyboardInputReport(uint16_t connHandle, uint8_t *p_k
 
     hvParams.charHandle = HIDS_HDL_CHARVAL_BOOT_KB_INPUT_REPORT;
     hvParams.charLength = HID_REPORT_LENGTH_BOOT_KB_INPUT;
-    memcpy(hvParams.charValue, s_hogpsDb.charValBootKbInputReport, HID_REPORT_LENGTH_BOOT_KB_INPUT);
+    (void)memcpy(hvParams.charValue, s_hogpsDb.charValBootKbInputReport, HID_REPORT_LENGTH_BOOT_KB_INPUT);
     hvParams.sendType = ATT_HANDLE_VALUE_NTF;
     return GATTS_SendHandleValue(connHandle, &hvParams);
 }
@@ -665,7 +629,7 @@ uint16_t BLE_HOGPS_SendBootMouseInputReport(uint16_t connHandle, uint8_t buttons
 
     hvParams.charHandle = HIDS_HDL_CHARVAL_BOOT_M_INPUT_REPORT;
     hvParams.charLength = HID_REPORT_LENGTH_BOOT_M_INPUT;
-    memcpy(hvParams.charValue, s_hogpsDb.charValBootMInputReport, HID_REPORT_LENGTH_BOOT_M_INPUT);
+    (void)memcpy(hvParams.charValue, s_hogpsDb.charValBootMInputReport, HID_REPORT_LENGTH_BOOT_M_INPUT);
     hvParams.sendType = ATT_HANDLE_VALUE_NTF;
     return GATTS_SendHandleValue(connHandle, &hvParams);
 }

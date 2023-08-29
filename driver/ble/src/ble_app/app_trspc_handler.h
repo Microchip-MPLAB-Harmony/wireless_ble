@@ -41,8 +41,8 @@
     are defined here for convenience.
 *******************************************************************************/
 
-#ifndef _APP_TRSPC_HANDLER_H
-#define _APP_TRSPC_HANDLER_H
+#ifndef APP_TRSPC_HANDLER_H
+#define APP_TRSPC_HANDLER_H
 
 // *****************************************************************************
 // *****************************************************************************
@@ -90,14 +90,15 @@ extern "C" {
 */
 void APP_TrspcEvtHandler(BLE_TRSPC_Event_T *p_event);
 
-
-#endif /* _APP_TRSPC_HANDLER_H */
-
 //DOM-IGNORE-BEGIN
 #ifdef __cplusplus
 }
 #endif
 //DOM-IGNORE-END
+
+
+#endif /* APP_TRSPC_HANDLER_H */
+
 
 /*******************************************************************************
  End of File

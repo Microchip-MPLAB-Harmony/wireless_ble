@@ -48,11 +48,13 @@
 #define BLE_OTAS_H
 
 
-// *****************************************************************************
-// *****************************************************************************
-// Section: Included Files
-// *****************************************************************************
-// *****************************************************************************
+// DOM-IGNORE-BEGIN
+#ifdef __cplusplus  // Provide C++ Compatibility
+
+extern "C" {
+
+#endif
+// DOM-IGNORE-END
 
 
 // *****************************************************************************
@@ -105,6 +107,12 @@ typedef enum BLE_OTAS_AttributeHandle_T
  *                              the start handle of the service is smaller than @ref GATTS_APP_SVC_START_HDL.
  */
 uint16_t BLE_OTAS_Add(void);
+
+//DOM-IGNORE-BEGIN
+#ifdef __cplusplus
+}
+#endif
+//DOM-IGNORE-END
 
 #endif
 

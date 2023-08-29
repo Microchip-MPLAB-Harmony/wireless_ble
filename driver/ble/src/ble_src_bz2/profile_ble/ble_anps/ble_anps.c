@@ -50,7 +50,7 @@
 #include "gatt.h"
 #include "ble_util/byte_stream.h"
 #include "ble_ans/ble_ans.h"
-#include "ble_anps/ble_anps.h"
+#include "ble_anps.h"
 
 
 // *****************************************************************************
@@ -62,16 +62,26 @@
 /**@defgroup BLE_ANPS_ERRCODE  Error code definition
  * @brief The definition of BLE alert notification error code.
  * @{ */
-#define BLE_ANPS_ERRCODE_COMMAND_NOT_SUPPORTTED   0xA0
+#define BLE_ANPS_ERRCODE_COMMAND_NOT_SUPPORTTED   0xA0U
 /** @} */
 
 
-/**@defgroup BLE_ANPS_RETRY_TYPE Retrying type 
+/**@defgroup BLE_ANPS_RETRY_TYPE Retrying type
  * @brief The definition of BLE alert notification retry type
  * @{ */
 #define BLE_ANPS_RETRY_TYPE_WRITE_RESP         0x01    /**< Definition of response retry type write response. */
 #define BLE_ANPS_RETRY_TYPE_READ_RESP          0x02    /**< Definition of response retry type read response. */
 #define BLE_ANPS_RETRY_TYPE_ERR                0x03    /**< Definition of error retry type. */
+/** @} */
+
+/**@defgroup BLE_ANPS_STATE ANPS state
+ * @brief The definition of BLE ANPS connection state
+ * @{ */
+ typedef enum BLE_ANPS_State_T
+{
+    BLE_ANPS_STATE_IDLE = 0x00,
+    BLE_ANPS_STATE_CONNECTED
+} BLE_ANPS_State_T;
 /** @} */
 
 // *****************************************************************************
@@ -90,9 +100,10 @@ typedef struct BLE_ANPS_Params_T
 /**@brief The structure contains information about BLE alert notification profile connection parameters for recording information. */
 typedef struct BLE_ANPS_ConnList_T
 {
-    uint16_t connHandle;     /**< Connection handle associated with this connection. */
-    uint8_t  retryType;      /**< Retry type. @ref BLE_ANPS_RETRY_TYPE. */
-    uint8_t  *p_retryData;   /**< Retry data pointer. */
+    uint16_t            connHandle;     /**< Connection handle associated with this connection. */
+    BLE_ANPS_State_T    state;          /**< Connection state. @ref BLE_ANPS_STATE. */
+    uint8_t             retryType;      /**< Retry type. @ref BLE_ANPS_RETRY_TYPE. */
+    uint8_t             *p_retryData;   /**< Retry data pointer. */
 } BLE_ANPS_ConnList_T;
 
 // *****************************************************************************
@@ -112,7 +123,7 @@ static BLE_ANPS_Params_T      s_anpsParams;
 // *****************************************************************************
 
 static void ble_anps_FreeRetryData(BLE_ANPS_ConnList_T *p_conn) {
-    if (p_conn->p_retryData)
+    if (p_conn->p_retryData != NULL)
     {
         OSAL_Free(p_conn->p_retryData);
         p_conn->p_retryData = NULL;
@@ -122,7 +133,7 @@ static void ble_anps_FreeRetryData(BLE_ANPS_ConnList_T *p_conn) {
 
 static void ble_anps_InitConnList(BLE_ANPS_ConnList_T *p_conn)
 {
-    memset(p_conn, 0, sizeof(BLE_ANPS_ConnList_T));
+    (void)memset(p_conn, 0, sizeof(BLE_ANPS_ConnList_T));
 }
 
 static BLE_ANPS_ConnList_T * ble_anps_GetConnListByHandle(uint16_t connHandle)
@@ -131,7 +142,7 @@ static BLE_ANPS_ConnList_T * ble_anps_GetConnListByHandle(uint16_t connHandle)
 
     for(i=0; i<BLE_ANPS_MAX_CONN_NBR;i++)
     {
-        if (s_anpsConnList[i].connHandle == connHandle)
+        if ((s_anpsConnList[i].state == BLE_ANPS_STATE_CONNECTED) && (s_anpsConnList[i].connHandle == connHandle))
         {
             return &s_anpsConnList[i];
         }
@@ -140,14 +151,15 @@ static BLE_ANPS_ConnList_T * ble_anps_GetConnListByHandle(uint16_t connHandle)
     return NULL;
 }
 
-static BLE_ANPS_ConnList_T *ble_anps_GetFreeConnList()
+static BLE_ANPS_ConnList_T *ble_anps_GetFreeConnList(void)
 {
     uint8_t i;
 
     for(i=0; i<BLE_ANPS_MAX_CONN_NBR;i++)
     {
-        if (s_anpsConnList[i].connHandle == 0)
+        if (s_anpsConnList[i].state == BLE_ANPS_STATE_IDLE)
         {
+            s_anpsConnList[i].state = BLE_ANPS_STATE_CONNECTED;
             return &s_anpsConnList[i];
         }
     }
@@ -157,12 +169,12 @@ static BLE_ANPS_ConnList_T *ble_anps_GetFreeConnList()
 
 static void ble_anps_ConveyEvent(uint8_t eventId, uint8_t *p_eventField, uint8_t eventFieldLen)
 { 
-    if (sp_anpsCbRoutine)
+    if (sp_anpsCbRoutine != NULL)
     {
         BLE_ANPS_Event_T evtPara;
 
         evtPara.eventId = eventId;
-        memcpy(&evtPara.eventField, p_eventField, eventFieldLen);
+        (void)memcpy((uint8_t *)&evtPara.eventField, (uint8_t *)p_eventField, eventFieldLen);
         sp_anpsCbRoutine(&evtPara);
     }
 }
@@ -186,6 +198,10 @@ static void ble_anps_ProcWrite(GATT_Event_T *p_event)
         if (p_event->eventField.onWrite.writeValue[0] > BLE_ANPS_CMD_END)
         {
             errCode = BLE_ANPS_ERRCODE_COMMAND_NOT_SUPPORTTED;
+        }
+        else if (p_event->eventField.onWrite.writeType != ATT_WRITE_REQ)
+        {
+            errCode = ATT_ERRCODE_REQUEST_NOT_SUPPORT;
         }
 
 
@@ -240,18 +256,20 @@ static void ble_anps_ProcRead(GATT_Event_T *p_event)
     uint8_t valueLen = 2;
     uint16_t status;
     GATTS_SendReadRespParams_T *p_respParams;
+    GATTS_SendErrRespParams_T *p_errRespParams;
     BLE_ANPS_ConnList_T *p_conn;
+
 
     switch (p_event->eventField.onRead.attrHandle)
     {
         case ANS_HDL_CHARVAL_SUPP_NEW_ALERT_CAT:
         {
-            memcpy(value, &s_anpsParams.suppNewCat, valueLen);
+            (void)memcpy((uint8_t *)value, (uint8_t *)&s_anpsParams.suppNewCat, valueLen);
         }
         break;
         case ANS_HDL_CHARVAL_SUPP_UNREAD_ALERT_CAT:
         {
-            memcpy(value, &s_anpsParams.suppUnreadCat, valueLen);
+            (void)memcpy((uint8_t *)value, (uint8_t *)&s_anpsParams.suppUnreadCat, valueLen);
         }
         break;
         default:
@@ -269,19 +287,40 @@ static void ble_anps_ProcRead(GATT_Event_T *p_event)
         ble_anps_ConveyEvent(BLE_ANPS_EVT_ERR_UNSPECIFIED_IND, NULL, 0);
         return;
     }
-    p_conn->p_retryData = OSAL_Malloc(sizeof(GATTS_SendReadRespParams_T) - (BLE_ATT_MAX_MTU_LEN - ATT_READ_RESP_HEADER_SIZE) + valueLen);
-    if (p_conn->p_retryData == NULL)
+
+    if (p_event->eventField.onRead.readType == ATT_READ_REQ)
     {
-        ble_anps_ConveyEvent(BLE_ANPS_EVT_ERR_NO_MEM_IND, NULL, 0);
-        return;
+        p_conn->p_retryData = OSAL_Malloc(sizeof(GATTS_SendReadRespParams_T) - (BLE_ATT_MAX_MTU_LEN - ATT_READ_RESP_HEADER_SIZE) + valueLen);
+        if (p_conn->p_retryData == NULL)
+        {
+            ble_anps_ConveyEvent(BLE_ANPS_EVT_ERR_NO_MEM_IND, NULL, 0);
+            return;
+        }
+
+        p_conn->retryType = BLE_ANPS_RETRY_TYPE_READ_RESP;
+        p_respParams = (GATTS_SendReadRespParams_T *)p_conn->p_retryData;
+        p_respParams->attrLength = valueLen;
+        p_respParams->responseType = ATT_READ_RSP;
+        (void)memcpy(p_respParams->attrValue, value, valueLen);
+        status = GATTS_SendReadResponse(p_event->eventField.onRead.connHandle, p_respParams);
+    }
+    else
+    {
+        p_conn->p_retryData = OSAL_Malloc(sizeof(GATTS_SendErrRespParams_T));
+        if (p_conn->p_retryData == NULL)
+        {
+            ble_anps_ConveyEvent(BLE_ANPS_EVT_ERR_NO_MEM_IND, NULL, 0);
+            return;
+        }
+        p_conn->retryType = BLE_ANPS_RETRY_TYPE_ERR;
+        p_errRespParams = (GATTS_SendErrRespParams_T *)p_conn->p_retryData;
+        p_errRespParams->reqOpcode = p_event->eventField.onRead.readType;
+        p_errRespParams->attrHandle = p_event->eventField.onRead.attrHandle;
+        p_errRespParams->errorCode = ATT_ERRCODE_REQUEST_NOT_SUPPORT;
+        status = GATTS_SendErrorResponse(p_event->eventField.onRead.connHandle, p_errRespParams);
     }
 
-    p_conn->retryType = BLE_ANPS_RETRY_TYPE_READ_RESP;
-    p_respParams = (GATTS_SendReadRespParams_T *)p_conn->p_retryData;
-    p_respParams->attrLength = valueLen;
-    p_respParams->responseType = ATT_READ_RSP;
-    memcpy(p_respParams->attrValue, value, valueLen);
-    status = GATTS_SendReadResponse(p_event->eventField.onRead.connHandle, p_respParams);
+    
     if (status == MBA_RES_SUCCESS)
     {
         ble_anps_FreeRetryData(p_conn);
@@ -353,12 +392,12 @@ static void ble_anps_GattEventProcess(GATT_Event_T *p_event)
     } 
 }
 
-uint16_t BLE_ANPS_Init()
+uint16_t BLE_ANPS_Init(void)
 {
     uint8_t i;
 
     sp_anpsCbRoutine = NULL;
-    memset(&s_anpsParams, 0, sizeof(BLE_ANPS_Params_T));
+    (void)memset(&s_anpsParams, 0, sizeof(BLE_ANPS_Params_T));
     for (i = 0; i < BLE_ANPS_MAX_CONN_NBR; i++)
     {
         ble_anps_InitConnList(&s_anpsConnList[i]);
@@ -377,12 +416,12 @@ uint16_t BLE_ANPS_SetSuppNewCat(uint16_t catMask)
 
     for(i=0; i<BLE_ANPS_MAX_CONN_NBR;i++)
     {
-        if (s_anpsConnList[i].connHandle)
+        if (s_anpsConnList[i].state == BLE_ANPS_STATE_CONNECTED)
         {
             return MBA_RES_FAIL;
         }
     }
-    if(catMask & BLE_ANPS_SUPP_CAT_RESERVED)
+    if((catMask & BLE_ANPS_SUPP_CAT_RESERVED)!= 0U)
     {
         return MBA_RES_INVALID_PARA;
     }
@@ -396,12 +435,12 @@ uint16_t BLE_ANPS_SetSuppUnreadCat(uint16_t catMask)
 
     for(i=0; i<BLE_ANPS_MAX_CONN_NBR;i++)
     {
-        if (s_anpsConnList[i].connHandle)
+        if (s_anpsConnList[i].state == BLE_ANPS_STATE_CONNECTED)
         {
             return MBA_RES_FAIL;
         }
     }
-    if(catMask & BLE_ANPS_SUPP_CAT_RESERVED)
+    if((catMask & BLE_ANPS_SUPP_CAT_RESERVED)!= 0U)
     {
         return MBA_RES_INVALID_PARA;
     }
@@ -423,10 +462,10 @@ uint16_t BLE_ANPS_SendNewAlert(uint16_t connHandle, uint8_t catId, uint8_t num, 
     if (p_notiParams != NULL)
     {
         p_notiParams->charHandle = ANS_HDL_CHARVAL_NEW_ALERT;
-        p_notiParams->charLength = txtStrLen + 2;
+        p_notiParams->charLength = txtStrLen + 2U;
         p_notiParams->charValue[0] = catId;
         p_notiParams->charValue[1] = num; 
-        memcpy(&p_notiParams->charValue[2], p_txtStr, txtStrLen);
+        (void)memcpy(&p_notiParams->charValue[2], p_txtStr, txtStrLen);
         p_notiParams->sendType = ATT_HANDLE_VALUE_NTF;
 
         result = GATTS_SendHandleValue(connHandle, p_notiParams);
@@ -455,7 +494,7 @@ uint16_t BLE_ANPS_SendUnreadAlertStat(uint16_t connHandle, uint8_t catId, uint8_
     return result;
 }
 
-void ble_anps_GapEventProcess(BLE_GAP_Event_T *p_event)
+static void ble_anps_GapEventProcess(BLE_GAP_Event_T *p_event)
 {
     switch (p_event->eventId)
     {
