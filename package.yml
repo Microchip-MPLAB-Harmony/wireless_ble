@@ -3,7 +3,7 @@ package:
   name: "wireless_ble"
   type: "package"
   status: "production"
-  required: true
+  required: false
   version: "1.1.0"
 
   dependencies:
