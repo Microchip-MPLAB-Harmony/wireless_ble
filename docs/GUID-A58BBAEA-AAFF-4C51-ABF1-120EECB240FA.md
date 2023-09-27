@@ -1,4 +1,6 @@
-# BLE_GAP_CharPeriPreferConnParams_T
+# BLE\_GAP\_CharPeriPreferConnParams\_T
+
+**Parent topic:**[Structures](GUID-230368B0-FB2A-4967-A471-691387B35A9E.md)
 
 ## C
 
@@ -17,13 +19,13 @@ typedef struct BLE_GAP_CharPeriPreferConnParams_T
 
 Peripheral prefered connection parameter characteristic.
 
-
 ## Field Documentation
 
 |Field|Description|
-|:---|:---|
+|-----|-----------|
 |enable|If ture to enable the characteristic of "Peripheral Preferred Connection Parameters". Otherwise, disable it.|
 |minConnInterval|Defines minimum value for the connection interval. See **[Connection parameters range](GUID-5ABC0266-6BD2-424C-B8AB-3024AE2E9771.md)**.|
 |maxConnInterval|Defines maximum value for the connection interval. See **[Connection parameters range](GUID-5ABC0266-6BD2-424C-B8AB-3024AE2E9771.md)**.|
 |peripheralLatency|Defines the peripheral latency for the connection. See **[Connection parameters range](GUID-5ABC0266-6BD2-424C-B8AB-3024AE2E9771.md)**.|
 |connSupervisionTimeoutMulti|Defines the connection supervisor timeout multiplier as a multiple of 10ms.|
+

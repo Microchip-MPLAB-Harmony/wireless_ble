@@ -1,5 +1,7 @@
 # Procedure status definition
 
+**Parent topic:**[Defines](GUID-F7CF3BA1-36B6-40A6-9257-19D4863812CA.md)
+
 ## C
 
 ```c
@@ -9,19 +11,18 @@
 
 ## Description
 
-The definition of of procedure status
+The definition of of procedure status.
 
 ### Note
 
-Some GATT procedures would not finish in one ATT request. Hence, more than one event will received in one procedure.
+Some GATT procedures would not finish in one ATT request. Hence, more than one event will be sent in one procedure.
 
-Status in the event indicates if this procedure will continue or end.
-
-
+Status in the event indicates if this procedure is still in progress or complete.
 
 ## Macro Definition
 
 |Macro|Description|
-|:---|:---|
-|GATT_PROCEDURE_STATUS_CONTINUE|Querying procedure continues. Further events will be received.|
-|GATT_PROCEDURE_STATUS_FINISH|Querying procedure is complete. Last event of this procedure.|
+|-----|-----------|
+|GATT\_PROCEDURE\_STATUS\_CONTINUE|Querying procedure continues. Further events will be received.|
+|GATT\_PROCEDURE\_STATUS\_FINISH|Querying procedure is complete. Last event of this procedure.|
+

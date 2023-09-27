@@ -1,5 +1,7 @@
 # Definition of downlink status
 
+**Parent topic:**[Defines](GUID-6EDD6ECC-FF39-46BA-9B00-972ED3CD5AFC.md)
+
 ## C
 
 ```c
@@ -15,7 +17,8 @@ The definition of BLE transparent service downlink status.
 ## Macro Definition
 
 |Macro|Description|
-|:---|:---|
-|BLE_TRSPC_DL_STATUS_DISABLED|Transparent downlink is disabled.|
-|BLE_TRSPC_DL_STATUS_NONCBFCENABLED|Transparent downlink is enabled without credit based flow control|
-|BLE_TRSPC_DL_STATUS_CBFCENABLED|Transparent downlink is enabled with credit based flow control|
+|-----|-----------|
+|BLE\_TRSPC\_DL\_STATUS\_DISABLED|Transparent downlink is disabled.|
+|BLE\_TRSPC\_DL\_STATUS\_NONCBFCENABLED|Transparent downlink is enabled without credit based flow control.|
+|BLE\_TRSPC\_DL\_STATUS\_CBFCENABLED|Transparent downlink is enabled with credit based flow control.|
+

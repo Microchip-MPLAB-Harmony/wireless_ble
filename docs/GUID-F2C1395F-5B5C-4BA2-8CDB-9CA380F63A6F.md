@@ -1,5 +1,7 @@
 # Definition of uplink status
 
+**Parent topic:**[Defines](GUID-6EDD6ECC-FF39-46BA-9B00-972ED3CD5AFC.md)
+
 ## C
 
 ```c
@@ -14,6 +16,7 @@ The definition of BLE transparent service uplink status.
 ## Macro Definition
 
 |Macro|Description|
-|:---|:---|
-|BLE_TRSPC_UL_STATUS_DISABLED|Transparent uplink is disabled.|
-|BLE_TRSPC_UL_STATUS_CBFCENABLED|Transparent uplink is enabled with credit based flow control|
+|-----|-----------|
+|BLE\_TRSPC\_UL\_STATUS\_DISABLED|Transparent uplink is disabled.|
+|BLE\_TRSPC\_UL\_STATUS\_CBFCENABLED|Transparent uplink is enabled with credit based flow control.|
+

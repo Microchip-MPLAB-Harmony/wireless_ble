@@ -1,5 +1,7 @@
 # Maximum periodic advertising fragment data length
 
+**Parent topic:**[Defines](GUID-9781CD29-3C4B-41EE-8F98-355D2AA99482.md)
+
 ## C
 
 ```c
@@ -8,10 +10,11 @@
 
 ## Description
 
-The definition of maximum periodic advertising fragment data length
+The definition of maximum periodic advertising fragment data length.
 
 ## Macro Definition
 
 |Macro|Description|
-|:---|:---|
-|BLE_GAP_PERIODIC_ADV_FRAGMENT_MAX_LENGTH|Maximum length of periodic advertising fragment data in bytes.|
+|-----|-----------|
+|BLE\_GAP\_PERIODIC\_ADV\_FRAGMENT\_MAX\_LENGTH|Maximum length of periodic advertising fragment data in bytes.|
+

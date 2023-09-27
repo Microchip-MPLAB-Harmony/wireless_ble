@@ -1,8 +1,6 @@
 # GAP ADV / Ext ADV procedure
 
-<br />
-
--   Example of starting advertising
+## Example of starting advertising
 
 <br />
 
@@ -10,7 +8,7 @@
 
 <br />
 
--   Example of changing adv data under advertising enabled
+## Example of changing adv data under advertising enabled
 
 <br />
 
@@ -18,7 +16,7 @@
 
 <br />
 
--   Example of changing advertising parameter under advertising enabled
+## Example of changing advertising parameter under advertising enabled
 
 <br />
 
@@ -26,7 +24,7 @@
 
 <br />
 
--   Example of stopping advertising under advertising enabled
+## Example of stopping advertising under advertising enabled
 
 <br />
 
@@ -34,7 +32,7 @@
 
 <br />
 
--   Example of advertising timeout
+## Example of advertising timeout
 
 <br />
 
@@ -42,7 +40,7 @@
 
 <br />
 
--   Example of becoming peripheral role under advertising enabled
+## Example of becoming peripheral role under advertising enabled
 
 <br />
 
@@ -50,7 +48,7 @@
 
 <br />
 
--   Example of starting extended advertising
+## Example of starting extended advertising
 
 <br />
 
@@ -58,7 +56,7 @@
 
 <br />
 
--   Example of changing adv data under extended advertising enabled
+## Example of changing adv data under extended advertising enabled
 
 <br />
 
@@ -66,7 +64,7 @@
 
 <br />
 
--   Example of changing extended advertising parameter extended advertising enabled
+## Example of changing extended advertising parameter extended advertising enabled
 
 <br />
 
@@ -74,7 +72,7 @@
 
 <br />
 
--   Example of receiving BLE\_GAP\_EVT\_SCAN\_REQ\_RECEIVED event
+## Example of receiving BLE\_GAP\_EVT\_SCAN\_REQ\_RECEIVED event
 
 <br />
 
@@ -82,7 +80,7 @@
 
 <br />
 
--   Example of stopping extended advertising
+## Example of stopping extended advertising
 
 <br />
 
@@ -90,11 +88,13 @@
 
 <br />
 
--   Example of becoming peripheral role under extended advertising enabled
+## Example of becoming peripheral role under extended advertising enabled
 
 <br />
 
 ![](GUID-8F73B113-043B-45E0-8FED-6A25B45FC802-low.png)
+
+<br />
 
 **Parent topic:**[Message Sequence Chart](GUID-30D405B5-0472-4B35-AD01-4DDF330F3091.md)
 

@@ -1,4 +1,6 @@
-# BT_SYS_ReadVersion
+# BT\_SYS\_ReadVersion
+
+**Parent topic:**[Functions](GUID-BCD34C15-EAC6-45F0-97B7-E2EBA942CFEE.md)
 
 ## C
 
@@ -13,6 +15,6 @@ Retrieve BT version.
 ## Parameters
 
 |Parameter|Description|
-|:---|:---|
-|\[out\] p_version|Point to version buffer.|
+|---------|-----------|
+|\[out\] p\_version|Point to version buffer.|
 

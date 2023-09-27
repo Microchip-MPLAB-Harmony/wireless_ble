@@ -1,5 +1,7 @@
 # Credit based channel number
 
+**Parent topic:**[Defines](GUID-565156DB-69EB-46D5-863E-7A7329456648.md)
+
 ## C
 
 ```c
@@ -8,10 +10,11 @@
 
 ## Description
 
-The definition of L2cap credit based channel number per connection
+The definition of L2cap credit based channel number per connection.
 
 ## Macro Definition
 
 |Macro|Description|
-|:---|:---|
-|BLE_L2CAP_MAX_CB_NUM|The maximum L2cap credit based channel number per connection|
+|-----|-----------|
+|BLE\_L2CAP\_MAX\_CB\_NUM|The maximum L2cap credit based channel number per connection.|
+

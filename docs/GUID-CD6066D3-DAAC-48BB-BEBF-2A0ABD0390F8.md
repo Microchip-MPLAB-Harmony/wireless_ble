@@ -1,4 +1,6 @@
-# BLE_PXPR_EventField_T
+# BLE\_PXPR\_EventField\_T
+
+**Parent topic:**[Structures](GUID-A9588F6C-1E36-4F3E-9BB7-C1BF21F919CA.md)
 
 ## C
 
@@ -14,10 +16,10 @@ typedef union
 
 Union of BLE PXP Reporter callback event data types.
 
-
 ## Field Documentation
 
 |Field|Description|
-|:---|:---|
-|evtLlsAlertLevelWriteInd|Handle **[BLE_PXPR_EVT_LLS_ALERT_LEVEL_WRITE_IND](GUID-7FECC045-859E-429B-987B-C6BB9271911A.md)**|
-|evtIasAlertLevelWriteInd|Handle **[BLE_PXPR_EVT_IAS_ALERT_LEVEL_WRITE_IND](GUID-7FECC045-859E-429B-987B-C6BB9271911A.md)**|
+|-----|-----------|
+|evtLlsAlertLevelWriteInd|Handle **[BLE\_PXPR\_EVT\_LLS\_ALERT\_LEVEL\_WRITE\_IND](GUID-7FECC045-859E-429B-987B-C6BB9271911A.md)**.|
+|evtIasAlertLevelWriteInd|Handle **[BLE\_PXPR\_EVT\_IAS\_ALERT\_LEVEL\_WRITE\_IND](GUID-7FECC045-859E-429B-987B-C6BB9271911A.md)**.|
+

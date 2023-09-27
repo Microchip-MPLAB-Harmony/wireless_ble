@@ -1,5 +1,7 @@
 # Attribute settings
 
+**Parent topic:**[Defines](GUID-F7CF3BA1-36B6-40A6-9257-19D4863812CA.md)
+
 ## C
 
 ```c
@@ -18,10 +20,11 @@ The definition of attribute settings.
 ## Macro Definition
 
 |Macro|Description|
-|:---|:---|
-|SETTING_MANUAL_WRITE_RSP|Set if service need to know write operations on this attribute. Service also need to send response (if need) manually.|
-|SETTING_MANUAL_READ_RSP|Set if service need to know read operations on this attribute. Service also need to send response manually.|
-|SETTING_UUID_16|Set if the UUID is 16 bytes (128 bits) in length|
-|SETTING_VARIABLE_LEN|Set if the attribute has a variable length|
-|SETTING_ALLOW_OFFSET|Set if writes are allowed with an offset|
-|SETTING_CCCD|Set if the attribute is CCCD|
+|-----|-----------|
+|SETTING\_MANUAL\_WRITE\_RSP|Set if service need to know write operations on this attribute. Service also need to send response \(if necessary\) manually.|
+|SETTING\_MANUAL\_READ\_RSP|Set if service need to know read operations on this attribute. Service also need to send response manually.|
+|SETTING\_UUID\_16|Set if the UUID is 16 bytes \(128 bits\) in length.|
+|SETTING\_VARIABLE\_LEN|Set if the attribute has a variable length.|
+|SETTING\_ALLOW\_OFFSET|Set if writes are allowed with an offset.|
+|SETTING\_CCCD|Set if the attribute is CCCD.|
+

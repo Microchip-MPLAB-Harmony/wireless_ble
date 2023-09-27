@@ -1,5 +1,7 @@
 # Maximum connection number
 
+**Parent topic:**[Defines](GUID-4B2D354D-5C6F-4C03-A5C2-1EF1B1D1449B.md)
+
 ## C
 
 ```c
@@ -13,5 +15,6 @@ The definition of Memory size.
 ## Macro Definition
 
 |Macro|Description|
-|:---|:---|
-|BLE_ANPS_MAX_CONN_NBR|Maximum allowing Conncetion Numbers.|
+|-----|-----------|
+|BLE\_ANPS\_MAX\_CONN\_NBR|Maximum allowing Conncetion Numbers.|
+

@@ -1,4 +1,6 @@
-# GATTS_BondingParams_T
+# GATTS\_BondingParams\_T
+
+**Parent topic:**[Structures](GUID-033AEAE3-56F0-4C38-99A5-6315F4885209.md)
 
 ## C
 
@@ -14,10 +16,10 @@ typedef struct GATTS_BondingParams_T
 
 Bonding parameters.
 
-
 ## Field Documentation
 
 |Field|Description|
-|:---|:---|
+|-----|-----------|
 |serviceChange|The service change state.|
 |clientSupportFeature|Support feature of the related client.|
+

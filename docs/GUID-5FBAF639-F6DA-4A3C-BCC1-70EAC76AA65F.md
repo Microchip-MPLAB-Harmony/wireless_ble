@@ -7,5 +7,5 @@
 -   **[Transport Dependencies](GUID-6399D17D-61A2-45C5-984C-E13AD14E6FFA.md)**  
 
 
-**Parent topic:**[Microchip OTA Profile v1.0](GUID-8FB2E8E4-2700-455A-8B4B-7E396CAD954D.md)
+**Parent topic:**[Microchip OTA Profile v1.2](GUID-8FB2E8E4-2700-455A-8B4B-7E396CAD954D.md)
 

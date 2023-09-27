@@ -1,8 +1,6 @@
 # GATTC Primary Services Discovery
 
-<br />
-
--   Example of GATTC Discover All Primary Services
+## Example of GATTC Discover All Primary Services
 
 <br />
 
@@ -10,11 +8,13 @@
 
 <br />
 
--   Example of GATTC Discover a Specific Service
+## Example of GATTC Discover a Specific Service
 
 <br />
 
 ![](GUID-6593B644-19D7-4630-8DE3-9A5256376611-low.png)
+
+<br />
 
 **Parent topic:**[Message Sequence Chart](GUID-F222E22D-493E-4F16-8480-6F7AAD168EB9.md)
 

@@ -1,4 +1,6 @@
-# BLE_DTM_EndTest
+# BLE\_DTM\_EndTest
+
+**Parent topic:**[Functions](GUID-965015D2-EDE8-4792-85DF-17B7B0E47E36.md)
 
 ## C
 
@@ -12,18 +14,19 @@ Stop any test which is in progress.
 
 ### Note
 
-**[BLE_DTM_Init](GUID-21714A75-A3D2-41AE-AF6B-7AB79CE96BAE.md)** is required for this API.
+**[BLE\_DTM\_Init](GUID-21714A75-A3D2-41AE-AF6B-7AB79CE96BAE.md)** is required for this API.
 
 ## Parameters
 
 |Parameter|Description|
-|:---|:---|
-|\[out\] p_packetCount|Pointer to the packet count parameter buffer. The number of count shall be zero for a transmitter test and shall be received packets for a reveiver test.|
-|\[out\] p_avgRssi|Pointer to the average rssi value buffer.|
+|---------|-----------|
+|\[out\] p\_packetCount|Pointer to the packet count parameter buffer. The number of count shall be zero for a transmitter test and shall be received packets for a reveiver test.|
+|\[out\] p\_avgRssi|Pointer to the average rssi value buffer.|
 
 ## Return values
 
 |Return value|Description|
-|:---|:---|
-MBA_RES_SUCCESS|Successfully stop the test which is in progress.|
-MBA_RES_OOM|Internal memory allocation failure.|
+|------------|-----------|
+|MBA\_RES\_SUCCESS|Successfully stop the test which is in progress.|
+|MBA\_RES\_OOM|Internal memory allocation failure.|
+

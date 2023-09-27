@@ -1,8 +1,6 @@
 # Transparent Profile Vendor Command Exchange Procedure
 
-<br />
-
--   Example of Transparent Profile Client Role Vendor Command Exchange Over Control Pipe
+## Example of Transparent Profile Client Role Vendor Command Exchange Over Control Pipe
 
 <br />
 
@@ -10,11 +8,13 @@
 
 <br />
 
--   Example of Transparent Profile Server Role Vendor Command Exchange Over Control Pipe
+## Example of Transparent Profile Server Role Vendor Command Exchange Over Control Pipe
 
 <br />
 
 ![](GUID-901F6CAD-EC18-4572-9512-DE682059E692-low.png)
+
+<br />
 
 **Parent topic:**[Message Sequence Chart](GUID-3D4E2E63-0227-40ED-BBB4-0E93622C38E0.md)
 

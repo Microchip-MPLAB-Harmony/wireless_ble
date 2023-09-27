@@ -1,5 +1,7 @@
 # Connection parameter update result
 
+**Parent topic:**[Defines](GUID-565156DB-69EB-46D5-863E-7A7329456648.md)
+
 ## C
 
 ```c
@@ -14,6 +16,7 @@ The definition of response result code for connection parameter update.
 ## Macro Definition
 
 |Macro|Description|
-|:---|:---|
-|BLE_L2CAP_CONN_PARAMS_ACCEPT|Connection Parameters accepted|
-|BLE_L2CAP_CONN_PARAMS_REJECT|Connection Parameters rejected|
+|-----|-----------|
+|BLE\_L2CAP\_CONN\_PARAMS\_ACCEPT|Connection Parameters accepted.|
+|BLE\_L2CAP\_CONN\_PARAMS\_REJECT|Connection Parameters rejected.|
+

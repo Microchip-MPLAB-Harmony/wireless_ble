@@ -1,4 +1,6 @@
-# BLE_ANPS_Init
+# BLE\_ANPS\_Init
+
+**Parent topic:**[Functions](GUID-37FC87C4-D5D7-4E4F-B857-934E83BC1494.md)
 
 ## C
 
@@ -13,5 +15,6 @@ Initialize BLE Alert Notification Profile.
 ## Return values
 
 |Return value|Description|
-|:---|:---|
-MBA_RES_SUCCESS|Successfully init BLE Alert Notification Profile.|
+|------------|-----------|
+|MBA\_RES\_SUCCESS|Successfully init BLE Alert Notification Profile.|
+

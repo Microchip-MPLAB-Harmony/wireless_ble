@@ -1,5 +1,7 @@
 # Characteristic extended property
 
+**Parent topic:**[Defines](GUID-F7CF3BA1-36B6-40A6-9257-19D4863812CA.md)
+
 ## C
 
 ```c
@@ -9,11 +11,12 @@
 
 ## Description
 
-The definition of Characteristic Extended Properties bit field
+The definition of Characteristic Extended Properties bit field.
 
 ## Macro Definition
 
 |Macro|Description|
-|:---|:---|
-|RELIABLE_WRITE|If set, permits reliable writes of Characteristic Value.|
-|WRITABLE_AUXILIARIES|If set, permits writes to the Characteristic Descriptor.|
+|-----|-----------|
+|RELIABLE\_WRITE|If set, permits reliable writes of Characteristic Value.|
+|WRITABLE\_AUXILIARIES|If set, permits writes to the Characteristic Descriptor.|
+

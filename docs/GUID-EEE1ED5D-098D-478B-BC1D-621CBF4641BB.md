@@ -1,5 +1,10 @@
 # Defines
 
+-   [Log type](GUID-654D5ACE-F64F-4D92-8675-41DB4B465DB1.md)
+
+    The definition of BLE log.
+
+
 -   **[Log type](GUID-654D5ACE-F64F-4D92-8675-41DB4B465DB1.md)**  
 
 

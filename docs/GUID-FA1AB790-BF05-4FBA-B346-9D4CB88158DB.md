@@ -11,5 +11,5 @@
 -   **[Device Reset Request operation](GUID-9F77307A-D3E0-4915-BC24-BBE46AE0DF2A.md)**  
 
 
-**Parent topic:**[Microchip OTA Service v1.0](GUID-ADB0AB34-DEE4-4107-8618-C3FBA1CDDDA1.md)
+**Parent topic:**[Microchip OTA Service v1.3](GUID-ADB0AB34-DEE4-4107-8618-C3FBA1CDDDA1.md)
 

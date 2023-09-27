@@ -1,4 +1,6 @@
-# BT_SYS_Init
+# BT\_SYS\_Init
+
+**Parent topic:**[Functions](GUID-BCD34C15-EAC6-45F0-97B7-E2EBA942CFEE.md)
 
 ## C
 
@@ -8,20 +10,21 @@ bool BT_SYS_Init(void *p_reqQueueHandle, void *p_osalApiList, BT_SYS_Option_T *p
 
 ## Description
 
-BT Init Entry
+BT Init Entry.
 
 ## Parameters
 
 |Parameter|Description|
-|:---|:---|
-|\[in\] p_reqQueueHandle|OS handle for Bluetooth internal task.|
-|\[in\] p_osalApiList|OSAL api list.|
-|\[in\] p_option|Initialization option.|
-|\[in\] p_cfg|System configuration.|
+|---------|-----------|
+|\[in\] p\_reqQueueHandle|OS handle for Bluetooth internal task.|
+|\[in\] p\_osalApiList|OSAL api list.|
+|\[in\] p\_option|Initialization option.|
+|\[in\] p\_cfg|System configuration.|
 
 ## Return values
 
 |Return value|Description|
-|:---|:---|
-true|Success to initialize BT.|
-false|Fail to initialize BT.|
+|------------|-----------|
+|true|Success to initialize BT.|
+|false|Fail to initialize BT.|
+

@@ -1,6 +1,20 @@
-# Microchip OTA Service v1.0
+# Microchip OTA Service v1.3
 
 OTA Service exposes a device firmware update scheme when in a connection.
+
+<br />
+
+|Revision Number|Comments|
+|---------------|--------|
+|v1.0|Initial version|
+|v1.3|<br /> -   Add a new supported image type- metadata.
+-   Add Image\_Start\_Index field in response for supporting resume scheme.
+-   Add firmware extended feature in OTA Feature characteristic
+-   Add New\_Firmware\_Image\_Checksim, New\_Firmware\_Image\_File\_Type and New\_Firmware\_Image\_CRC16 for Firmware Update Request operation.
+
+<br />|
+
+<br />
 
 -   **[Introduction](GUID-2C8F7158-DD20-4413-93A9-69708F1F475A.md)**  
 

@@ -1,5 +1,7 @@
 # L2CAP minimum MTU size
 
+**Parent topic:**[Defines](GUID-565156DB-69EB-46D5-863E-7A7329456648.md)
+
 ## C
 
 ```c
@@ -8,10 +10,11 @@
 
 ## Description
 
-The definition of MTU size
+The definition of MTU size.
 
 ## Macro Definition
 
 |Macro|Description|
-|:---|:---|
-|BLE_L2CAP_MIN_MTU_SIZE|The minimum MTU size|
+|-----|-----------|
+|BLE\_L2CAP\_MIN\_MTU\_SIZE|The minimum MTU size.|
+

@@ -1,4 +1,6 @@
-# BLE_OTAPS_EventField_T
+# BLE\_OTAPS\_EventField\_T
+
+**Parent topic:**[Structures](GUID-DD4DCB53-DB4E-479A-9365-B7F9312729B4.md)
 
 ## C
 
@@ -16,12 +18,12 @@ typedef union
 
 Union of BLE OTA profile callback event data types.
 
-
 ## Field Documentation
 
 |Field|Description|
-|:---|:---|
-|evtUpdateReq|Handle **[BLE_OTAPS_EVT_UPDATE_REQ](GUID-63B996F4-CEC1-4B2A-BDE5-37090FBFA514.md)**|
-|evtStartInd|Handle **[BLE_OTAPS_EVT_START_IND](GUID-63B996F4-CEC1-4B2A-BDE5-37090FBFA514.md)**|    
-|evtUpdatingInd|Handle **[BLE_OTAPS_EVT_UPDATING_IND](GUID-63B996F4-CEC1-4B2A-BDE5-37090FBFA514.md)**|        
-|evtCompleteInd|Handle **[BLE_OTAPS_EVT_COMPLETE_IND](GUID-63B996F4-CEC1-4B2A-BDE5-37090FBFA514.md)**|        
+|-----|-----------|
+|evtUpdateReq|Handle **[BLE\_OTAPS\_EVT\_UPDATE\_REQ](GUID-63B996F4-CEC1-4B2A-BDE5-37090FBFA514.md)**.|
+|evtStartInd|Handle **[BLE\_OTAPS\_EVT\_START\_IND](GUID-63B996F4-CEC1-4B2A-BDE5-37090FBFA514.md)**.|
+|evtUpdatingInd|Handle **[BLE\_OTAPS\_EVT\_UPDATING\_IND](GUID-63B996F4-CEC1-4B2A-BDE5-37090FBFA514.md)**.|
+|evtCompleteInd|Handle **[BLE\_OTAPS\_EVT\_COMPLETE\_IND](GUID-63B996F4-CEC1-4B2A-BDE5-37090FBFA514.md)**.|
+
