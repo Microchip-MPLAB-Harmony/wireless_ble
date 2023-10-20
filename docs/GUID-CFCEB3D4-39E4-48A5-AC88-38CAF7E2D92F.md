@@ -11,7 +11,7 @@
 
 ## Description
 
-The definition of GATT Client configuration bits.
+The definition of of GATT Client configuration bits.
 
 ## Macro Definition
 

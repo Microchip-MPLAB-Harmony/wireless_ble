@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<Module name="wireless_ble" id="6f912e3e-2a43-4b5d-a4fe-b36ebcceda5d" version="1.1.0">
+<Module name="wireless_ble" id="6f912e3e-2a43-4b5d-a4fe-b36ebcceda5d" version="1.2.0">
     <ConfigRoot path="config/module.py"/>
 </Module>

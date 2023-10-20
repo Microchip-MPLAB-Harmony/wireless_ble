@@ -1,0 +1,36 @@
+# PTA Signal Timing vs Coexistence Scenarios
+
+-   **Scenario 1: Wi-Fi device grants BT device’s request.**
+    -   T1: BT device raises the request by asserting BT\_ACTIVE signal and sets BT\_PRIORITY level before BT RF active.
+    -   T2: BT device checks WLAN\_ACTIVE signal is low to confirm this request is granted by Wi-Fi device. BT device performs the BT RF activities execution continuously.
+
+![](GUID-6CCCF904-5382-4CF6-BD72-993960EC2B53-low.png)
+
+-   **Scenario 2: Wi-Fi device rejects BT device’s request.**
+    -   T2: BT device checks WLAN\_ACTIVE signal is high to confirm this request is rejected by Wi-Fi device. BT device stops the ongoing BT RF preparation.
+    -   T3: BT device de-asserts both BT\_ACTIVE and BT\_PRIORITY signals after stops the BT RF preparation.
+
+![](GUID-24C0DC37-3221-41AA-A52A-3815E9E93495-low.png)
+
+-   **Scenario 3: Wi-Fi device aborts the ongoing BT RF activity by raising WLAN\_ACTIVE signal.**
+    -   T9: BT device aborts the ongoing BT RF activity after detecting the WLAN\_ACTIVE signal is asserted.
+    -   T8: BT device de-asserts both BT\_ACTIVE and BT\_PRIORITY signals after detecting the WLAN\_ACTIVE signal is asserted.
+
+![](GUID-DD2D7F52-42C6-42A5-B7E9-D842FD95FD8A-low.png)
+
+Below table is the summary of these timing values.
+
+<br />
+
+|Timing|Minimum\(us\)|Maximum\(us\)|
+|------|-------------|-------------|
+|T1|-|100|
+|T2|75|80|
+|T3|120|160|
+|T8|-|100|
+|T9|-|45|
+
+<br />
+
+**Parent topic:**[BLE PTA](GUID-B51CB84B-C796-47F2-B083-EB2F0302AC33.md)
+

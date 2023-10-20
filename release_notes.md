@@ -3,6 +3,24 @@
 
 # Microchip MPLAB® Harmony 3 Release Notes
 
+## Wireless BLE Release v1.2.0
+
+### New Features
++ This release includes initial Bluetooth Low Energy software support for PIC32CX-BZ3/WBZ35x families of 32-bit microcontrollers.
+
+
+### Known Issues
++ Tx power may decrease suddenly after PHY changed. (#626)
++ Peripheral role may loss connection due to instant passed under multiple role scenario(#627)
+
+
+### Development Tools
++ [MPLAB X v6.15](https://www.microchip.com/mplab/mplab-x-ide)
++ [MPLAB® XC32 C/C++ Compiler v4.35](https://www.microchip.com/mplab/compilers)
++ MPLAB® X IDE plug-ins: MPLAB® Code Configurator (MCC) v5.3.7 and above
+
+
+---
 ## Wireless BLE Release v1.1.0
 
 ### New Features

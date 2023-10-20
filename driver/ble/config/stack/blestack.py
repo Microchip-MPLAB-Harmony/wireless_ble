@@ -439,18 +439,12 @@ def instantiateComponent(libBLEStackComponent):
     bleMwDfuHeaderFile.setDependencies(dfuFileChange, ["BLE_SYS_CTRL_ONLY_EN", "BOOL_BLE_UTIL_DFU"])
 
 
-    # Add mw_aes.h.ble_dm_aes.h file - static file
+    # Add mw_aes.h file - static file
     blepUtilAesHeaderFile = libBLEStackComponent.createFileSymbol(None, None)
-    if( processor in pic32cx_bz2_family):
-        blepUtilAesHeaderFile.setSourcePath('driver/ble/src/' + srcPath + '/middleware_ble/ble_util/mw_aes.h')
-        blepUtilAesHeaderFile.setOutputName('mw_aes.h')
-        blepUtilAesHeaderFile.setDestPath('ble/middleware_ble/ble_util')
-        blepUtilAesHeaderFile.setProjectPath('config/' + configName + '/ble/middleware_ble/ble_util')
-    else:
-        blepUtilAesHeaderFile.setSourcePath('driver/ble/src/' + srcPath + '/middleware_ble/ble_dm/ble_dm_aes.h')
-        blepUtilAesHeaderFile.setOutputName('ble_dm_aes.h')
-        blepUtilAesHeaderFile.setDestPath('ble/middleware_ble/ble_dm')
-        blepUtilAesHeaderFile.setProjectPath('config/' + configName + '/ble/middleware_ble/ble_dm')
+    blepUtilAesHeaderFile.setSourcePath('driver/ble/src/' + srcPath + '/middleware_ble/ble_util/mw_aes.h')
+    blepUtilAesHeaderFile.setOutputName('mw_aes.h')
+    blepUtilAesHeaderFile.setDestPath('ble/middleware_ble/ble_util')
+    blepUtilAesHeaderFile.setProjectPath('config/' + configName + '/ble/middleware_ble/ble_util')
     blepUtilAesHeaderFile.setOverwrite(True)
     blepUtilAesHeaderFile.setType('HEADER')
     blepUtilAesHeaderFile.setEnabled(True)
@@ -458,18 +452,12 @@ def instantiateComponent(libBLEStackComponent):
     blepUtilAesHeaderFile.setDependencies(ctrlOnlyFileChange, ["BLE_SYS_CTRL_ONLY_EN"])
 
 
-    # Add ble_dm_aes.c/mw_aes.c - static file
+    # Add mw_aes.c - static file
     blepUtilAesSourceFile = libBLEStackComponent.createFileSymbol(None, None)
-    if( processor in pic32cx_bz3_family):
-        blepUtilAesSourceFile.setSourcePath('driver/ble/src/' + srcPath + '/middleware_ble/ble_dm/ble_dm_aes.c')
-        blepUtilAesSourceFile.setOutputName('ble_dm_aes.c')
-        blepUtilAesSourceFile.setDestPath('ble/middleware_ble/ble_dm/')
-        blepUtilAesSourceFile.setProjectPath('config/' + configName + '/ble/middleware_ble/ble_dm/')
-    else:
-        blepUtilAesSourceFile.setSourcePath('driver/ble/src/' + srcPath + '/middleware_ble/ble_util/mw_aes.c')
-        blepUtilAesSourceFile.setOutputName('mw_aes.c')
-        blepUtilAesSourceFile.setDestPath('ble/middleware_ble/ble_util/')
-        blepUtilAesSourceFile.setProjectPath('config/' + configName + '/ble/middleware_ble/ble_util/')
+    blepUtilAesSourceFile.setSourcePath('driver/ble/src/' + srcPath + '/middleware_ble/ble_util/mw_aes.c')
+    blepUtilAesSourceFile.setOutputName('mw_aes.c')
+    blepUtilAesSourceFile.setDestPath('ble/middleware_ble/ble_util/')
+    blepUtilAesSourceFile.setProjectPath('config/' + configName + '/ble/middleware_ble/ble_util/')
     blepUtilAesSourceFile.setOverwrite(True)
     blepUtilAesSourceFile.setType('SOURCE')
     blepUtilAesSourceFile.setEnabled(True)

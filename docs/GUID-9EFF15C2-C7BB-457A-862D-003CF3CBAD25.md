@@ -1,8 +1,6 @@
 # Database Discovery with BLE\_SCM in Service Change Situation
 
-<br />
-
--   Example of receiving service change \(SC\) indication from peer
+## Example of receiving service change \(SC\) indication from peer
 
 <br />
 
@@ -10,11 +8,13 @@
 
 <br />
 
--   Example of receiving ATT Database Out Of Sync. error code from peer
+## Example of receiving ATT Database Out Of Sync. error code from peer
 
 <br />
 
 ![](GUID-8E08515E-EEF4-45F2-9424-CE4F1EBB13D9-low.png)
+
+<br />
 
 **Parent topic:**[Message Sequence Chart](GUID-92488830-E17D-4AA1-9A3C-BEC23C905D64.md)
 

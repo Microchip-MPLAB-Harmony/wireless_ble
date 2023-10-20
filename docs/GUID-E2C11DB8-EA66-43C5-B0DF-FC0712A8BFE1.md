@@ -5,7 +5,7 @@
 ## C
 
 ```c
-uint16_t MW_DFU_FwImageStart(void);
+uint16_t MW_DFU_FwImageStart();
 ```
 
 ## Description

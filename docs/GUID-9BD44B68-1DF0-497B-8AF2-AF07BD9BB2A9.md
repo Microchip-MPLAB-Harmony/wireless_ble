@@ -15,9 +15,9 @@ The definition of of procedure status.
 
 ### Note
 
-Some GATT procedures would not finish in one ATT request. Hence, more than one event will be sent in one procedure.
+Some GATT procedures would not finish in one ATT request. Hence, more than one event will received in one procedure.
 
-Status in the event indicates if this procedure is still in progress or complete.
+Status in the event indicates if this procedure will continue or end.
 
 ## Macro Definition
 
