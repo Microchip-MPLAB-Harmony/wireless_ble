@@ -364,9 +364,9 @@ static uint16_t mw_dfu_FwImageValidateInt(uint16_t fwImageCrc)
     DMAC_CRC_SETUP  crcSetup;
     uint32_t src = 0x00000000;
     uint8_t srcOffset, crcOffset;
-    uint32_t fwLen, result;
+    uint32_t fwLen=0, result;
 
-    if (s_dfuIsV1Fw)
+    if (s_dfuIsV1Fw!=NULL)
     {
         crcOffset = MW_DFU_CRC_OFFSET_V1;
         srcOffset = MW_DFU_META_SRC_OFFSET_V1;
