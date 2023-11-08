@@ -721,7 +721,7 @@ typedef struct HCI_LE_SetExtAdvertisingData_T
     uint8_t     advHandle;                                                      /**< Used to identify an advertising set. */
     uint8_t     operation;                                                      /**< The operation of the advertising data. */
     uint8_t     fragPreference;                                                 /**< Fragment preference of the advertising data. */
-    uint8_t     advLen;                                                         /**< Length of extended advertising data, see @ref HCI_CMD_MAX_EXTENDED_ADVERTISING_DATA_LENGTH for the maximum length. */
+    uint16_t    advLen;                                                         /**< Length of extended advertising data, see @ref HCI_CMD_MAX_EXTENDED_ADVERTISING_DATA_LENGTH for the maximum length. */
     uint8_t     advData[HCI_CMD_MAX_EXTENDED_ADVERTISING_DATA_LENGTH];          /**< Advertising data. */
 } HCI_LE_SetExtAdvertisingData_T;
 
@@ -731,7 +731,7 @@ typedef struct HCI_LE_SetExtScanRespData_T
     uint8_t     advHandle;                                                      /**< Used to identify an advertising set. */
     uint8_t     operation;                                                      /**< The operation of the scan response data. */
     uint8_t     fragPreference;                                                 /**< Fragment preference of the scan response data. */
-    uint8_t     scanRspLen;                                                     /**< Length of scan response data, see @ref HCI_CMD_MAX_EXTENDED_ADVERTISING_DATA_LENGTH for the maximum length. */
+    uint16_t    scanRspLen;                                                     /**< Length of scan response data, see @ref HCI_CMD_MAX_EXTENDED_ADVERTISING_DATA_LENGTH for the maximum length. */
     uint8_t     scanRspData[HCI_CMD_MAX_EXTENDED_ADVERTISING_DATA_LENGTH];      /**< Scan response data. */
 } HCI_LE_SetExtScanRespData_T;
 
@@ -771,7 +771,7 @@ typedef struct HCI_LE_SetPeriodicAdvertisingData_T
 {
     uint8_t     advHandle;                                                      /**< Used to identify an advertising set. */
     uint8_t     operation;                                                      /**< The operation of the advertising data. */
-    uint8_t     advLen;                                                         /**< Length of periodic advertising data, see @ref HCI_CMD_MAX_PERIODIC_ADVERTISING_DATA_LENGTH for the maximum length. */
+    uint16_t    advLen;                                                         /**< Length of periodic advertising data, see @ref HCI_CMD_MAX_PERIODIC_ADVERTISING_DATA_LENGTH for the maximum length. */
     uint8_t     advData[HCI_CMD_MAX_PERIODIC_ADVERTISING_DATA_LENGTH];          /**< Periodic advertising data. */
 } HCI_LE_SetPeriodicAdvertisingData_T;
 
