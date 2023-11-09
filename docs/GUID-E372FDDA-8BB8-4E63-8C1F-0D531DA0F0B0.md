@@ -1,5 +1,10 @@
 # Enums
 
+-   [BLE\_TRSPC\_EventId\_T](GUID-629BEAFF-0BDD-4521-8E20-F81D3FA47153.md)
+
+    Enumeration type of BLE transparent profile callback events.
+
+
 -   **[BLE\_TRSPC\_EventId\_T](GUID-629BEAFF-0BDD-4521-8E20-F81D3FA47153.md)**  
 
 

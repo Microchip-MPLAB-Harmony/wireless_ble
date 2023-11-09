@@ -1,5 +1,10 @@
 # Enums
 
+-   [GATT\_EventId\_T](GUID-20EFFBD2-7D3F-40CA-B85C-8FD3202D9933.md)
+
+    Enumeration type of GATT callback events.<br />
+
+
 -   **[GATT\_EventId\_T](GUID-20EFFBD2-7D3F-40CA-B85C-8FD3202D9933.md)**  
 
 

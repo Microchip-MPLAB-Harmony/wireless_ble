@@ -1,5 +1,22 @@
 # Defines
 
+-   [Length of Bluetooth address](GUID-3A6DFA4E-4197-4A61-9A89-2F1274338B1D.md)
+
+    Length of the Bluetooth address.
+
+-   [RF Supend Status](GUID-910D933F-0C04-4957-9999-A312B0C9BB89.md)
+
+    The definition of rf suspend status.
+
+-   [Trace Level](GUID-AE7C6E5E-069A-4753-A013-0C58A632AD16.md)
+
+    The definition of trace level.
+
+-   [Trace Mask](GUID-CF032020-D7F1-46CD-AEB5-7029A8F92B46.md)
+
+    The definition of trace mask.
+
+
 -   **[Length of Bluetooth address](GUID-3A6DFA4E-4197-4A61-9A89-2F1274338B1D.md)**  
 
 -   **[Rf Suspned Status](GUID-910D933F-0C04-4957-9999-A312B0C9BB89.md)**  

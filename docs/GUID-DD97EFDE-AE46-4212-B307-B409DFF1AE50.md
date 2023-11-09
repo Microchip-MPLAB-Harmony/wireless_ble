@@ -18,7 +18,7 @@ The API should be called in response to passkey entry request or passkey display
 
 ## Events generated
 
-This API is called during pairing procedure, please see the events generated of **[BLE\_SMP\_InitiatePairing](GUID-1B66AA6E-254B-4E4C-B70C-AB4C9AC5D7DD.md)**.
+This API is called during pairing procedure, please see the events generated of **[BLE\_SMP\_InitiatePairing](GUID-87C9F8A4-1DC1-46A3-80E1-B84D5145BB8D.md)**.
 
 ## Parameters
 

@@ -21,7 +21,7 @@ The definition of attribute settings.
 
 |Macro|Description|
 |-----|-----------|
-|SETTING\_MANUAL\_WRITE\_RSP|Set if service need to know write operations on this attribute. Service also need to send response \(if need\) manually.|
+|SETTING\_MANUAL\_WRITE\_RSP|Set if service need to know write operations on this attribute. Service also need to send response \(if necessary\) manually.|
 |SETTING\_MANUAL\_READ\_RSP|Set if service need to know read operations on this attribute. Service also need to send response manually.|
 |SETTING\_UUID\_16|Set if the UUID is 16 bytes \(128 bits\) in length.|
 |SETTING\_VARIABLE\_LEN|Set if the attribute has a variable length.|

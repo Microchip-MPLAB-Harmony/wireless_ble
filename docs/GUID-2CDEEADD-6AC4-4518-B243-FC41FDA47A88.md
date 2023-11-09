@@ -1,4 +1,4 @@
-# TRCPBS status
+# TRCBPS status
 
 **Parent topic:**[Defines](GUID-C11241E1-5A96-4825-ABA7-B4045381B602.md)
 

@@ -12,7 +12,7 @@ uint16_t BLE_ANPC_ReadSuppNewAlertCat(uint16_t connHandle);
 
 Read the value of Supported New Alert Category.
 
-Application must call this API after starting BLE Alert Notification Client procedure.
+Application must call this API after the BLE Alert Notification Client procedure has been initiated.
 
 ## Parameters
 
@@ -24,6 +24,7 @@ Application must call this API after starting BLE Alert Notification Client proc
 
 |Return value|Description|
 |------------|-----------|
-|MBA\_RES\_SUCCESS|Send command successful.|
-|MBA\_RES\_FAIL|Fail.|
+|MBA\_RES\_SUCCESS|Successfully issue a read Supported New Alert Category packet.|
+|MBA\_RES\_INVALID\_PARA|Invalid connection handle. Connection handle is not valid.|
+|MBA\_RES\_FAIL|Fail to issue a read Supported New Alert Category packet.|
 

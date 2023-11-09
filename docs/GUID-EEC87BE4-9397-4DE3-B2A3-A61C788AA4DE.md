@@ -1,5 +1,62 @@
 # Structures
 
+-   [BLE\_ANPC\_CharList\_T](GUID-EFFD47A0-9C99-451C-91F9-8C5744DF135E.md)
+
+    Data structure for BLE\_ANPC\_GetCharList function.
+
+-   [BLE\_ANPC\_DescInfo\_T](GUID-B10CC562-D5DB-44E8-8574-8FA1CCFB11A9.md)
+
+    Information structure for BLE\_ANPC\_GetDescList function.
+
+-   [BLE\_ANPC\_DescList\_T](GUID-5F20AA2C-04D9-4E87-80E6-D5D352EA6A08.md)
+
+    Data structure for BLE\_ANPC\_GetDescList function.
+
+-   [BLE\_ANPC\_Event\_T](GUID-1A263F12-9CF9-46EC-B3DB-F537EC4BF530.md)
+
+    BLE Alert Notification Client callback event.
+
+-   [BLE\_ANPC\_EventCb\_T](GUID-28A9FE03-B026-4CB0-85FF-7F311FA45108.md)
+
+    BLE Alert Notification profile Client callback type.
+
+-   [BLE\_ANPC\_EventField\_T](GUID-0DD15562-7238-4258-9EC1-3BB5E98AFE7F.md)
+
+    Union of BLE Alert Notification Client callback event data types.
+
+-   [BLE\_ANPC\_EvtDiscComplete\_T](GUID-DEABEAA2-F2F7-49DC-B163-D450D7CC95D5.md)
+
+    Data structure for BLE\_ANPC\_EVT\_DISC\_COMPLETE\_IND event.
+
+-   [BLE\_ANPC\_EvtNewAlertInd\_T](GUID-F92B291D-63DD-4919-97C7-67826454E955.md)
+
+    Data structure for BLE\_ANPC\_EVT\_NEW\_ALERT\_IND event.
+
+-   [BLE\_ANPC\_EvtSuppNewAlertCatInd\_T](GUID-9760DEAA-340C-4E4B-9C42-0B988B6E99F5.md)
+
+    Data structure for BLE\_ANPC\_EVT\_SUPP\_NEW\_ALERT\_CAT\_IND event.
+
+-   [BLE\_ANPC\_EvtSuppUnreadAlertCatInd\_T](GUID-D296A6C3-081D-44BE-83DA-C0D85CBBF021.md)
+
+    Data structure for BLE\_ANPC\_EVT\_SUPP\_UNREAD\_ALERT\_STAT\_CAT\_IND event.
+
+-   [BLE\_ANPC\_EvtUnreadAlertStatInd\_T](GUID-73AE5D05-3423-4FBD-B676-221F0AE401A2.md)
+
+    Data structure for BLE\_ANPC\_EVT\_UNREAD\_ALERT\_STAT\_IND event.
+
+-   [BLE\_ANPC\_EvtWriteCpRspInd\_T](GUID-D9E27D1C-EFD0-4EC6-98DB-BCA32DF35164.md)
+
+    Data structure for BLE\_ANPC\_EVT\_WRITE\_CP\_RSP\_IND event.
+
+-   [BLE\_ANPC\_EvtWriteNewAlertRspInd\_T](GUID-4209610E-FAD4-4CC7-9F94-5977AB0C80D3.md)
+
+    Data structure for BLE\_ANPC\_EVT\_WRITE\_NEW\_ALERT\_NTFY\_RSP\_IND event.
+
+-   [BLE\_ANPC\_EvtWriteUnreadAlertRspInd\_T](GUID-CF84C030-E5AB-4D71-B6EB-E828AD7A6289.md)
+
+    Data structure for BLE\_ANPC\_EVT\_WRITE\_UNREAD\_ALERT\_NTFY\_RSP\_IND event.
+
+
 -   **[BLE\_ANPC\_CharList\_T](GUID-EFFD47A0-9C99-451C-91F9-8C5744DF135E.md)**  
 
 -   **[BLE\_ANPC\_DescInfo\_T](GUID-B10CC562-D5DB-44E8-8574-8FA1CCFB11A9.md)**  
@@ -27,8 +84,6 @@
 -   **[BLE\_ANPC\_EvtWriteNewAlertRspInd\_T](GUID-4209610E-FAD4-4CC7-9F94-5977AB0C80D3.md)**  
 
 -   **[BLE\_ANPC\_EvtWriteUnreadAlertRspInd\_T](GUID-CF84C030-E5AB-4D71-B6EB-E828AD7A6289.md)**  
-
--   **[BLE\_ANPC\_DescList\_T](GUID-A9283611-489B-4A11-9497-370D1B77E7F0.md)**  
 
 
 **Parent topic:**[Alert Notification Profile Client Role](GUID-7A9B41EC-97DD-46FE-B962-56939D6AB761.md)

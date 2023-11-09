@@ -1,5 +1,10 @@
 # Defines
 
+-   [Error code definitions](GUID-CE597F34-2DD2-44C8-9BD3-A6E75D6457F9.md)
+
+    The definition of STACK API result.
+
+
 -   **[Error code definitions](GUID-CE597F34-2DD2-44C8-9BD3-A6E75D6457F9.md)**  
 
 

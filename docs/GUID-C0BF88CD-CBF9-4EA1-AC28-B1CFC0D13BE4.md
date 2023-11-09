@@ -1,5 +1,10 @@
 # Enums
 
+-   [BLE\_L2CAP\_EventId\_T](GUID-91D55D80-4397-48D1-BB8D-C2A0F010F669.md)
+
+    L2cap events delivered to application from BLE Stack.
+
+
 -   **[BLE\_L2CAP\_EventId\_T](GUID-91D55D80-4397-48D1-BB8D-C2A0F010F669.md)**  
 
 

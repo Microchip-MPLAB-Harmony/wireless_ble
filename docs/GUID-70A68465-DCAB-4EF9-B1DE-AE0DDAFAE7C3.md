@@ -5,7 +5,7 @@
 ## C
 
 ```c
-uint16_t BLE_GAP_CreateSyncCancel();
+uint16_t BLE_GAP_CreateSyncCancel(void);
 ```
 
 ## Description

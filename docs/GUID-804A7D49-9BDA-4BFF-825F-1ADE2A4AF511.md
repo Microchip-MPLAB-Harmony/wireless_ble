@@ -5,10 +5,17 @@
 ## C
 
 ```c
-void BLE_DM_Init();
+void BLE_DM_Init(void);
 ```
 
 ## Description
 
 Initialize BLE\_DM module.
+
+## Return values
+
+|Return value|Description|
+|------------|-----------|
+|true|Successfully initialize BLE\_DM module.|
+|false|Fail to initialize BLE\_DM module.|
 

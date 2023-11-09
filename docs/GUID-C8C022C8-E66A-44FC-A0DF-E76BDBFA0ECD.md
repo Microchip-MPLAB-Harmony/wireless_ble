@@ -5,7 +5,7 @@
 ## C
 
 ```c
-void BLE_SCM_Init();
+uint16_t BLE_SCM_Init(void);
 ```
 
 ## Description
@@ -17,4 +17,11 @@ Initialize BLE\_SCM module.
 This module is required only when GATT client is supported and service change status needs to be taken care at remote.
 
 This module required BLE\_DD supported.
+
+## Return values
+
+|Return value|Description|
+|------------|-----------|
+|MBA\_RES\_SUCCESS|Successfully initialize BLE SCM module.|
+|MBA\_RES\_FAIL|Fail initialize BLE SCM module.|
 

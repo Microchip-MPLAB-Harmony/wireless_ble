@@ -36,9 +36,9 @@
 
     The definition of appearance.
 
--   [Operation of extended advertising data](GUID-531EDDE0-0642-450B-BDF3-0792437EC4D9.md)
+-   [Operation of extended advertising data](GUID-972BA4EA-F703-4CBA-8978-AD7B4742103B.md)
 
-    BLE LIB supports both legacy and extended advertising features.
+    BLE LIB supports both legacy and extended advertising<br /> features.
 
 -   [Connection parameters range](GUID-A0E7191A-5AF6-44B4-9E1B-19D74354392D.md)
 
@@ -72,7 +72,7 @@
 
     The definition of event type of advertising report.
 
--   [Extendedprimary advertising interval](GUID-88C91195-9CF6-452F-80B5-066D0556F970.md)
+-   [Extended primary advertising interval](GUID-88C91195-9CF6-452F-80B5-066D0556F970.md)
 
     Range of LE extended primary advertising interval.
 
@@ -80,11 +80,11 @@
 
     Range of extended scan data length.
 
--   [Extended scaninterval](GUID-204797D4-B498-42CF-BE13-6FDE10A57A31.md)
+-   [Extended scan interval](GUID-204797D4-B498-42CF-BE13-6FDE10A57A31.md)
 
     Range of LE extended scan interval.
 
--   [Extended scanwindow](GUID-1DFE2FDD-E653-4526-ACDB-7A88E81F5E8A.md)
+-   [Extended scan window](GUID-1DFE2FDD-E653-4526-ACDB-7A88E81F5E8A.md)
 
     Range of LE extended scan window.
 
@@ -164,7 +164,7 @@
 
     The definition of creating sync options.
 
--   [Periodicadvertising interval](GUID-A0CC250A-0581-49CA-B038-9A92CDAB5423.md)
+-   [Periodic advertising interval](GUID-A0CC250A-0581-49CA-B038-9A92CDAB5423.md)
 
     Range of LE periodic advertising interval.
 
@@ -248,13 +248,13 @@
 
     The definition of transmitter test packet PHY type.
 
--   [Type of constant tone extension](GUID-57983CDC-9821-4241-97A5-7459D623DEB7.md)
-
-    The definition of CTE type.
-
 -   [TX power change reason](GUID-5C66E77D-6667-4E7A-A7D0-0CF327985A40.md)
 
     The definition of disconnection reason.
+
+-   [Type of Constant Tone Extension](GUID-57983CDC-9821-4241-97A5-7459D623DEB7.md)
+
+    The definition of CTE type.
 
 
 -   **[Address length](GUID-9D7C3EEB-B510-401A-BFCE-005BC574D0D2.md)**  
