@@ -12,6 +12,7 @@
 ### Known Issues
 + Tx power may decrease suddenly after PHY changed. (#626)
 + Peripheral role may loss connection due to instant passed under multiple role scenario(#627)
++ The lenght of advertising data in BLE_GAP_SetExtAdvData, BLE_GAP_SetExtScanRspData and BLE_GAP_SetPeriAdvData is limited to 251 bytes.
 
 
 ### Development Tools
