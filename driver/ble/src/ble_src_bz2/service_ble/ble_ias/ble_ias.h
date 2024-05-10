@@ -64,19 +64,19 @@ extern "C" {
 /**@defgroup BLE_IAS_UUID_DEF BLE_IAS_UUID_DEF
  * @brief The definition of Immediate Alert Service UUID.
  * @{ */
-#define UUID_IMMEDIATE_ALERT_SERVICE                    0x1802  /**< Immediate Alert Service UUID. */
+#define UUID_IMMEDIATE_ALERT_SERVICE                    (0x1802U)  /**< Immediate Alert Service UUID. */
 /** @} */
 
 /**@defgroup BLE_ALERT_LEVEL_UUID_DEF BLE_ALERT_LEVEL_UUID_DEF
  * @brief The definition of Alert Level UUID.
  * @{ */
-#define UUID_ALERT_LEVEL                                0x2A06  /**< Alert Level UUID. */
+#define UUID_ALERT_LEVEL                                (0x2A06U)  /**< Alert Level UUID. */
 /** @} */
 
 /**@defgroup BLE_IAS_ASSIGN_HANDLE BLE_IAS_ASSIGN_HANDLE
  * @brief Assigned attribute handles of BLE Immediate Alert Service.
  * @{ */
-#define IAS_START_HDL                               0x0FA                                      /**< The start attribute handle of transparent service. */
+#define IAS_START_HDL                                   (0x0FAU)  /**< The start attribute handle of transparent service. */
 /** @} */
 
 /**@brief Definition of BLE Immediate Alert Service attribute handle */

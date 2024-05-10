@@ -107,6 +107,12 @@ extern "C" {
 #define BT_SYS_RF_SUSPENDED_WITH_SLEEP      (2U)          /**< BLE RF is allowed to suspended with ble sleep mode. */
 /**@} */ //BT_SYS_RF_SUSPEND
 
+/**@defgroup BT_SYS_FEAT_MASK Feature Mask
+ * @brief The definition of feature mask.
+ * @{ */
+#define BT_SYS_FEAT_PWR_CTRL                (1U)          /**< Power control. */
+/**@} */ //BT_SYS_FEAT_MASK
+
 /**@} */ //BT_SYS_DEFINES
 
 
@@ -146,9 +152,9 @@ typedef enum BT_SYS_ErrCode_T{
 typedef struct BT_SYS_Cfg_T
 {
     int8_t      	antennaGain;                        /**< Antenna gain. */
-    uint8_t     	addrValid:1;                        /**< Set true if devAddr field is valid. */
-    uint8_t     	rssiOffsetValid:1;                  /**< Set true if rssiOffset field is valid. */
-    uint8_t     	adcTimingValid:1;                 	/**< Set true if adcTiming field is valid. */
+    unsigned int    addrValid:1;                        /**< Set true if devAddr field is valid. */
+    unsigned int    rssiOffsetValid:1;                  /**< Set true if rssiOffset field is valid. */
+    unsigned int    adcTimingValid:1;                 	/**< Set true if adcTiming field is valid. */
     uint8_t     	devAddr[BT_SYS_DEV_ADDR_LEN];       /**< Device address. */
     int8_t      	rssiOffset;                         /**< RSSI offset. */
     uint8_t     	adcTiming08;                        /**< Adc Timing register which is RF 08 reg */
@@ -161,7 +167,8 @@ typedef struct BT_SYS_Option_T
     uint32_t        cmnMemSize;                     	/**< Common memory size. */
     uint8_t         *p_cmnMemAddr;                  	/**< Common memory address. */
     uint32_t        *p_sramVecorTable;              	/**< Vector table. */
-    uint8_t			hciMode:1;							/**< HCI mode option. Set TRUE to enable HCI mode. */
+    unsigned int	hciMode:1;							/**< HCI mode option. Set TRUE to enable HCI mode. */
+    uint32_t        deFeatMask;                         /**< Features to be disabled. See @ref BT_SYS_FEAT_MASK. */
 } BT_SYS_Option_T;
 
 /**@brief Trace event additional information. */

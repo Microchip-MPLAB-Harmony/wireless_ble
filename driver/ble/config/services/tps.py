@@ -1,27 +1,16 @@
-processor = 0
-pic32cx_bz2_family = {'PIC32CX1012BZ25048',
-                      'PIC32CX1012BZ25032',
-                      'PIC32CX1012BZ24032',
-                      'WBZ451',
-                      'WBZ450',
-                      }
-
-pic32cx_bz3_family = {'PIC32CX5109BZ31032',
-                      'PIC32CX5109BZ31048',
-                      'WBZ351',
-                      'WBZ350',
-                      }
+execfile(Module.getPath() + '/driver/ble/config/dev_info.py')
+devFamily = GetDeviceFamily()
+# print('Config Name: {}, device family: {}'.format(configName, devFamily))
+if devFamily == "pic32cx_bz2_family":
+    srcPath = "ble_src_bz2"
+elif devFamily == "pic32cx_bz3_family":
+    srcPath = "ble_src_bz3"
+else:
+    print("Device not support")
 
 def instantiateComponent(serviceTpsComponent):
     print('Load Module: SERVICE_TPS')
     configName = Variables.get('__CONFIGURATION_NAME')
-    processor = Variables.get("__PROCESSOR")
-
-    #print('Config Name: {} processor: {}'.format(configName, processor))
-    if( processor in pic32cx_bz2_family):
-        srcPath = "ble_src_bz2"
-    else:
-        srcPath = "ble_src_bz3"
 
     # Add ble_tps.c file
     bleTpsSourceFile = serviceTpsComponent.createFileSymbol(None, None)

@@ -69,11 +69,11 @@
 // *****************************************************************************
 /* BLE Transparent Credit Based Service Declaration */
 static uint8_t s_svcUuidBleTrcb[] = {UUID_MCHP_PROPRIETARY_SERVICE_TRCB_16};
-static const uint16_t s_svcUuidBleTrcbLen = sizeof (s_svcUuidBleTrcb);
+static const uint16_t s_svcUuidBleTrcbLen = (uint16_t)sizeof (s_svcUuidBleTrcb);
 
 /* BLE Transparent Credit Based Ctrl Point Characteristic Declaration */
 static uint8_t s_charBleTrcbCtrl[] = {(ATT_PROP_WRITE_CMD | ATT_PROP_WRITE_REQ | ATT_PROP_NOTIFY), UINT16_TO_BYTES(BLE_TRCB_HDL_CHARVAL_CTRL), UUID_MCHP_TRCB_CTRL_16};
-static const uint16_t s_charBleTrcbCtrlLen = sizeof (s_charBleTrcbCtrl);
+static const uint16_t s_charBleTrcbCtrlLen = (uint16_t)sizeof (s_charBleTrcbCtrl);
 
 /* BLE Transparent Credit Based Ctrl Point Characteristic Value */
 static uint8_t s_chUuidBleTrcbCtrl[] = {UUID_MCHP_TRCB_CTRL_16};
@@ -82,17 +82,17 @@ static uint16_t s_bleTrcbCtrlValLen = 1;
 
 /* BLE Transparent Credit Based Ctrl Point Client Characteristic Configuration Descriptor */
 static uint8_t s_descCccBleTrcbCtrl[] = {UINT16_TO_BYTES(0x0000)};
-static const uint16_t s_descCccBleTrcbCtrlLen = sizeof (s_descCccBleTrcbCtrl);
+static const uint16_t s_descCccBleTrcbCtrlLen = (uint16_t)sizeof (s_descCccBleTrcbCtrl);
 
 
 /* BLE Transparent Credit Based PSM Characteristic Declaration */
 static const uint8_t s_charBleTrcbPsm[] = {ATT_PROP_READ, UINT16_TO_BYTES(BLE_TRCB_HDL_CHARVAL_L2CAP_PSM), UUID_MCHP_TRCB_L2CAP_PSM_16};
-static const uint16_t s_charBleTrcbPsmLen = sizeof(s_charBleTrcbPsm);
+static const uint16_t s_charBleTrcbPsmLen = (uint16_t)sizeof(s_charBleTrcbPsm);
 
 /* BLE Transparent Credit Based PSM Characteristic Value */
 static uint8_t s_chUuidBleTrcbPsm[] = {UUID_MCHP_TRCB_L2CAP_PSM_16};
 static uint8_t s_bleTrcbPsmVal[2] = {UINT16_TO_BYTES_BE(BLE_TRCB_DATA_PSM)};
-static uint16_t s_bleTrcbPsmValLen = sizeof(s_bleTrcbPsmVal);
+static uint16_t s_bleTrcbPsmValLen = (uint16_t)sizeof(s_bleTrcbPsmVal);
 
 
 /* Attribute list for Transparent service */
@@ -102,7 +102,7 @@ static GATTS_Attribute_T s_bleTrcbList[] = {
         (uint8_t *) g_gattUuidPrimSvc,
         (uint8_t *) s_svcUuidBleTrcb,
         (uint16_t *) & s_svcUuidBleTrcbLen,
-        sizeof (s_svcUuidBleTrcb),
+        (uint16_t)sizeof (s_svcUuidBleTrcb),
         0,
         PERMISSION_READ
     },
@@ -111,7 +111,7 @@ static GATTS_Attribute_T s_bleTrcbList[] = {
         (uint8_t *) g_gattUuidChar,
         (uint8_t *) s_charBleTrcbCtrl,
         (uint16_t *) & s_charBleTrcbCtrlLen,
-        sizeof (s_charBleTrcbCtrl),
+        (uint16_t)sizeof (s_charBleTrcbCtrl),
         0,
         PERMISSION_READ
     },
@@ -129,7 +129,7 @@ static GATTS_Attribute_T s_bleTrcbList[] = {
         (uint8_t *) g_descUuidCcc,
         (uint8_t *) s_descCccBleTrcbCtrl,
         (uint16_t *) & s_descCccBleTrcbCtrlLen,
-        sizeof (s_descCccBleTrcbCtrl),
+        (uint16_t)sizeof (s_descCccBleTrcbCtrl),
         (SETTING_MANUAL_WRITE_RSP | SETTING_CCCD),
         (PERMISSION_READ | PERMISSION_WRITE)
     },
@@ -138,7 +138,7 @@ static GATTS_Attribute_T s_bleTrcbList[] = {
         (uint8_t *) g_gattUuidChar,
         (uint8_t *) s_charBleTrcbPsm,
         (uint16_t *) & s_charBleTrcbPsmLen,
-        sizeof (s_charBleTrcbPsm),
+        (uint16_t)sizeof (s_charBleTrcbPsm),
         0,
         PERMISSION_READ
     },
@@ -147,7 +147,7 @@ static GATTS_Attribute_T s_bleTrcbList[] = {
         (uint8_t *) s_chUuidBleTrcbPsm,
         (uint8_t *) s_bleTrcbPsmVal,
         (uint16_t *) & s_bleTrcbPsmValLen,
-        sizeof(s_bleTrcbPsmVal),
+        (uint16_t)sizeof(s_bleTrcbPsmVal),
         0,
         PERMISSION_READ
     }
@@ -155,7 +155,7 @@ static GATTS_Attribute_T s_bleTrcbList[] = {
 
 static const GATTS_CccdSetting_T s_trcbCccdSetting[] = 
 {
-    {BLE_TRCB_HDL_CCCD_CTRL, (NOTIFICATION)}
+    {(uint16_t)BLE_TRCB_HDL_CCCD_CTRL, (NOTIFICATION)}
 };
 
 /* BLE Transparent Credit Based Service structure */
@@ -164,8 +164,8 @@ static GATTS_Service_T s_svcBleTrcb =
     NULL,
     (GATTS_Attribute_T *) s_bleTrcbList,
     (GATTS_CccdSetting_T const *)s_trcbCccdSetting,
-    BLE_TRCB_START_HDL,
-    BLE_TRCB_END_HDL,
+    (uint16_t)BLE_TRCB_START_HDL,
+    (uint16_t)BLE_TRCB_END_HDL,
     BLE_TRCBS_CCCD_NUM
 };
 
@@ -177,5 +177,5 @@ static GATTS_Service_T s_svcBleTrcb =
 
 uint16_t BLE_TRCBS_Add(void)
 {
-    return GATTS_AddService(&s_svcBleTrcb, (BLE_TRCB_END_HDL - BLE_TRCB_START_HDL + 1));
+    return GATTS_AddService(&s_svcBleTrcb, (uint8_t)((uint16_t)BLE_TRCB_END_HDL - (uint16_t)BLE_TRCB_START_HDL + 1U));
 }

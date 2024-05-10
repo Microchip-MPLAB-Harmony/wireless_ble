@@ -65,7 +65,7 @@
 /**@defgroup BLE_TRCBPS_MAX_CHAN_NBR BLE_TRCBPS_MAX_CHAN_NBR
  * @brief The definition of maximum  channel number over each L2CAP CoC link.
  * @{ */
-#define BLE_TRCBPS_MAX_CHAN_NBR                             0x01    /**< Maximum channel number over each L2CAP CoC link. */
+#define BLE_TRCBPS_MAX_CHAN_NBR                             (0x01U)    /**< Maximum channel number over each L2CAP CoC link. */
 /** @} */
 
 
@@ -76,17 +76,17 @@
 #define BLE_TRCBPS_MAX_CONNLIST_NBR                         (BLE_TRCBPS_MAX_CONN_NBR * BLE_TRCBPS_MAX_CHAN_NBR)   /**< Maximum connection list number */
 /** @} */
 
-#define BLE_TRCB_CTRL_PSM                                   (0x0080U)                /**< PSM value of control channel. */
+#define BLE_TRCB_CTRL_PSM                                   (0x0080U)  /**< PSM value of control channel. */
 
-#define BLE_TRCBPS_SET_FLAG(x, y)    ((x) |= (1 << (y)))
-#define BLE_TRCBPS_CLR_FLAG(x, y)    ((x) &= ~(1 << (y)))
-#define BLE_TRCBPS_CHK_FLAG(x, y)    ((x) & (1 << (y)))
+#define BLE_TRCBPS_SET_FLAG(x, y)    ((x) |= (1U << (y)))
+#define BLE_TRCBPS_CLR_FLAG(x, y)    ((x) &= ~(1U << (y)))
+#define BLE_TRCBPS_CHK_FLAG(x, y)    ((x) & (1U << (y)))
 
 /**@defgroup BLE_TRCBPS_CCCD BLE_TRCBPS_CCCD
  * @brief The definition of Client Characteristic Configuration Descriptor
  * @{ */
-#define BLE_TRCBPS_CCCD_DISABLE              0x0000         /**< Definition of Client Characteristic Configuration Descriptor disable. */
-#define BLE_TRCBPS_CCCD_NOTIFY               NOTIFICATION   /**< Definition of Client Characteristic Configuration Descriptor enable NOTIFY property. */
+#define BLE_TRCBPS_CCCD_DISABLE                             (0x0000U)      /**< Definition of Client Characteristic Configuration Descriptor disable. */
+#define BLE_TRCBPS_CCCD_NOTIFY                              NOTIFICATION   /**< Definition of Client Characteristic Configuration Descriptor enable NOTIFY property. */
 /** @} */
 // *****************************************************************************
 // *****************************************************************************
@@ -97,10 +97,10 @@
 /**@brief The structure contains information about BLE Transparent Credit Based profile packetIn. */
 typedef struct BLE_TRCBPS_PacketList_T
 {
-    uint8_t                    leL2capId;               /**< Instance of l2cap session. */
-    uint8_t                    frameNum;                /**< Number of frames reassembled for this SDU. */
-    uint16_t                   length;                  /**< Data length. */
-    uint8_t                    *p_packet;               /**< Pointer to the RX data buffer */
+    uint8_t                             leL2capId;               /**< Instance of l2cap session. */
+    uint8_t                             frameNum;                /**< Number of frames reassembled for this SDU. */
+    uint16_t                            length;                  /**< Data length. */
+    uint8_t                             *p_packet;               /**< Pointer to the RX data buffer */
 } BLE_TRCBPS_PacketList_T;
 
 /**@brief The structure contains information about packet input queue format of BLE Transparent Credit Based profile. */
@@ -115,20 +115,20 @@ typedef struct BLE_TRCBPS_QueueIn_T
 /**@brief The structure contains information about BLE Transparent Credit Based profile connection parameters for recording connection information. */
 typedef struct BLE_TRCBPS_ConnList_T
 {
-    uint16_t     connHandle;                                                         /**< Connection handle. */
-    uint16_t     spsm;                                                               /**< PSM of l2cap session. */
-    uint8_t      leL2capId;                                                          /**< Instance of l2cap session. */
-    uint8_t      state;                                                              /**< L2CAP CoC state. See @ref BLE_TRCBPS_STATUS. */
-    uint16_t     localMtu;                                                           /**< MTU size of local device. */
-    uint16_t     peerMtu;                                                            /**< MTU size of peer device. */
-    uint16_t     localMps;                                                           /**< PDU size of local device. */
-    uint16_t     peerMps;                                                            /**< PDU size of peer device. */
-    uint16_t     localCredits;                                                       /**< Credits of local device. */
-    uint16_t     localAccuCredits;                                                   /**< Accumulation Credits which will be sent to the peer device. */
-    uint16_t     peerCredits;                                                        /**< Credits of peer device. */
-    uint16_t     attMtu;                                                             /**< Record the current connection ATT MTU size. */
-    BLE_TRCBPS_QueueIn_T     queueIn;                                                /**< Data channel packet input queue. */
-    uint8_t      encStatus;                                                          /**< Encryption status. */
+    uint16_t                            connHandle;                 /**< Connection handle. */
+    uint16_t                            spsm;                       /**< PSM of l2cap session. */
+    uint8_t                             leL2capId;                  /**< Instance of l2cap session. */
+    uint8_t                             state;                      /**< L2CAP CoC state. See @ref BLE_TRCBPS_STATUS. */
+    uint16_t                            localMtu;                   /**< MTU size of local device. */
+    uint16_t                            peerMtu;                    /**< MTU size of peer device. */
+    uint16_t                            localMps;                   /**< PDU size of local device. */
+    uint16_t                            peerMps;                    /**< PDU size of peer device. */
+    uint16_t                            localCredits;               /**< Credits of local device. */
+    uint16_t                            localAccuCredits;           /**< Accumulation Credits which will be sent to the peer device. */
+    uint16_t                            peerCredits;                /**< Credits of peer device. */
+    uint16_t                            attMtu;                     /**< Record the current connection ATT MTU size. */
+    BLE_TRCBPS_QueueIn_T                queueIn;                    /**< Data channel packet input queue. */
+    bool                                encStatus;                  /**< Encryption status. */
 } BLE_TRCBPS_ConnList_T;
 
 
@@ -206,7 +206,7 @@ static BLE_TRCBPS_ChanType_T ble_trcbps_CovertSpsmToType(uint16_t spsm)
     {
         return BLE_TRCBPS_CTRL_CHAN;
     }
-    else if (spsm == BLE_TRCB_DATA_PSM)
+    else if (spsm == (uint16_t)BLE_TRCB_DATA_PSM)
     {
         return BLE_TRCBPS_DATA_CHAN;
     }
@@ -617,7 +617,7 @@ uint16_t BLE_TRCBPS_SendVendorCommand(uint16_t connHandle, uint8_t cmdId, uint16
         return MBA_RES_INVALID_PARA;
     }
 
-    if (len > (p_conn->attMtu - ATT_NOTI_INDI_HEADER_SIZE - 1))
+    if (len > (p_conn->attMtu - ATT_NOTI_INDI_HEADER_SIZE - 1U))
     {
         return MBA_RES_INVALID_PARA;
     }
@@ -627,7 +627,7 @@ uint16_t BLE_TRCBPS_SendVendorCommand(uint16_t connHandle, uint8_t cmdId, uint16
     {
         uint16_t ret;
 
-        p_hvParams->charHandle = BLE_TRCB_HDL_CHARVAL_CTRL;
+        p_hvParams->charHandle = (uint16_t)BLE_TRCB_HDL_CHARVAL_CTRL;
         p_hvParams->charLength = (len + 1U);
         p_hvParams->charValue[0] = cmdId;
         (void)memcpy(&p_hvParams->charValue[1], p_payload, len);
@@ -742,8 +742,8 @@ static void ble_trcbps_CtrlValue(BLE_TRCBPS_ConnList_T *p_conn, uint16_t length,
 
     (void)memset((uint8_t *) &evtPara, 0, sizeof(evtPara));
 
-    if ((p_value[0] >= BLE_TRCBPS_VENDOR_OPCODE_MIN) && (p_value[0] <= BLE_TRCBPS_VENDOR_OPCODE_MAX)
-        && s_bleTrcbpProcess)
+    if ((p_value[0] >= BLE_TRCBPS_VENDOR_OPCODE_MIN)
+        && (s_bleTrcbpProcess!= NULL))
     {
         evtPara.eventId = BLE_TRCBPS_EVT_VENDOR_CMD;
         evtPara.eventField.onVendorCmd.connHandle = p_conn->connHandle;
@@ -763,7 +763,7 @@ static uint8_t ble_trcbps_CtrlCccd(BLE_TRCBPS_ConnList_T *p_conn, uint8_t *p_val
     
     if ((cccd != 0U) && (cccd != BLE_TRCBPS_CCCD_NOTIFY))
     {
-        return ATT_ERRCODE_APPLICATION_ERROR;
+        return ATT_ERR_APPLICATION_ERROR;
     }
 
     (void)memset((uint8_t *)&connStatusPara, 0, sizeof(BLE_TRCBPS_EvtConnStatus_T));
@@ -791,8 +791,8 @@ static void ble_trcbps_GattsWriteProcess(GATT_Event_T *p_event)
     BLE_TRCBPS_ConnList_T *p_conn = NULL;
     uint16_t status;
 
-    if ((p_event->eventField.onWrite.attrHandle <= BLE_TRCB_START_HDL) ||
-        (p_event->eventField.onWrite.attrHandle > BLE_TRCB_END_HDL))
+    if ((p_event->eventField.onWrite.attrHandle <= (uint16_t)BLE_TRCB_START_HDL) ||
+        (p_event->eventField.onWrite.attrHandle > (uint16_t)BLE_TRCB_END_HDL))
     {
         /* Not BLE TRCBS characteristic. */
         return;
@@ -801,32 +801,35 @@ static void ble_trcbps_GattsWriteProcess(GATT_Event_T *p_event)
     p_conn = ble_trcbps_GetConnListByHandle(p_event->eventField.onWrite.connHandle);
     if (p_conn == NULL)
     {
-        error = ATT_ERRCODE_APPLICATION_ERROR;
+        error = ATT_ERR_APPLICATION_ERROR;
     }
 
     if (p_event->eventField.onWrite.writeType == ATT_PREPARE_WRITE_REQ)
     {
-        error = ATT_ERRCODE_REQUEST_NOT_SUPPORT;
+        error = ATT_ERR_REQUEST_NOT_SUPPORT;
     }
 
-    if (!error)
+    if (error==0U)
     {
         switch(p_event->eventField.onWrite.attrHandle)
         {
-            case BLE_TRCB_HDL_CHARVAL_CTRL:
+            case (uint16_t)BLE_TRCB_HDL_CHARVAL_CTRL:
             {
                 ble_trcbps_CtrlValue(p_conn, p_event->eventField.onWrite.writeDataLength, 
                     p_event->eventField.onWrite.writeValue);
             }
             break;
 
-            case BLE_TRCB_HDL_CCCD_CTRL:
+            case (uint16_t)BLE_TRCB_HDL_CCCD_CTRL:
             {
                 error = ble_trcbps_CtrlCccd(p_conn, p_event->eventField.onWrite.writeValue);
             }
             break;
 
             default:
+            {
+                //Do nothing
+            }
             break;
         }
     }
@@ -834,7 +837,7 @@ static void ble_trcbps_GattsWriteProcess(GATT_Event_T *p_event)
     if ((p_event->eventField.onWrite.writeType == ATT_WRITE_REQ)
     || (p_event->eventField.onWrite.writeType == ATT_PREPARE_WRITE_REQ))
     {
-        if (!error)
+        if (error==0U)
         {
             sp_trcbpsRespParams = (GATTS_SendWriteRespParams_T *)OSAL_Malloc(sizeof(GATTS_SendWriteRespParams_T));
             if (sp_trcbpsRespParams == NULL)
@@ -913,7 +916,10 @@ static void ble_trcbps_GattEventProcess(GATT_Event_T *p_event)
         break;
 
         default:
-            break;
+        {
+            //Do nothing
+        }
+        break;
     }
 }
 
@@ -951,7 +957,7 @@ static void ble_trcbps_GapEventProcess(BLE_GAP_Event_T *p_event)
 
             if (p_conn != NULL)
             {
-                if (p_event->eventField.evtEncryptStatus.status == BLE_GAP_ENCRYPT_SUCCESS)
+                if (p_event->eventField.evtEncryptStatus.status == GAP_STATUS_SUCCESS)
                 {
                     p_conn->encStatus = true;
                 }
@@ -964,7 +970,10 @@ static void ble_trcbps_GapEventProcess(BLE_GAP_Event_T *p_event)
         break;
 
         default:
-            break;
+        {
+            //Do nothing
+        }
+        break;
     }
     
 }
@@ -1083,7 +1092,10 @@ static void ble_trcbps_L2capEventProcess(BLE_L2CAP_Event_T *p_event)
         break;
 
         default:
-            break;
+        {
+            //Do nothing
+        }
+        break;
     }
 }
 
@@ -1111,6 +1123,9 @@ void BLE_TRCBPS_BleEventHandler(STACK_Event_T *p_stackEvent)
         break;
         
         default:
+        {
+            //Do nothing
+        }
         break;
     }    
 }

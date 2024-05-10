@@ -93,24 +93,24 @@ extern "C" {
 /**@defgroup BLE_PXPM_DESC_MAX_NUM   Max descriptor number
  * @brief The definition of the max number of descriptor.
  * @{ */
-#define BLE_PXPM_DESC_MAX_NUM               (2)         /**< Maximum number of descriptor.*/
+#define BLE_PXPM_DESC_MAX_NUM               (2U)           /**< Maximum number of descriptor.*/
 /** @} */
 
 
 /**@defgroup BLE_PXPM_SVC_UUID   UUID of service in Proximity profile
  * @brief The definition of UUID of services are used in Proximity profile.
  * @{ */
-#define BLE_PXPM_UUID_IMMEDIATE_ALERT_SVC    0x1802     /**< Immediate Alert Service UUID. */
-#define BLE_PXPM_UUID_LINKLOSS_SVC           0x1803     /**< Link Loss Service UUID. */
-#define BLE_PXPM_UUID_TXPOWER_SVC            0x1804     /**< Tx Power Service UUID. */
+#define BLE_PXPM_UUID_IMMEDIATE_ALERT_SVC    (0x1802U)     /**< Immediate Alert Service UUID. */
+#define BLE_PXPM_UUID_LINKLOSS_SVC           (0x1803U)     /**< Link Loss Service UUID. */
+#define BLE_PXPM_UUID_TXPOWER_SVC            (0x1804U)     /**< Tx Power Service UUID. */
 /** @} */
 
 
 /**@defgroup BLE_PXPM_UUID    UUID of characteristic in Proximity profile
  * @brief The definition of UUID of characteristics are used in Proximity profile.
  * @{ */
-#define BLE_PXPM_UUID_ALERT_LEVEL            0x2A06     /**< Alert Level UUID. */
-#define BLE_PXPM_UUID_TXPOWER_LEVEL          0x2A07     /**< Tx Power Level UUID. */
+#define BLE_PXPM_UUID_ALERT_LEVEL            (0x2A06U)     /**< Alert Level UUID. */
+#define BLE_PXPM_UUID_TXPOWER_LEVEL          (0x2A07U)     /**< Tx Power Level UUID. */
 /** @} */
 /**@} */ //BLE_PXPM_DEFINES
 
@@ -121,16 +121,16 @@ extern "C" {
 /**@brief Enumeration type of BLE PXP Monitor alert levels. */
 typedef enum BLE_PXPM_AlertLevel_T
 {
-    BLE_PXPM_ALERT_LEVEL_NO = 0x00,                 /**< Indicate alert level for No Alert. */
-    BLE_PXPM_ALERT_LEVEL_MILD = 0x01,               /**< Indicate alert level for Mild Alert. */
-    BLE_PXPM_ALERT_LEVEL_HIGH = 0x02,               /**< Indicate alert level for High Alert. */
+    BLE_PXPM_ALERT_LEVEL_NO = 0x00U,                 /**< Indicate alert level for No Alert. */
+    BLE_PXPM_ALERT_LEVEL_MILD = 0x01U,               /**< Indicate alert level for Mild Alert. */
+    BLE_PXPM_ALERT_LEVEL_HIGH = 0x02U,               /**< Indicate alert level for High Alert. */
 } BLE_PXPM_AlertLevel_T;
 
 
 /**@brief Enumeration type of BLE PXP Monitor callback events. */
 typedef enum BLE_PXPM_EventId_T
 {
-    BLE_PXPM_EVT_DISC_COMPLETE_IND = 0x00,          /**< PXP Reporter Service discovery completed and ready to perform PXP procedure. See @ref BLE_PXPM_EvtDiscComplete_T for event details.*/
+    BLE_PXPM_EVT_DISC_COMPLETE_IND = 0x00U,          /**< PXP Reporter Service discovery completed and ready to perform PXP procedure. See @ref BLE_PXPM_EvtDiscComplete_T for event details.*/
     BLE_PXPM_EVT_LLS_ALERT_LEVEL_WRITE_RSP_IND,     /**< Event for receiving LLS Alert Level write response. See @ref BLE_PXPM_EvtLlsAlertLvWriteRspInd_T for event details.*/
     BLE_PXPM_EVT_LLS_ALERT_LEVEL_IND,               /**< Event for receiving LLS Alert Level read response. See @ref BLE_PXPM_EvtLlsAlertLvInd_T for event details.*/
     BLE_PXPM_EVT_TPS_TX_POWER_LEVEL_IND,            /**< Event for receiving TPS TX Power Level read response. See @ref BLE_PXPM_EvtTpsTxPwrLvInd_T for event details.*/
@@ -208,7 +208,7 @@ typedef struct BLE_PXPM_DescInfo_T
 /**@brief Descriptor list. */
 typedef struct BLE_PXPM_DescList_T
 {
-    uint8_t             num;                             /**< Total number of the descriptor.*/
+    uint8_t             totalNum;        /**< Total number of the descriptor.*/
     BLE_PXPM_DescInfo_T descInfo[BLE_PXPM_DESC_MAX_NUM]; /**< Discovered informations.*/
 } BLE_PXPM_DescList_T;
 
@@ -274,6 +274,7 @@ void BLE_PXPM_EventRegister(BLE_PXPM_EventCb_T routine);
 uint16_t BLE_PXPM_WriteLlsAlertLevel(uint16_t connHandle, BLE_PXPM_AlertLevel_T level);
 
 
+#ifdef BLE_PXPM_IAS_ENABLE
 /**
  * @brief Write Alert Level value to Immediate Alert Service table of peer PXP Reporter device.\n
  *       Application must call this API after starting BLE PXP Monitor procedure.
@@ -283,7 +284,7 @@ uint16_t BLE_PXPM_WriteLlsAlertLevel(uint16_t connHandle, BLE_PXPM_AlertLevel_T 
  *
  */
 uint16_t BLE_PXPM_WriteIasAlertLevel(uint16_t connHandle, BLE_PXPM_AlertLevel_T level);
-
+#endif
 
 /**
  * @brief Read Alert Level value from Link Loss Service table of peer PXP Reporter device.\n
@@ -295,6 +296,7 @@ uint16_t BLE_PXPM_WriteIasAlertLevel(uint16_t connHandle, BLE_PXPM_AlertLevel_T 
 uint16_t BLE_PXPM_ReadLlsAlertLevel(uint16_t connHandle);
 
 
+#ifdef BLE_PXPM_TPS_ENABLE
 /**
  * @brief Read Tx Power Level value from Tx Power Service table of peer PXP Reporter device.\n
  *       Application must call this API after starting BLE PXP Monitor procedure.
@@ -303,6 +305,7 @@ uint16_t BLE_PXPM_ReadLlsAlertLevel(uint16_t connHandle);
  *
  */
 uint16_t BLE_PXPM_ReadTpsTxPowerLevel(uint16_t connHandle);
+#endif
 
 /**
  * @brief Get information about characteristic UUID of the Proximity service that has been discovered.

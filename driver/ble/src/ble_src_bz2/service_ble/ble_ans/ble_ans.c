@@ -73,62 +73,62 @@
 // *****************************************************************************
 /* Service Declaration */
 static const uint8_t s_svcUuidAns[] = {UINT16_TO_BYTES(BLE_ANS_UUID_ANS_SVC)};
-static const uint16_t s_svcUuidAnsLen = sizeof(s_svcUuidAns);
+static const uint16_t s_svcUuidAnsLen = (uint16_t)sizeof(s_svcUuidAns);
 
 /* Supported New Alert Category Characteristic Declaration */
 static const uint8_t s_charAnsSuppNewAlertCat[] = {ATT_PROP_READ, UINT16_TO_BYTES(ANS_HDL_CHARVAL_SUPP_NEW_ALERT_CAT), UINT16_TO_BYTES(BLE_ANS_UUID_SUPP_NEW_ALERT_CAT)};
-static const uint16_t s_charAnsSuppNewAlertCatLen = sizeof(s_charAnsSuppNewAlertCat);
+static const uint16_t s_charAnsSuppNewAlertCatLen = (uint16_t)sizeof(s_charAnsSuppNewAlertCat);
 
 /* Supported New Alert Category Characteristic Value */
 static const uint8_t s_chUuidAnsSuppNewAlertCat[] = {UINT16_TO_BYTES(BLE_ANS_UUID_SUPP_NEW_ALERT_CAT)};
 static uint8_t s_ansSuppNewAlertCatVal[] = {0x00,0x00};
-static uint16_t s_ansSuppNewAlertCatValLen = sizeof(s_ansSuppNewAlertCatVal);
+static uint16_t s_ansSuppNewAlertCatValLen =(uint16_t) sizeof(s_ansSuppNewAlertCatVal);
 
 /* New Alert  Characteristic Declaration */
 static const uint8_t s_charAnsNewAlert[] = {ATT_PROP_NOTIFY, UINT16_TO_BYTES(ANS_HDL_CHARVAL_NEW_ALERT), UINT16_TO_BYTES(BLE_ANS_UUID_NEW_ALERT)};
-static const uint16_t s_charAnsNewAlertLen = sizeof(s_charAnsNewAlert);
+static const uint16_t s_charAnsNewAlertLen = (uint16_t)sizeof(s_charAnsNewAlert);
 
 /* New Alert Characteristic Value */
 static const uint8_t s_chUuidAnsNewAlert[] = {UINT16_TO_BYTES(BLE_ANS_UUID_NEW_ALERT)};
 static uint8_t s_ansNewAlertVal[] = {0,0,0,0,0,0,0,0,0,0};
-static uint16_t s_ansNewAlertValLen = sizeof(s_ansNewAlertVal);
+static uint16_t s_ansNewAlertValLen = (uint16_t)sizeof(s_ansNewAlertVal);
 
 /* New Alert Client Characteristic Configuration Descriptor */
 static uint8_t s_descCccAnsNewAlertCcc[] = {UINT16_TO_BYTES(0x0000)};
-static const uint16_t s_descCccAnsNewAlertCccLen = sizeof(s_descCccAnsNewAlertCcc);
+static const uint16_t s_descCccAnsNewAlertCccLen =(uint16_t)sizeof(s_descCccAnsNewAlertCcc);
 
 
 /* Supported Unread Alert Category Characteristic Declaration */
 static const uint8_t s_charAnsSuppUnreadAlertCat[] = {ATT_PROP_READ, UINT16_TO_BYTES(ANS_HDL_CHARVAL_SUPP_UNREAD_ALERT_CAT), UINT16_TO_BYTES(BLE_ANS_UUID_SUPP_UNREAD_ALERT_CAT)};
-static const uint16_t s_charAnsSuppUnreadAlertCatLen = sizeof(s_charAnsSuppUnreadAlertCat);
+static const uint16_t s_charAnsSuppUnreadAlertCatLen = (uint16_t)sizeof(s_charAnsSuppUnreadAlertCat);
 
 /* Supported Unread Alert Category Characteristic Value */
 static const uint8_t s_chUuidAnsSuppUnreadAlertCat[] = {UINT16_TO_BYTES(BLE_ANS_UUID_SUPP_UNREAD_ALERT_CAT)};
 static uint8_t s_ansSuppUnreadAlertCatVal[] = {0x00,0x00};
-static uint16_t s_ansSuppUnreadAlertCatValLen = sizeof(s_ansSuppUnreadAlertCatVal);
+static uint16_t s_ansSuppUnreadAlertCatValLen = (uint16_t)sizeof(s_ansSuppUnreadAlertCatVal);
 
 /* Unread Alert Status Characteristic Declaration */
 static const uint8_t s_charAnsUnreadAlertStat[] = {ATT_PROP_NOTIFY, UINT16_TO_BYTES(ANS_HDL_CHARVAL_UNREAD_ALERT_STAT), UINT16_TO_BYTES(BLE_ANS_UUID_UNREAD_ALERT_STAT)};
-static const uint16_t s_charAnsUnreadAlertStatLen = sizeof(s_charAnsUnreadAlertStat);
+static const uint16_t s_charAnsUnreadAlertStatLen =(uint16_t)sizeof(s_charAnsUnreadAlertStat);
 
 /* Unread Alert Status Characteristic Value */
 static const uint8_t s_chUuidAnsUnreadAlertStat[] = {UINT16_TO_BYTES(BLE_ANS_UUID_UNREAD_ALERT_STAT)};
 static uint8_t s_ansUnreadAlertStatVal[] = {0,0,0,0,0,0,0,0,0,0};
-static uint16_t s_ansUnreadAlertStatValLen = sizeof(s_ansUnreadAlertStatVal);
+static uint16_t s_ansUnreadAlertStatValLen = (uint16_t)sizeof(s_ansUnreadAlertStatVal);
 
 /* Unread Alert Status Client Characteristic Configuration Descriptor */
 static uint8_t s_descCccAnsUnreadAlertStatCcc[] = {UINT16_TO_BYTES(0x0000)};
-static const uint16_t s_descCccAnsUnreadAlertStatCccLen = sizeof(s_descCccAnsUnreadAlertStatCcc);
+static const uint16_t s_descCccAnsUnreadAlertStatCccLen = (uint16_t)sizeof(s_descCccAnsUnreadAlertStatCcc);
 
 
 /* Alert Notification Control Point Characteristic Declaration */
 static const uint8_t s_charAnsAncp[] = {ATT_PROP_WRITE_REQ, UINT16_TO_BYTES(ANS_HDL_CHARVAL_ANCP), UINT16_TO_BYTES(BLE_ANS_UUID_ANCP)};
-static const uint16_t s_charAnsAncpLen = sizeof(s_charAnsAncp);
+static const uint16_t s_charAnsAncpLen = (uint16_t)sizeof(s_charAnsAncp);
 
 /* Alert Notification Control Point Characteristic Value */
 static const uint8_t s_descUuidAnsAncp[] = {UINT16_TO_BYTES(BLE_ANS_UUID_ANCP)};
 static uint8_t s_ansAncpVal[] = {0,0}; /** <Command ID; Alert Category ID. */
-static uint16_t s_ansAncpValLen = sizeof(s_ansAncpVal);
+static uint16_t s_ansAncpValLen = (uint16_t)sizeof(s_ansAncpVal);
 
 /* Attributes list for Alert Notification service */
 static GATTS_Attribute_T s_ansList[] =
@@ -138,7 +138,7 @@ static GATTS_Attribute_T s_ansList[] =
         (uint8_t *) g_gattUuidPrimSvc,
         (uint8_t *) s_svcUuidAns,
         (uint16_t *) &s_svcUuidAnsLen,
-        sizeof(s_svcUuidAns),
+        (uint16_t)sizeof(s_svcUuidAns),
         0,
         (PERMISSION_READ)
     },
@@ -147,7 +147,7 @@ static GATTS_Attribute_T s_ansList[] =
         (uint8_t *) g_gattUuidChar,
         (uint8_t *) s_charAnsSuppNewAlertCat,
         (uint16_t *) &s_charAnsSuppNewAlertCatLen,
-        sizeof(s_charAnsSuppNewAlertCat),
+        (uint16_t)sizeof(s_charAnsSuppNewAlertCat),
         0,
         (PERMISSION_READ)
     },
@@ -156,7 +156,7 @@ static GATTS_Attribute_T s_ansList[] =
         (uint8_t *) s_chUuidAnsSuppNewAlertCat,
         (uint8_t *) s_ansSuppNewAlertCatVal,
         (uint16_t *) &s_ansSuppNewAlertCatValLen,
-        sizeof(s_ansSuppNewAlertCatVal),
+        (uint16_t)sizeof(s_ansSuppNewAlertCatVal),
         SETTING_MANUAL_READ_RSP,
         (PERMISSION_READ)
     },
@@ -165,7 +165,7 @@ static GATTS_Attribute_T s_ansList[] =
         (uint8_t *) g_gattUuidChar,
         (uint8_t *) s_charAnsNewAlert,
         (uint16_t *) &s_charAnsNewAlertLen,
-        sizeof(s_charAnsNewAlert),
+        (uint16_t)sizeof(s_charAnsNewAlert),
         0,
         (PERMISSION_READ)
     },
@@ -183,15 +183,15 @@ static GATTS_Attribute_T s_ansList[] =
         (uint8_t *) g_descUuidCcc,
         (uint8_t *) s_descCccAnsNewAlertCcc,
         (uint16_t *) &s_descCccAnsNewAlertCccLen,
-        sizeof(s_descCccAnsNewAlertCcc),
+        (uint16_t)sizeof(s_descCccAnsNewAlertCcc),
         (SETTING_CCCD),
-        (PERMISSION_READ|PERMISSION_WRITE)
+        (PERMISSION_READ|PERMISSION_WRITE|PERMISSION_WRITE_ENC)
     },
     /* Characteristic Delcaration */
     {   (uint8_t *) g_gattUuidChar,
         (uint8_t *) s_charAnsSuppUnreadAlertCat,
         (uint16_t *) &s_charAnsSuppUnreadAlertCatLen,
-        sizeof(s_charAnsSuppUnreadAlertCat),
+        (uint16_t)sizeof(s_charAnsSuppUnreadAlertCat),
         0,
         (PERMISSION_READ)
     },
@@ -209,7 +209,7 @@ static GATTS_Attribute_T s_ansList[] =
         (uint8_t *) g_gattUuidChar,
         (uint8_t *) s_charAnsUnreadAlertStat,
         (uint16_t *) &s_charAnsUnreadAlertStatLen,
-        sizeof(s_charAnsUnreadAlertStat),
+        (uint16_t)sizeof(s_charAnsUnreadAlertStat),
         0,
         (PERMISSION_READ)
     },
@@ -227,16 +227,16 @@ static GATTS_Attribute_T s_ansList[] =
         (uint8_t *) g_descUuidCcc,
         (uint8_t *) s_descCccAnsUnreadAlertStatCcc,
         (uint16_t *) &s_descCccAnsUnreadAlertStatCccLen,
-        sizeof(s_descCccAnsUnreadAlertStatCcc),
+        (uint16_t)sizeof(s_descCccAnsUnreadAlertStatCcc),
         (SETTING_CCCD),
-        (PERMISSION_READ|PERMISSION_WRITE)
+        (PERMISSION_READ|PERMISSION_WRITE|PERMISSION_WRITE_ENC)
     },
     /* Characteristic Delcaration */
     {
         (uint8_t *) g_gattUuidChar,
         (uint8_t *) s_charAnsAncp,
         (uint16_t *) &s_charAnsAncpLen,
-        sizeof(s_charAnsAncp),
+        (uint16_t)sizeof(s_charAnsAncp),
         0,
         (PERMISSION_READ)
     },
@@ -245,7 +245,7 @@ static GATTS_Attribute_T s_ansList[] =
         (uint8_t *) s_descUuidAnsAncp,
         (uint8_t *) s_ansAncpVal,
         (uint16_t *) &s_ansAncpValLen,
-        sizeof(s_ansAncpVal),
+        (uint16_t)sizeof(s_ansAncpVal),
         SETTING_MANUAL_WRITE_RSP,
         (PERMISSION_WRITE)
     },
@@ -253,8 +253,8 @@ static GATTS_Attribute_T s_ansList[] =
 
 static const GATTS_CccdSetting_T s_ansCccdSetting[] = 
 {
-    {ANS_HDL_CHARVAL_NEW_ALERT_CCC, (NOTIFICATION)},
-    {ANS_HDL_CHARVAL_UNREAD_ALERT_STAT_CCC, (NOTIFICATION)}
+    {(uint16_t)ANS_HDL_CHARVAL_NEW_ALERT_CCC, (NOTIFICATION)},
+    {(uint16_t)ANS_HDL_CHARVAL_UNREAD_ALERT_STAT_CCC, (NOTIFICATION)}
 };
 
 /* Alert Notification Service structure */
@@ -263,8 +263,8 @@ static GATTS_Service_T s_svcAns =
     NULL,
     (GATTS_Attribute_T *) s_ansList,
     (GATTS_CccdSetting_T const *)s_ansCccdSetting,
-    BLE_ANS_START_HDL,
-    BLE_ANS_END_HDL,
+    (uint16_t)BLE_ANS_START_HDL,
+    (uint16_t)BLE_ANS_END_HDL,
     BLE_ANS_CCC_NUM
 };
 
@@ -276,5 +276,5 @@ static GATTS_Service_T s_svcAns =
 
 uint16_t BLE_ANS_Add(void)
 {
-    return GATTS_AddService(&s_svcAns, (BLE_ANS_END_HDL - BLE_ANS_START_HDL + 1));
+    return GATTS_AddService(&s_svcAns, (uint8_t)((uint16_t)BLE_ANS_END_HDL - (uint16_t)BLE_ANS_START_HDL + 1U));
 }

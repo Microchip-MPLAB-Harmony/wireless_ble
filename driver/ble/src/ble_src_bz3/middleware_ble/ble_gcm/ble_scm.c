@@ -76,7 +76,7 @@ typedef enum DISC_INDEX_GattSvc_T
 /**@brief The definition of configuration procedures in BLE_SCM. */
 typedef enum BLE_SCM_CofigProcedure_T
 {
-    BLE_SCM_CONFIG_NONE=0x00,                                    /**< No configuration.*/
+    BLE_SCM_CONFIG_NONE=0x00U,                                    /**< No configuration.*/
     BLE_SCM_CONFIG_GATT_ENABLE_INDICATION,                  /**< Enable Service Change Indication of Remote GATT Service. */
     BLE_SCM_CONFIG_GATT_WRITE_FEATURES,                     /**< Write Client Supported Features to Remote GATT Service. */
     BLE_SCM_CONFIG_END
@@ -84,7 +84,7 @@ typedef enum BLE_SCM_CofigProcedure_T
 
 typedef enum BLE_SCM_ConfigStatus_T
 {
-    BLE_SCM_CONFIG_STATUS_SUCCESS=0x00,                          /**< Successfully execute the configuration. */
+    BLE_SCM_CONFIG_STATUS_SUCCESS=0x00U,                          /**< Successfully execute the configuration. */
     BLE_SCM_CONFIG_STATUS_FAIL,                             /**< Fail to execute the configuration. Try another configuration. */
     BLE_SCM_CONFIG_STATUS_ATT_BUSY,                         /**< ATT protocol is busy. */
     BLE_SCM_CONFIG_STATUS_END
@@ -92,7 +92,7 @@ typedef enum BLE_SCM_ConfigStatus_T
 
 typedef enum BLE_SCM_State_T
 {
-    BLE_SCM_STATE_IDLE = 0x00,                              /**< Default state (Disconnected). */
+    BLE_SCM_STATE_IDLE = 0x00U,                              /**< Default state (Disconnected). */
     BLE_SCM_STATE_CONNECTED                                 /**< Connected. */
 } BLE_SCM_State_T;
 
@@ -110,7 +110,7 @@ typedef struct BLE_SCM_Conn_T
     BLE_SCM_CofigProcedure_T    configProcedure;                /**< Current configure procedure after discovery complete. */
     bool                        isGattSvcFound;                 /**< Record GATT service is found or not of the connection. */
     bool                        isPairingComplete;              /**< Record if paring complete received of the connection. Discovered handle information need to be sent to application when pairing complete. */
-    uint8_t                     queueProcedure;                 /**< Record queued procedure by the ATT protocol. */
+    BLE_SCM_CofigProcedure_T    queueProcedure;                 /**< Record queued procedure by the ATT protocol. */
     BLE_SCM_State_T             state;                          /**< Connection state. */
 } BLE_SCM_Conn_T;
 
@@ -149,7 +149,7 @@ static BLE_DD_CharInfo_T ** sp_gattCharInfoList;
 static BLE_DD_CharList_T *  sp_gattCharList;
 
 /**@brief API returned code mapping between SCM and MBA. */
-static const uint16_t       s_scmMbaRetCodeMap[]=
+static const BLE_SCM_ConfigStatus_T       s_scmMbaRetCodeMap[]=
 {
     BLE_SCM_CONFIG_STATUS_SUCCESS,          //MBA_RES_SUCCESS
     BLE_SCM_CONFIG_STATUS_FAIL,             //MBA_RES_FAIL
@@ -293,6 +293,9 @@ static void ble_scm_GapEventProcess(BLE_GAP_Event_T *p_event)
         break;
 
         default:
+        {
+            //Do nothing
+        }
         break;
     }
 }
@@ -341,11 +344,11 @@ static BLE_SCM_ConfigStatus_T ble_scm_EnableServiceChangeIndication(BLE_SCM_Conn
     uint16_t    scCccdHandle, apiStatus;
     uint8_t     cccdValue[] = {UINT16_TO_BYTES(INDICATION)};
 
-    scCccdHandle = ble_scm_GetScAttrHandle(p_conn->connHandle, DISC_INDEX_GATT_SC_CCCD);
+    scCccdHandle = ble_scm_GetScAttrHandle(p_conn->connHandle, (uint8_t)DISC_INDEX_GATT_SC_CCCD);
 
     if (scCccdHandle != 0U)
     {
-        apiStatus = ble_scm_SendGattWriteRequest(p_conn, scCccdHandle, sizeof(cccdValue), cccdValue);
+        apiStatus = ble_scm_SendGattWriteRequest(p_conn, scCccdHandle, (uint16_t)sizeof(cccdValue), cccdValue);
         result = s_scmMbaRetCodeMap[apiStatus];
     }
     else
@@ -361,11 +364,11 @@ static BLE_SCM_ConfigStatus_T ble_scm_WriteClientSupportFeatures(BLE_SCM_Conn_T 
     uint16_t    csfHandle, apiStatus;
     uint8_t     feature[] = {GATT_ROBUST_CACHING};
 
-    csfHandle = ble_scm_GetScAttrHandle(p_conn->connHandle, DISC_INDEX_GATT_CSF_CHAR);
+    csfHandle = ble_scm_GetScAttrHandle(p_conn->connHandle, (uint8_t)DISC_INDEX_GATT_CSF_CHAR);
 
     if (csfHandle != 0U)
     {
-        apiStatus = ble_scm_SendGattWriteRequest(p_conn, csfHandle, sizeof(feature), feature);
+        apiStatus = ble_scm_SendGattWriteRequest(p_conn, csfHandle, (uint16_t)sizeof(feature), feature);
         result = s_scmMbaRetCodeMap[apiStatus];
     }
     else
@@ -393,7 +396,7 @@ static void ble_scm_ConfigProcedureStateMachine(BLE_SCM_Conn_T *p_conn, BLE_SCM_
         }
         else
         {
-            procedure += 1;
+            procedure += 1U;
         }
     }
 
@@ -413,7 +416,7 @@ static void ble_scm_ConfigProcedureStateMachine(BLE_SCM_Conn_T *p_conn, BLE_SCM_
         }
         else
         {
-            procedure += 1;
+            procedure += 1U;
         }
     }
 
@@ -442,7 +445,7 @@ static void ble_scm_GattEventProcess(GATT_Event_T *p_event)
             p_conn = ble_scm_FindConnByHandle(p_event->eventField.onError.connHandle);
             if (p_conn != NULL)
             {
-                if (p_event->eventField.onError.errCode == ATT_ERRCODE_DATABASE_OUT_OF_SYNC)
+                if (p_event->eventField.onError.errCode == ATT_ERR_DATABASE_OUT_OF_SYNC)
                 {
                     p_conn->configProcedure = BLE_SCM_CONFIG_NONE;
                     p_conn->isGattSvcFound = false;
@@ -452,7 +455,7 @@ static void ble_scm_GattEventProcess(GATT_Event_T *p_event)
                 {
                     if (p_conn->configProcedure != BLE_SCM_CONFIG_NONE)
                     {
-                        ble_scm_ConfigProcedureStateMachine(p_conn, (p_conn->configProcedure+1));
+                        ble_scm_ConfigProcedureStateMachine(p_conn, (p_conn->configProcedure+1U));
                     }
                 }
             }
@@ -467,14 +470,14 @@ static void ble_scm_GattEventProcess(GATT_Event_T *p_event)
 
             if ((p_conn != NULL) && (p_conn->configProcedure))
             {
-                ble_scm_ConfigProcedureStateMachine(p_conn, (p_conn->configProcedure+1));
+                ble_scm_ConfigProcedureStateMachine(p_conn, (p_conn->configProcedure+1U));
             }
         }
         break;
 
         case GATTC_EVT_HV_INDICATE:
         {
-            if (p_event->eventField.onIndication.charHandle == ble_scm_GetScAttrHandle(p_event->eventField.onIndication.connHandle, DISC_INDEX_GATT_SC_CHAR))
+            if (p_event->eventField.onIndication.charHandle == ble_scm_GetScAttrHandle(p_event->eventField.onIndication.connHandle, (uint8_t)DISC_INDEX_GATT_SC_CHAR))
             {
                 uint16_t        affectedStartHandle, affectedEndHandle;
                 BLE_SCM_Conn_T  *p_conn;
@@ -498,15 +501,18 @@ static void ble_scm_GattEventProcess(GATT_Event_T *p_event)
 
             p_conn = ble_scm_FindConnByHandle(p_event->eventField.onClientProtocolAvailable.connHandle);
 
-            if ((p_conn != NULL) && (p_conn->queueProcedure))
+            if ((p_conn != NULL) && (p_conn->queueProcedure!=0U))
             {
                 ble_scm_ConfigProcedureStateMachine(p_conn, p_conn->queueProcedure);
-                p_conn->queueProcedure = 0;
+                p_conn->queueProcedure = BLE_SCM_CONFIG_NONE;
             }
         }
         break;
 
         default:
+        {
+            //Do nothing
+        }
         break;
     }
 }
@@ -545,6 +551,9 @@ static void ble_scm_SmpEventProcess(BLE_SMP_Event_T *p_event)
         break;
 
         default:
+        {
+            //Do nothing
+        }
         break;
     }
 }
@@ -641,6 +650,9 @@ void BLE_SCM_BleEventHandler(STACK_Event_T *p_stackEvent)
         break;
 
         default:
+        {
+            //Do nothing
+        }
         break;
     }
 }
@@ -659,7 +671,7 @@ void BLE_SCM_BleDdEventHandler(BLE_DD_Event_T *p_event)
             if (p_conn != NULL)
             {
                 /* By checking the discovered handles exist or not. */
-                if (ble_scm_GetScAttrHandle(p_event->eventField.evtDiscResult.connHandle, DISC_INDEX_GATT_SC_CHAR) != 0U)
+                if (ble_scm_GetScAttrHandle(p_event->eventField.evtDiscResult.connHandle, (uint8_t)DISC_INDEX_GATT_SC_CHAR) != 0U)
                 {
                     p_conn->isGattSvcFound = true;
 
@@ -692,6 +704,9 @@ void BLE_SCM_BleDdEventHandler(BLE_DD_Event_T *p_event)
         break;
 
         default:
+        {
+            //Do nothing
+        }
         break;
     }
 }

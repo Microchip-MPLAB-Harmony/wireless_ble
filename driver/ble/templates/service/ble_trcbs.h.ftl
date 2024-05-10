@@ -74,14 +74,14 @@ extern "C" {
 /**@defgroup BLE_TRCB_ASSIGN_HANDLE BLE_TRCB_ASSIGN_HANDLE
  * @brief Assigned attribute handles of BLE Transparent Credit Based Service.
  * @{ */
-#define BLE_TRCB_START_HDL                                        0x00C0                /**< The start attribute handle of BLE Transparent Credit Based service. */
+#define BLE_TRCB_START_HDL                                        (0x00C0U)                /**< The start attribute handle of BLE Transparent Credit Based service. */
 /** @} */
 
 
 /**@defgroup BLE_TRCB_PSM BLE_TRCB_PSM
  * @brief The definition of BLE Transparent Credit Based PSM.
  * @{ */
-#define BLE_TRCB_DATA_PSM                                         0x0081                /**< PSM value of data channel. */
+#define BLE_TRCB_DATA_PSM                                         (0x0081U)                /**< PSM value of data channel. */
 /** @} */
 
 

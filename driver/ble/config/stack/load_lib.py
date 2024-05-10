@@ -10,20 +10,6 @@
 
 print('BLE LIB: loading BLE Stack library')
 
-pic32cx_bz2_family = {'PIC32CX1012BZ25048',
-                      'PIC32CX1012BZ25032',
-                      'PIC32CX1012BZ24032',
-                      'WBZ451',
-                      'WBZ450',
-                      }
-
-pic32cx_bz3_family = {'PIC32CX5109BZ31032',
-                      'PIC32CX5109BZ31048',
-                      'WBZ351',
-                      'WBZ350',
-                      }
-
-
 ble_stack_header = [
     ('ble_gap.h'), 
     ('ble_l2cap.h'), 
@@ -57,14 +43,6 @@ def bleConfigXC32Setting(component, key, value):
     blestack_macros.setKey(key)
     blestack_macros.setValue(value)
 
-
-processor = Variables.get("__PROCESSOR")
-
-if( processor in pic32cx_bz2_family):
-    srcPath = "ble_src_bz2"
-else:
-    srcPath = "ble_src_bz3"
-
 # Add header files
 for name in ble_stack_header:
     fsymbol = libBLEStackComponent.createFileSymbol(None, None)
@@ -75,6 +53,15 @@ for name in ble_stack_header:
     fsymbol.setProjectPath('config/' + configName + '/ble/lib/include')
     fsymbol.setType('HEADER')
     fsymbol.setEnabled(True)
+    if name.find("bt_sys_pta.h") != -1:
+        fsymbol.setEnabled(False)
+        fsymbol.setDependencies(bleConfigEnable, ["BLE_SYS_PTA_EN"])
+    elif name.find('hci.h') != -1:
+        fsymbol.setEnabled(False)
+        fsymbol.setDependencies(bleConfigEnable, ["BLE_SYS_CTRL_ONLY_EN"])
+    else:
+        if name.find('bt_sys.h') == -1:
+            fsymbol.setDependencies(ctrlOnlyFileChange, ["BLE_SYS_CTRL_ONLY_EN"])
 
 # Add extra include declaration
 n = 0

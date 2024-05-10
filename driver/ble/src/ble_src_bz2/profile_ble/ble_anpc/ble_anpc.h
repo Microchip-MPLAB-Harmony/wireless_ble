@@ -84,66 +84,66 @@ extern "C" {
 /**@defgroup BLE_ANPC_ERRCODE    Error Code definition
  * @brief The definition of command id.
  * @{ */
-#define BLE_ANPC_ERRCODE_COMMAND_NOT_SUPPORTTED     (0xA0) /**< Command not supportted.*/
+#define BLE_ANPC_ERRCODE_COMMAND_NOT_SUPPORTTED     (0xA0U) /**< Command not supportted.*/
 /** @} */
 
 /**@defgroup BLE_ANPC_CMD   Command definition
  * @brief The definition of command id.
  * @{ */
-#define BLE_ANPC_CMD_ENABLE_NEW_ALERT               (0x00) /**< Enable new alert notification.*/
-#define BLE_ANPC_CMD_ENABLE_UNREAD_ALERT_STAT       (0x01) /**< Enable unread alert status notification.*/
-#define BLE_ANPC_CMD_DISABLE_NEW_ALERT              (0x02) /**< Disable new alert notification.*/
-#define BLE_ANPC_CMD_DISABLE_UNREAD_ALERT_STAT      (0x03) /**< Disable unread alert status notification.*/
-#define BLE_ANPC_CMD_NOTI_NEW_ALERT_IMM             (0x04) /**< Notify new alert immediately.*/
-#define BLE_ANPC_CMD_NOTI_UNREAD_ALERT_STAT_IMM     (0x05) /**< Notify unread alert status immediately.*/
+#define BLE_ANPC_CMD_ENABLE_NEW_ALERT               (0x00U) /**< Enable new alert notification.*/
+#define BLE_ANPC_CMD_ENABLE_UNREAD_ALERT_STAT       (0x01U) /**< Enable unread alert status notification.*/
+#define BLE_ANPC_CMD_DISABLE_NEW_ALERT              (0x02U) /**< Disable new alert notification.*/
+#define BLE_ANPC_CMD_DISABLE_UNREAD_ALERT_STAT      (0x03U) /**< Disable unread alert status notification.*/
+#define BLE_ANPC_CMD_NOTI_NEW_ALERT_IMM             (0x04U) /**< Notify new alert immediately.*/
+#define BLE_ANPC_CMD_NOTI_UNREAD_ALERT_STAT_IMM     (0x05U) /**< Notify unread alert status immediately.*/
 #define BLE_ANPC_CMD_END                            (BLE_ANPC_CMD_NOTI_UNREAD_ALERT_STAT_IMM) /**< End of command ID.*/
 /** @} */
 
 /**@defgroup BLE_ANPC_DESC_MAX_NUM   Maximum number of descriptor
  * @brief The definition of the max number of descriptor.
  * @{ */
-#define BLE_ANPC_DESC_MAX_NUM 						(2)	   /**< Maximum number of descriptor.*/
+#define BLE_ANPC_DESC_MAX_NUM 						(2U)	   /**< Maximum number of descriptor.*/
 /** @} */
 
 /**@defgroup BLE_ANPC_CAT_ID    Category Id
  * @brief The definition of category id. 
  * @{ */
-#define BLE_ANPC_CAT_ID_SIMPLE_ALERT                (0x00) /**< Simple Alert. The title of the alert.*/
-#define BLE_ANPC_CAT_ID_EMAIL                       (0x01) /**< Email. Sender name.*/
-#define BLE_ANPC_CAT_ID_NEWS                        (0x02) /**< News. Title of the news feed.*/
-#define BLE_ANPC_CAT_ID_CALL                        (0x03) /**< Call. Caller name or caller ID.*/
-#define BLE_ANPC_CAT_ID_MISSED_CALL                 (0x04) /**< Missed Call. Caller name or caller ID*/
-#define BLE_ANPC_CAT_ID_SMS_MMS                     (0x05) /**< SMS. Sender name or caller ID.*/
-#define BLE_ANPC_CAT_ID_VOICE_MAIL                  (0x06) /**< Voice Mail. Sender name or caller ID.*/
-#define BLE_ANPC_CAT_ID_SCHEDULE                    (0x07) /**< Schedule. Title of the schedule.*/
-#define BLE_ANPC_CAT_ID_HIGH_PRIOR_ALERT            (0x08) /**< High Prioritized Alert. Title of alert.*/
-#define BLE_ANPC_CAT_ID_INSTANT_MSG                 (0x09) /**< Instant Messaging. Sender name.*/
-#define BLE_ANPC_CAT_ID_ALL_ALERT                   (0xFF) /**< All alert.*/
+#define BLE_ANPC_CAT_ID_SIMPLE_ALERT                (0x00U) /**< Simple Alert. The title of the alert.*/
+#define BLE_ANPC_CAT_ID_EMAIL                       (0x01U) /**< Email. Sender name.*/
+#define BLE_ANPC_CAT_ID_NEWS                        (0x02U) /**< News. Title of the news feed.*/
+#define BLE_ANPC_CAT_ID_CALL                        (0x03U) /**< Call. Caller name or caller ID.*/
+#define BLE_ANPC_CAT_ID_MISSED_CALL                 (0x04U) /**< Missed Call. Caller name or caller ID*/
+#define BLE_ANPC_CAT_ID_SMS_MMS                     (0x05U) /**< SMS. Sender name or caller ID.*/
+#define BLE_ANPC_CAT_ID_VOICE_MAIL                  (0x06U) /**< Voice Mail. Sender name or caller ID.*/
+#define BLE_ANPC_CAT_ID_SCHEDULE                    (0x07U) /**< Schedule. Title of the schedule.*/
+#define BLE_ANPC_CAT_ID_HIGH_PRIOR_ALERT            (0x08U) /**< High Prioritized Alert. Title of alert.*/
+#define BLE_ANPC_CAT_ID_INSTANT_MSG                 (0x09U) /**< Instant Messaging. Sender name.*/
+#define BLE_ANPC_CAT_ID_ALL_ALERT                   (0xFFU) /**< All alert.*/
 /** @} */
 
 /**@defgroup BLE_ANPC_SUPP_CAT_ID_BIT_MASK          Supported category mask
  * @brief The definition of category id bit mask.
  * @{ */
-#define BLE_ANPC_SUPP_CAT_SIMPLE_ALERT              (1<<0) /**< Simple Alert.*/
-#define BLE_ANPC_SUPP_CAT_EMAIL                     (1<<1) /**< Email.*/
-#define BLE_ANPC_SUPP_CAT_NEWS                      (1<<2) /**< News.*/
-#define BLE_ANPC_SUPP_CAT_CALL                      (1<<3) /**< Call.*/
-#define BLE_ANPC_SUPP_CAT_MISSED_CALL               (1<<4) /**< Missed Call.*/
-#define BLE_ANPC_SUPP_CAT_SMS_MMS                   (1<<5) /**< SMS, MMS.*/
-#define BLE_ANPC_SUPP_CAT_VOICE_MAIL                (1<<6) /**< Voice Mail.*/
-#define BLE_ANPC_SUPP_CAT_SCHEDULE                  (1<<7) /**< Schedule.*/
-#define BLE_ANPC_SUPP_CAT_HIGH_PRIOR_ALERT          (1<<8) /**< High Prioritized Alert.*/
-#define BLE_ANPC_SUPP_CAT_INSTANT_MSG               (1<<9) /**< Instant Message.*/
+#define BLE_ANPC_SUPP_CAT_SIMPLE_ALERT              (1U << 0U) /**< Simple Alert.*/
+#define BLE_ANPC_SUPP_CAT_EMAIL                     (1U << 1U) /**< Email.*/
+#define BLE_ANPC_SUPP_CAT_NEWS                      (1U << 2U) /**< News.*/
+#define BLE_ANPC_SUPP_CAT_CALL                      (1U << 3U) /**< Call.*/
+#define BLE_ANPC_SUPP_CAT_MISSED_CALL               (1U << 4U) /**< Missed Call.*/
+#define BLE_ANPC_SUPP_CAT_SMS_MMS                   (1U << 5U) /**< SMS, MMS.*/
+#define BLE_ANPC_SUPP_CAT_VOICE_MAIL                (1U << 6U) /**< Voice Mail.*/
+#define BLE_ANPC_SUPP_CAT_SCHEDULE                  (1U << 7U) /**< Schedule.*/
+#define BLE_ANPC_SUPP_CAT_HIGH_PRIOR_ALERT          (1U << 8U) /**< High Prioritized Alert.*/
+#define BLE_ANPC_SUPP_CAT_INSTANT_MSG               (1U << 9U) /**< Instant Message.*/
 /** @} */
 
 /**@defgroup BLE_ANPC_UUID    UUID of characteristic in Alert Notification profile
  * @brief The definition of UUID of characteristics are used in Alert Notification profile.
  * @{ */
-#define BLE_ANPC_UUID_ANCP                          (0x2A44) /**< Alert Notification Control Point UUID .*/
-#define BLE_ANPC_UUID_UNREAD_ALERT_STAT             (0x2A45) /**< Unread Alert Status UUID.*/
-#define BLE_ANPC_UUID_NEW_ALERT                     (0x2A46) /**< New Alert UUID.*/
-#define BLE_ANPC_UUID_SUPP_NEW_ALERT_CAT            (0x2A47) /**< Supported New Alert Category UUID.*/
-#define BLE_ANPC_UUID_SUPP_UNREAD_ALERT_CAT         (0x2A48) /**< Support Unread Alert Category UUID.*/
+#define BLE_ANPC_UUID_ANCP                          (0x2A44U) /**< Alert Notification Control Point UUID .*/
+#define BLE_ANPC_UUID_UNREAD_ALERT_STAT             (0x2A45U) /**< Unread Alert Status UUID.*/
+#define BLE_ANPC_UUID_NEW_ALERT                     (0x2A46U) /**< New Alert UUID.*/
+#define BLE_ANPC_UUID_SUPP_NEW_ALERT_CAT            (0x2A47U) /**< Supported New Alert Category UUID.*/
+#define BLE_ANPC_UUID_SUPP_UNREAD_ALERT_CAT         (0x2A48U) /**< Support Unread Alert Category UUID.*/
 /** @} */
 /**@} */ //BLE_ANPC_DEFINES
 
@@ -154,7 +154,7 @@ extern "C" {
 
 typedef enum BLE_ANPC_EventId_T
 {
-    BLE_ANPC_EVT_DISC_COMPLETE_IND = 0x00,         /**< Event for discovery completion. See @ref BLE_ANPC_EvtDiscComplete_T for event details.*/
+    BLE_ANPC_EVT_DISC_COMPLETE_IND = 0x00U,         /**< Event for discovery completion. See @ref BLE_ANPC_EvtDiscComplete_T for event details.*/
     BLE_ANPC_EVT_SUPP_NEW_ALERT_CAT_IND,           /**< Event for receiving read supported new alert category response. See @ref BLE_ANPC_EvtSuppNewAlertCatInd_T for event details.*/
     BLE_ANPC_EVT_SUPP_UNREAD_ALERT_STAT_CAT_IND,   /**< Event for receiving read supported unread alert status category response. See @ref BLE_ANPC_EvtSuppUnreadAlertCatInd_T for event details.*/
     BLE_ANPC_EVT_WRITE_NEW_ALERT_NTFY_RSP_IND,     /**< Event for receiving write new alert response. See @ref BLE_ANPC_EvtWriteNewAlertRspInd_T for event details.*/
@@ -255,7 +255,7 @@ typedef struct BLE_ANPC_DescInfo_T
 /**@brief Data structure for @ref BLE_ANPC_GetDescList function. */
 typedef struct BLE_ANPC_DescList_T
 {
-    uint8_t 		    num;  				             /**< Total number of the descriptor.*/
+    uint8_t 		    totalNum;  				             /**< Total number of the descriptor.*/
     BLE_ANPC_DescInfo_T descInfo[BLE_ANPC_DESC_MAX_NUM]; /**< Discovered informations.*/
 }BLE_ANPC_DescList_T;
 

@@ -77,43 +77,43 @@ extern "C" {
 /**@defgroup BLE_OTAPC_IMG_TYPE_DEF OTAPC image type
  * @brief The definition of image type.
  * @{ */
-#define BLE_OTAPC_IMG_TYPE_FW                 (1 << 0)                                 /**< Firmaware image type. */
+#define BLE_OTAPC_IMG_TYPE_FW                 (1U << 0U)                                 /**< Firmaware image type. */
 /** @} */
 
 
 /**@defgroup BLE_OTAPC_FW_FEATURE_DEF OTAPC firmware extended feature
  * @brief The definition of firmware extended feature.
  * @{ */
-#define BLE_OTAPC_FW_FEATURE_MASK1            (1 << 0)                                 /**< Supported feature mask 1. */
+#define BLE_OTAPC_FW_FEATURE_MASK1            (1U << 0U)                                 /**< Supported feature mask 1. */
 /** @} */
 
 
 /**@defgroup BLE_OTAPC_ENC_TYPE_DEF OTAPC Encryption method
  * @brief The definition of encryption method.
  * @{ */
-#define BLE_OTAPC_ENC_NONE                    0x00                                     /**< New firmware image is not encrypted. */
-#define BLE_OTAPC_ENC_AES_CBC                 0x01                                     /**< New firmware image is encrypted by AES-CBC. */
+#define BLE_OTAPC_ENC_NONE                    (0x00U)                                     /**< New firmware image is not encrypted. */
+#define BLE_OTAPC_ENC_AES_CBC                 (0x01U)                                     /**< New firmware image is encrypted by AES-CBC. */
 /** @} */
 
 
 /**@defgroup BLE_OTAPC_FILE_TYPE_DEF OTAPC image file type
  * @brief The definition of file type.
  * @{ */
-#define BLE_OTAPC_IMG_FILE_TYPE_EMB_STACK     0x01                                     /**< The image is for embeded or stack flash. */
-#define BLE_OTAPC_IMG_FILE_TYPE_APP           0x02                                     /**< Pass the image to application. */
-#define BLE_OTAPC_IMG_FILE_TYPE_EXT           0x03                                     /**< The image is for external flash. */
+#define BLE_OTAPC_IMG_FILE_TYPE_EMB_STACK     (0x01U)                                     /**< The image is for embeded or stack flash. */
+#define BLE_OTAPC_IMG_FILE_TYPE_APP           (0x02U)                                     /**< Pass the image to application. */
+#define BLE_OTAPC_IMG_FILE_TYPE_EXT           (0x03U)                                     /**< The image is for external flash. */
 /** @} */
 
 
 /**@defgroup BLE_OTAPC_RESULT_DEF OTAPC result code
  * @brief The definition of operation result.
  * @{ */
-#define BLE_OTAPC_RESULT_SUCCESS              0x00                                     /**< Response for successful operation. */
-#define BLE_OTAPC_RESULT_INVALID_STATE        0x01                                     /**< Response if the requested operation is not valid in the current state of the firmware update process. */
-#define BLE_OTAPC_RESULT_NOT_SUPPORTED        0x02                                     /**< Response if unsupported Opcode is received. */
-#define BLE_OTAPC_RESULT_OPERATION_FAILED     0x03                                     /**< Response if the requested operation failed. */
-#define BLE_OTAPC_RESULT_INVALID_PARA         0x04                                     /**< Response if Parameter received does not meet the requirements of the service. */
-#define BLE_OTAPC_RESULT_UNSPECIED_ERROR      0x05                                     /**< The server has encountered an unspecified error. */
+#define BLE_OTAPC_RESULT_SUCCESS              (0x00U)                                     /**< Response for successful operation. */
+#define BLE_OTAPC_RESULT_INVALID_STATE        (0x01U)                                     /**< Response if the requested operation is not valid in the current state of the firmware update process. */
+#define BLE_OTAPC_RESULT_NOT_SUPPORTED        (0x02U)                                     /**< Response if unsupported Opcode is received. */
+#define BLE_OTAPC_RESULT_OPERATION_FAILED     (0x03U)                                    /**< Response if the requested operation failed. */
+#define BLE_OTAPC_RESULT_INVALID_PARA         (0x04U)                                     /**< Response if Parameter received does not meet the requirements of the service. */
+#define BLE_OTAPC_RESULT_UNSPECIED_ERROR      (0x05U)                                     /**< The server has encountered an unspecified error. */
 /** @} */
 
 

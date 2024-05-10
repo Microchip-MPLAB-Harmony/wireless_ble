@@ -1,16 +1,15 @@
 def ptaEnabledChange(symbol, event):
     value = event["value"]
     Log.writeInfoMessage('BLEStack:ptaEnabledChange value={}'.format(str(value)))
-    global devId
     pinNoBtPriority = ''
     pinNoBtActive = ''
     pinNoWlanActive = ''
 
-    if devId == 451:
+    if devId == '451' or devId == '451H':
         pinNoBtPriority = 'BSP_PIN_33'
         pinNoBtActive = 'BSP_PIN_34'
         pinNoWlanActive = 'BSP_PIN_4'
-    else: # devId: 350, 351
+    else: # devId: '350', '351'
         pinNoBtPriority = 'BSP_PIN_30'
         pinNoBtActive = 'BSP_PIN_36'
         pinNoWlanActive = 'BSP_PIN_29'
@@ -60,16 +59,13 @@ def ptaEnabledChange(symbol, event):
         Database.clearSymbolValue("core", pinNoWlanActive + "_CN")
 
 def sleepEnabledChange(symbol, event):
-    global gapDsadvEn
     value = event["value"]
     if value == True:
-        if gapDsadvEn.getValue()==False:
-            Log.writeInfoMessage('BLEStack:sleepEnabledChange value={}'.format(str(value)))
-            sendRTCSupportMessage(value)
+        Log.writeInfoMessage('BLEStack:sleepEnabledChange value={}'.format(str(value)))
+        sendSleepEnableMessage(value)
     else:
-        if gapDsadvEn.getValue()==False:
-            Log.writeInfoMessage('BLEStack:sleepEnabledChange value={}'.format(str(value)))
-            sendRTCSupportMessage(value)
+        Log.writeInfoMessage('BLEStack:sleepEnabledChange value={}'.format(str(value)))
+        sendSleepEnableMessage(value)
 
 def ctrlOnlyChange(symbol, event):
     value = event["value"]
@@ -116,7 +112,7 @@ blePta = libBLEStackComponent.createBooleanSymbol('BLE_SYS_PTA_EN', menuBleSys)
 blePta.setLabel('Enable Three-Wire PTA interface')
 blePta.setDescription('Enable Three-Wire PTA interface')
 blePta.setDefaultValue(False)
-blePta.setVisible(devId != 450 and processor != 'PIC32CX1012BZ25032')
+blePta.setVisible(devId != '450' and processor != 'PIC32CX1012BZ25032')
 blePta.setDependencies(ptaEnabledChange, ["BLE_SYS_PTA_EN"])
 
 # BLE Controller Only

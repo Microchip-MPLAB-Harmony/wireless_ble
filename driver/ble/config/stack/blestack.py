@@ -5,21 +5,48 @@
 from binascii import hexlify
 import string
 
-devId = 0
-antennaGain = 3
-txPwrCap = 15
-pic32cx_bz2_family = {'PIC32CX1012BZ25048',
-                      'PIC32CX1012BZ25032',
-                      'PIC32CX1012BZ24032',
-                      'WBZ451',
-                      'WBZ450',
-                      }
 
-pic32cx_bz3_family = {'PIC32CX5109BZ31032',
-                      'PIC32CX5109BZ31048',
-                      'WBZ351',
-                      'WBZ350',
-                      }
+antennaGain = 3
+txPwrMaxNonFHSS = 15
+txPwrMaxFHSS = 15
+txPwrMin = -26
+
+execfile(Module.getPath() + '/driver/ble/config/dev_info.py')
+processor = Variables.get("__PROCESSOR")
+devFamily = GetDeviceFamily()
+# print('Config Name: {}, device family: {}'.format(configName, devFamily))
+if devFamily == "pic32cx_bz2_family":
+    srcPath = "ble_src_bz2"
+    devSupp = 'pic32cx_bz2_devsupport'
+    libObj = "ble_stack_bz2_lib.a"
+    if processor == 'WBZ450' or processor == 'PIC32CX1012BZ24032':
+        devId = '450'
+        conMinTxPwr = -25
+    else:
+        if (processor == 'WBZ451H'):
+            devId = '451H'
+            conMinTxPwr = -26
+        else:
+            devId = '451'
+            conMinTxPwr = -29
+elif devFamily == "pic32cx_bz3_family":
+    srcPath = "ble_src_bz3"
+    devSupp = 'pic32cx_bz3_devsupport'
+    libObj = "ble_stack_bz3_lib.a"
+    if processor == 'WBZ350' or processor == 'PIC32CX5109BZ31032':
+        devId = '350'
+    else:
+        devId = '351'
+    conMinTxPwr = -24
+else:
+    srcPath = ""
+    devSupp = ''
+    libObj = ""
+    devId = ''
+    conMinTxPwr = -29
+    print("Device not support")
+
+
 ################################################################################
 #### Component ####
 ################################################################################
@@ -92,18 +119,21 @@ def dfuFileChange(symbol, event):
 
     symbol.setEnabled(value)
 
-def sendRTCSupportMessage(rtcRequiredValue):
+def logFileChange(symbol, event):
+    if event["id"] == "BLE_VIRTUAL_SNIFFER_EN":
+        value = event["value"]
+    else: #BLE_SYS_CTRL_ONLY_EN
+        if event["value"] == False:
+            value = event['source'].getSymbolValue('BLE_VIRTUAL_SNIFFER_EN')
+        else:
+            value = False
 
-    processor = Variables.get("__PROCESSOR")
-    if( processor in pic32cx_bz2_family):
-        Database.sendMessage("pic32cx_bz2_devsupport", "RTC_SUPPORT", {"target": "pic32cx_bz2_devsupport",
-                                                    "source": "BLE_STACK_LIB",
-                                                    "rtcRequired": rtcRequiredValue})
-    else:
-        Database.sendMessage("pic32cx_bz3_devsupport", "RTC_SUPPORT", {"target": "pic32cx_bz3_devsupport",
-                                                    "source": "BLE_STACK_LIB",
-                                                    "rtcRequired": rtcRequiredValue})
+    symbol.setEnabled(value)
 
+global sendSleepEnableMessage
+def sendSleepEnableMessage(sleepEnable):
+    Database.sendMessage(devSupp, "SLEEP_ENABLE", {"target": devSupp,
+                                                    "source": "BLE_STACK_LIB","isEnabled":sleepEnable})
 
 def handleMessage(messageID, args):
     # Log.writeInfoMessage('BLEStack:handleMessage ID={} argLen={}'.format(messageID, len(args)))
@@ -113,48 +143,41 @@ def handleMessage(messageID, args):
     '''
     if(messageID == 'ANTENNA_GAIN_CHANGE'):
         global antennaGain
+        global txPwrMaxNonFHSS
+        global txPwrMaxFHSS
+        global txPwrMin
         
         component = Database.getComponentByID(args['target'])
-        regionChange = False
         Log.writeInfoMessage('{:<17}: Handling - target={}'.format('blestack.py', args['target']))
-        if Variables.get("__PROCESSOR") in pic32cx_bz2_family:
-            devSup = Database.getComponentByID("pic32cx_bz2_devsupport")
-        else:
-            devSup = Database.getComponentByID("pic32cx_bz3_devsupport")
-        
+
+        devSuppComponent = Database.getComponentByID(devSupp)
         for arg in args:
             Log.writeInfoMessage('{:<17}: {}: {}'.format('', arg, args[arg]))
-            if('CUSTOM_ANT_ENABLE' == arg):
-                if args[arg] == True:
-                    antennaGain = devSup.getSymbolValue('CUSTOM_ANT_GAIN')
-                else:
-                    antennaGain = devSup.getSymbolByID('CUSTOM_ANT_GAIN').getDefaultValue()
-            elif('CUSTOM_ANT_GAIN' == arg):
-                # device support will send gain in onAttachmentConnected even if 'CUSTOM_ANT_ENABLE' is disabled
-                if devSup.getSymbolValue('CUSTOM_ANT_ENABLE') == True:
-                    antennaGain = args[arg]
-            elif arg.find('REGION') != -1:
-                regionChange = True
+            if ('TX_PWR_MAX_NON_FHSS' == arg):
+                txPwrMaxNonFHSS = args[arg]
+            elif ('TX_PWR_MAX_FHSS' == arg):
+                txPwrMaxFHSS = args[arg]
+            elif ('CUSTOM_ANT_GAIN' == arg):
+                antennaGain = args[arg]
         
         component.setSymbolValue('BLE_ANTENNA_GAIN', antennaGain)
-        
+        txPwrMin = conMinTxPwr + antennaGain
+
         # update tx power symbols
-        gapConfigTxPwr(component, regionChange)
+        gapConfigTxPwr(component, txPwrMaxNonFHSS, txPwrMaxFHSS, txPwrMin)
 
 
 def instantiateComponent(libBLEStackComponent):
-    global devId
     global antennaGain
 
     print('libBLEStackComponent')
     configName = Variables.get('__CONFIGURATION_NAME')
-    processor = Variables.get("__PROCESSOR")
 
     print('HarmonyCore.ENABLE_APP_FILE = {}'.format(str(Database.getSymbolValue("HarmonyCore", 'ENABLE_APP_FILE'))))
     print('HarmonyCore.ENABLE_OSAL = {}'.format(str(Database.getSymbolValue("HarmonyCore", 'ENABLE_OSAL'))))
     print('FreeRTOS.FREERTOS_USE_QUEUE_SETS = {}'.format(str(Database.getSymbolValue("FreeRTOS", 'FREERTOS_USE_QUEUE_SETS'))))
 
-    print('Config Name: {} processor: {}'.format(configName, processor))
+    print('Config Name: {} processor: {} devId: {}'.format(configName, processor, devId))
 
     # Inform H3 core that BLE has been loaded
     Database.setSymbolValue("core", "BLE_CLOCK_ENABLE", True)
@@ -164,29 +187,7 @@ def instantiateComponent(libBLEStackComponent):
         if (Database.getSymbolValue("pdsSystem", "BLESTACK_LOADED") == False):
             Database.setSymbolValue("pdsSystem", "BLESTACK_LOADED", True)
 
-    
-    if( processor in pic32cx_bz2_family):
-        if processor == 'WBZ450' or processor == 'PIC32CX1012BZ24032':
-            devId = 450
-        else:
-            devId = 451
-
-        srcPath = "ble_src_bz2"
-        libObj='ble_stack_bz2_lib.a'
-        
-        devSup = Database.getComponentByID("pic32cx_bz2_devsupport")
-    else:
-        if processor == 'WBZ350' or processor == 'PIC32CX5109BZ31032':
-            devId = 350
-        else:
-            devId = 351
-
-        srcPath = "ble_src_bz3"
-        libObj='ble_stack_bz3_lib.a'
-        
-        devSup = Database.getComponentByID("pic32cx_bz3_devsupport")
-
-    
+  
     ############################################################################
     ### Execute additional H3 Python code ###
     ############################################################################
@@ -236,17 +237,12 @@ def instantiateComponent(libBLEStackComponent):
         ]
 
 
-    if( processor in pic32cx_bz2_family):
-        ds = 'pic32cx_bz2_devsupport'
-    else:
-        ds = 'pic32cx_bz3_devsupport'
-
     n = 0
     appBleInit = []
     for i, f, p in dsBleInitTemplates:
         appBleInit.append( libBLEStackComponent.createFileSymbol(i, None))
         appBleInit[n].setType('STRING')
-        appBleInit[n].setOutputName(ds + '.' + p)
+        appBleInit[n].setOutputName(devSupp + '.' + p)
         appBleInit[n].setSourcePath('driver/ble/templates/ds_app/' + f)
         appBleInit[n].setMarkup(True)
         print('{} file: {} pos: {}'.format(n, f, p))
@@ -290,12 +286,13 @@ def instantiateComponent(libBLEStackComponent):
 
     # Add app generated  files
     bleAppFile = [('app_ble.c.ftl', 'app_ble.c', 'SOURCE'),
+                  ('app_ble.h.ftl', 'app_ble.h', 'HEADER'),
                   ('app_ble_handler.c.ftl', 'app_ble_handler.c', 'SOURCE'),
                   ('app_ble_handler.h.ftl', 'app_ble_handler.h', 'HEADER'),
                   ('app_ble_dsadv.c.ftl', 'app_ble_dsadv.c', 'SOURCE'),
                   ]
 
-    n = 0
+
     for name, outputName, type in bleAppFile:
         fsymbol = libBLEStackComponent.createFileSymbol(None, None)
         fsymbol.setSourcePath('driver/ble/templates/app/'+ name)
@@ -311,15 +308,13 @@ def instantiateComponent(libBLEStackComponent):
             fsymbol.setEnabled(False)
         else:
             fsymbol.setDependencies(ctrlOnlyFileChange, ["BLE_SYS_CTRL_ONLY_EN"])
-        #print('App generated {} file: {} output: {} '.format(n, name, outputName))
-        n = n + 1
+
 
     # Add controller only static files
     bleAppFile = [('app_ble_hci.h', 'HEADER'),
                   ('app_ble_hci.c', 'SOURCE'),
                   ]
 
-    n = 0
     for name, type in bleAppFile:
         fsymbol = libBLEStackComponent.createFileSymbol(None, None)
         fsymbol.setSourcePath('driver/ble/src/ble_app/'+ name)
@@ -331,14 +326,13 @@ def instantiateComponent(libBLEStackComponent):
         fsymbol.setEnabled(False)
         fsymbol.setDependencies(bleConfigEnable, ["BLE_SYS_CTRL_ONLY_EN"])
         print('App staic {} file: {} '.format(n, name))
-        n = n + 1
+
 
     # Add pta static files
     bleAppFile = [('app_pta_handler.h', 'HEADER'),
                   ('app_pta_handler.c', 'SOURCE'),
                   ]
 
-    n = 0
     for name, type in bleAppFile:
         fsymbol = libBLEStackComponent.createFileSymbol(None, None)
         fsymbol.setSourcePath('driver/ble/src/ble_app/'+ name)
@@ -349,19 +343,16 @@ def instantiateComponent(libBLEStackComponent):
         fsymbol.setType(type)
         fsymbol.setEnabled(False)
         fsymbol.setDependencies(bleConfigEnable, ["BLE_SYS_PTA_EN"])
-        #print('App staic {} file: {} '.format(n, name))
-        n = n + 1
+
 
     # Add ble app static files
-    bleAppFile = [('app_ble.h', 'HEADER'),
-                  ('app_ble_log_handler.h', 'HEADER'), 
+    bleAppFile = [('app_ble_log_handler.h', 'HEADER'), 
                   ('app_ble_utility.h', 'HEADER'),
                   ('app_ble_dsadv.h', 'HEADER'),
                   ('app_ble_log_handler.c', 'SOURCE'),
                   ('app_ble_utility.c', 'SOURCE'),
                   ]
 
-    n = 0
     for name, type in bleAppFile:
         fsymbol = libBLEStackComponent.createFileSymbol(None, None)
         fsymbol.setSourcePath('driver/ble/src/ble_app/'+ name)
@@ -370,14 +361,18 @@ def instantiateComponent(libBLEStackComponent):
         fsymbol.setDestPath('../../app_ble')
         fsymbol.setProjectPath('app_ble')
         fsymbol.setType(type)
-        fsymbol.setEnabled(True)
-        fsymbol.setDependencies(ctrlOnlyFileChange, ["BLE_SYS_CTRL_ONLY_EN"])
-        #print('App staic {} file: {} '.format(n, name))
-        n = n + 1
+        if name.find('app_ble_log_handler') != -1:
+            fsymbol.setEnabled(False)
+            fsymbol.setDependencies(logFileChange, ["BLE_SYS_CTRL_ONLY_EN", "BLE_VIRTUAL_SNIFFER_EN"])
+        else:
+            fsymbol.setEnabled(True)
+            fsymbol.setDependencies(ctrlOnlyFileChange, ["BLE_SYS_CTRL_ONLY_EN"])
+
 
     # Add mandatory middleware static files
     bleMiddlewareFile = [('mw_assert.h', 'ble_util', 'HEADER'), 
                          ('byte_stream.h', 'ble_util', 'HEADER'),
+                         ('mw_aes.h', 'ble_util', 'HEADER'),
                          ('ble_dm.h', 'ble_dm', 'HEADER'),
                          ('ble_dm_conn.h', 'ble_dm', 'HEADER'),
                          ('ble_dm_sm.h', 'ble_dm', 'HEADER'),
@@ -388,6 +383,7 @@ def instantiateComponent(libBLEStackComponent):
                          ('ble_scm.h', 'ble_gcm', 'HEADER'),
                          ('ble_log.h', 'ble_log', 'HEADER'),
                          ('mw_dfu.c', 'ble_util', 'SOURCE'),
+                         ('mw_aes.c', 'ble_util', 'SOURCE'),
                          ('ble_dm.c', 'ble_dm', 'SOURCE'),
                          ('ble_dm_conn.c', 'ble_dm', 'SOURCE'),
                          ('ble_dm_sm.c', 'ble_dm', 'SOURCE'),
@@ -398,7 +394,6 @@ def instantiateComponent(libBLEStackComponent):
                          ('ble_log.c', 'ble_log', 'SOURCE'),
                          ]
 
-    n = 0
     for name, path, type in bleMiddlewareFile:
         fsymbol = libBLEStackComponent.createFileSymbol(None, None)
         fsymbol.setSourcePath('driver/ble/src/' + srcPath + '/middleware_ble/'+ path +'/'+ name)
@@ -416,19 +411,17 @@ def instantiateComponent(libBLEStackComponent):
         elif name.find('mw_dfu') != -1:
             fsymbol.setEnabled(False)
             fsymbol.setDependencies(dfuFileChange, ["BLE_SYS_CTRL_ONLY_EN", "BOOL_BLE_UTIL_DFU"])
+        elif name.find('ble_log') != -1:
+            fsymbol.setEnabled(False)
+            fsymbol.setDependencies(logFileChange, ["BLE_SYS_CTRL_ONLY_EN", "BLE_VIRTUAL_SNIFFER_EN"])
         else:
             fsymbol.setEnabled(True)
             fsymbol.setDependencies(ctrlOnlyFileChange, ["BLE_SYS_CTRL_ONLY_EN"])
-        #print('Middleware {} file: {} path: {} '.format(n, name, path))
-        n = n + 1
 
 
     # Add mw_dfu.h file - generated file
     bleMwDfuHeaderFile = libBLEStackComponent.createFileSymbol(None, None)
-    if( processor in pic32cx_bz2_family):
-        bleMwDfuHeaderFile.setSourcePath('driver/ble/src/ble_src_bz2/middleware_ble/ble_util/mw_dfu.h')
-    else:
-        bleMwDfuHeaderFile.setSourcePath('driver/ble/templates/middleware/bz3/mw_dfu.h.ftl')
+    bleMwDfuHeaderFile.setSourcePath('driver/ble/templates/middleware/' + srcPath + '/mw_dfu.h.ftl')
     bleMwDfuHeaderFile.setOutputName('mw_dfu.h')
     bleMwDfuHeaderFile.setOverwrite(True)
     bleMwDfuHeaderFile.setDestPath('ble/middleware_ble/ble_util/')
@@ -439,30 +432,22 @@ def instantiateComponent(libBLEStackComponent):
     bleMwDfuHeaderFile.setDependencies(dfuFileChange, ["BLE_SYS_CTRL_ONLY_EN", "BOOL_BLE_UTIL_DFU"])
 
 
-    # Add mw_aes.h file - static file
-    blepUtilAesHeaderFile = libBLEStackComponent.createFileSymbol(None, None)
-    blepUtilAesHeaderFile.setSourcePath('driver/ble/src/' + srcPath + '/middleware_ble/ble_util/mw_aes.h')
-    blepUtilAesHeaderFile.setOutputName('mw_aes.h')
-    blepUtilAesHeaderFile.setDestPath('ble/middleware_ble/ble_util')
-    blepUtilAesHeaderFile.setProjectPath('config/' + configName + '/ble/middleware_ble/ble_util')
-    blepUtilAesHeaderFile.setOverwrite(True)
-    blepUtilAesHeaderFile.setType('HEADER')
-    blepUtilAesHeaderFile.setEnabled(True)
-    blepUtilAesHeaderFile.setMarkup(True)
-    blepUtilAesHeaderFile.setDependencies(ctrlOnlyFileChange, ["BLE_SYS_CTRL_ONLY_EN"])
+    # Add hpa static files
+    if( processor == 'WBZ451H'):
+        bleAppFile = [('app_ble_hpa_handler.h', 'HEADER'),
+                      ('app_ble_hpa_handler.c', 'SOURCE'),
+                      ]
 
-
-    # Add mw_aes.c - static file
-    blepUtilAesSourceFile = libBLEStackComponent.createFileSymbol(None, None)
-    blepUtilAesSourceFile.setSourcePath('driver/ble/src/' + srcPath + '/middleware_ble/ble_util/mw_aes.c')
-    blepUtilAesSourceFile.setOutputName('mw_aes.c')
-    blepUtilAesSourceFile.setDestPath('ble/middleware_ble/ble_util/')
-    blepUtilAesSourceFile.setProjectPath('config/' + configName + '/ble/middleware_ble/ble_util/')
-    blepUtilAesSourceFile.setOverwrite(True)
-    blepUtilAesSourceFile.setType('SOURCE')
-    blepUtilAesSourceFile.setEnabled(True)
-    blepUtilAesSourceFile.setMarkup(True)
-    blepUtilAesSourceFile.setDependencies(ctrlOnlyFileChange, ["BLE_SYS_CTRL_ONLY_EN"])
+        for name, type in bleAppFile:
+            fsymbol = libBLEStackComponent.createFileSymbol(None, None)
+            fsymbol.setSourcePath('driver/ble/src/ble_app/'+ name)
+            fsymbol.setOutputName(name)
+            fsymbol.setOverwrite(True)
+            fsymbol.setDestPath('../../app_ble')
+            fsymbol.setProjectPath('app_ble')
+            fsymbol.setType(type)
+            fsymbol.setEnabled(True)
+    
 
 
     ############################################################################
@@ -483,30 +468,40 @@ def instantiateComponent(libBLEStackComponent):
     appBleDevice = libBLEStackComponent.createStringSymbol('APP_BLE_DEVICE', None)
     appBleDevice.setVisible(False)
     appBleDevice.setReadOnly(True)
-    if( processor in pic32cx_bz2_family):
-        appBleDevice.setDefaultValue("pic32cx_bz2")
-    else:
-        appBleDevice.setDefaultValue("pic32cx_bz3")
+    appBleDevice.setDefaultValue(devFamily)
+
 
 def finalizeComponent(libBLEStackComponent):
     Log.writeInfoMessage('Finalizing: {}'.format(libBLEStackComponent.getID()))
     activeComponents = Database.getActiveComponentIDs()
-    processor = Variables.get("__PROCESSOR")
 
-    if( processor in pic32cx_bz2_family):
+    if devFamily == "pic32cx_bz2_family":
         print('finalizeComponent bz2')
         requiredComponents = ['pic32cx_bz2_devsupport', 'lib_crypto', 'lib_wolfcrypt']
-    else:
+        Database.setSymbolValue("core", "AES_CLOCK_ENABLE", True)
+    elif devFamily == "pic32cx_bz3_family":
         print('finalizeComponent bz3')
         requiredComponents = ['pic32cx_bz3_devsupport']
+    else:
+        print("Device not support")
 
     for r in requiredComponents:
         if r not in activeComponents:
             res = Database.activateComponents([r])
 
-    if( processor in pic32cx_bz2_family):
+    if devFamily == "pic32cx_bz2_family":
         res = Database.connectDependencies([['BLE_STACK_LIB', 'BLE_WolfCrypt_Dependency', 'lib_wolfcrypt', 'lib_wolfcrypt']])
         res = Database.connectDependencies([['lib_crypto', 'LIB_CRYPTO_WOLFCRYPT_Dependency', 'lib_wolfcrypt', 'lib_wolfcrypt']])
+
+
+    devSuppComponent = Database.getComponentByID(devSupp)
+    # update Antenna Gain
+    if devSuppComponent.getSymbolValue('CUSTOM_ANT_ENABLE') == True:
+        antennaGain = devSuppComponent.getSymbolValue('CUSTOM_ANT_GAIN')
+    else:
+        antennaGain = devSuppComponent.getSymbolByID('CUSTOM_ANT_GAIN').getDefaultValue()
+    libBLEStackComponent.setSymbolValue('BLE_ANTENNA_GAIN', antennaGain)
+
 
 def onAttachmentConnected(source, target):
 
@@ -528,11 +523,15 @@ def onAttachmentConnected(source, target):
         else:
             bleDeepSleepEnabled = False
 
-        if bleSleepEnabled == True or bleDeepSleepEnabled==True:
-            sendRTCSupportMessage(True)
+        if bleSleepEnabled == True:
+            sendSleepEnableMessage(True)
+        else:
+            sendSleepEnableMessage(False)
 
-        if bleSleepEnabled == False and bleDeepSleepEnabled==False:
-            sendRTCSupportMessage(False)
+        if bleDeepSleepEnabled == True:
+            sendDeepSleepEnableMessage(True)
+        else:
+            sendDeepSleepEnableMessage(False)
 
     elif (connectID == "BLE_WolfCrypt_Dependency"):
         print("BLE LIB:onAttachmentConnected configuring lib_wolfcrypt")

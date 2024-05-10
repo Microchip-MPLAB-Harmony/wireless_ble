@@ -65,7 +65,10 @@
 #include "ble_gcm/ble_scm.h"
     </#if>
 </#if>
+
+<#if BLE_VIRTUAL_SNIFFER_EN == true>
 #include "ble_log/ble_log.h"
+</#if>
 
 // DOM-IGNORE-BEGIN
 #ifdef __cplusplus  // Provide C++ Compatibility

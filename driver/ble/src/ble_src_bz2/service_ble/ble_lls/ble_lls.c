@@ -67,11 +67,11 @@ static const uint8_t s_svcUuidLls[ATT_UUID_LENGTH_2] =                 {UINT16_T
 static const uint8_t s_chUuidLlsAlertLevel[ATT_UUID_LENGTH_2] =        {UINT16_TO_BYTES(UUID_ALERT_LEVEL)};
 
 /* Link Loss Service Declaration */
-static uint16_t s_svcUuidLlsLen = sizeof(s_svcUuidLls);
+static uint16_t s_svcUuidLlsLen = (uint16_t)sizeof(s_svcUuidLls);
 
 /* Link Loss Alert Level Characteristic Declaration */
 static const uint8_t s_charLlsAlertLevel[] = {(ATT_PROP_READ | ATT_PROP_WRITE_REQ), UINT16_TO_BYTES(LLS_HDL_CHARVAL_ALERT_LEVEL), UINT16_TO_BYTES(UUID_ALERT_LEVEL)};
-static const uint16_t s_charLlsAlertLevelLen = sizeof (s_charLlsAlertLevel);
+static const uint16_t s_charLlsAlertLevelLen = (uint16_t)sizeof (s_charLlsAlertLevel);
 
 /* Link Loss Alert Level Characteristic Value */
 static uint8_t s_llsAlertLevelVal[1] = {0};
@@ -85,7 +85,7 @@ static GATTS_Attribute_T s_llsList[] = {
         (uint8_t *) g_gattUuidPrimSvc,
         (uint8_t *) s_svcUuidLls,
         (uint16_t *) & s_svcUuidLlsLen,
-        sizeof (s_svcUuidLls),
+        (uint16_t)sizeof (s_svcUuidLls),
         0,
         PERMISSION_READ
     },
@@ -94,7 +94,7 @@ static GATTS_Attribute_T s_llsList[] = {
         (uint8_t *) g_gattUuidChar,
         (uint8_t *) s_charLlsAlertLevel,
         (uint16_t *) & s_charLlsAlertLevelLen,
-        sizeof (s_charLlsAlertLevel),
+        (uint16_t)sizeof (s_charLlsAlertLevel),
         0,
         PERMISSION_READ
     },
@@ -103,9 +103,9 @@ static GATTS_Attribute_T s_llsList[] = {
         (uint8_t *) s_chUuidLlsAlertLevel,
         (uint8_t *) s_llsAlertLevelVal,
         (uint16_t *) & s_llsAlertLevelValLen,
-        sizeof(s_llsAlertLevelVal),
+        (uint16_t)sizeof(s_llsAlertLevelVal),
         SETTING_MANUAL_READ_RSP,
-        (PERMISSION_READ | PERMISSION_WRITE)
+        (PERMISSION_READ | PERMISSION_WRITE | PERMISSION_WRITE_ENC)
     },
 };
 
@@ -115,8 +115,8 @@ static GATTS_Service_T s_svcLls =
     NULL,
     (GATTS_Attribute_T *) s_llsList,
     NULL,
-    LLS_START_HDL,
-    LLS_END_HDL,
+    (uint16_t)LLS_START_HDL,
+    (uint16_t)LLS_END_HDL,
     0
 };
 
@@ -128,5 +128,5 @@ static GATTS_Service_T s_svcLls =
 
 uint16_t BLE_LLS_Add(void)
 {
-    return GATTS_AddService(&s_svcLls, (LLS_END_HDL - LLS_START_HDL + 1));
+    return GATTS_AddService(&s_svcLls, (uint8_t)((uint16_t)LLS_END_HDL - (uint16_t)LLS_START_HDL + 1U));
 }

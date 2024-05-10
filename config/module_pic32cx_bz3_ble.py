@@ -22,7 +22,7 @@
     # THAT YOU HAVE PAID DIRECTLY TO MICROCHIP FOR THIS SOFTWARE.
 ##############################################################################
 
-## PIC32CX-BZ Radio stacks
+## PIC32CX-BZ3 Radio stacks
 
 print('Load Module: Harmony Wireless BLE Stack Library')
 

@@ -64,7 +64,7 @@ extern "C" {
 /**@defgroup BLE_ANS_ASSIGN_HANDLE BLE_ANS_ASSIGN_HANDLE
  * @brief Assigned attribute handles of BLE Alert Notification Service.
  * @{ */
-#define BLE_ANS_START_HDL                  0x0150      /**< The start attribute handle of alert notification service. */
+#define BLE_ANS_START_HDL                  (0x0150U)      /**< The start attribute handle of alert notification service. */
 /** @} */
 
 /**@brief Definition of BLE Device Information Service attribute handle */
@@ -87,16 +87,15 @@ typedef enum BLE_ANS_AttributeHandle_T
     ANS_HDL_CHARVAL_UNREAD_ALERT_STAT_CCC,  /**< Handle of Unread Alert Status Client Characteristic Configuration value. */
 
     ANS_HDL_CHAR_ANCP,     /**< Handle of Alert Notification Control Point. */
-    ANS_HDL_CHARVAL_ANCP,  /**< Handle of Alert Notification Control Point value. */
+    ANS_HDL_CHARVAL_ANCP  /**< Handle of Alert Notification Control Point value. */
 
-    ANS_HDL_END
 }BLE_ANS_AttributeHandle_T;
 
 /**@defgroup BLE_ANS_ASSIGN_HANDLE BLE_ANS_ASSIGN_HANDLE
  * @brief Assigned attribute handles of BLE Alert Notification Service.
  * @{ */
 
-#define BLE_ANS_END_HDL   (ANS_HDL_END-1) /**< The end attribute handle of alert notification service. */
+#define BLE_ANS_END_HDL   ANS_HDL_CHARVAL_ANCP /**< The end attribute handle of alert notification service. */
 /** @} */
 
 /**

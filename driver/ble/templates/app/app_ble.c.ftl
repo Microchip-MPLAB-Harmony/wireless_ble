@@ -51,6 +51,10 @@
 #include "app_pta_handler.h"
 </#if>
 
+<#if __PROCESSOR == "WBZ451H">
+#include "app_ble_hpa_handler.h"
+</#if>
+
 <#if APP_TRCBP_SERVER == true>
 #include "app_trcbps_handler.h"
 </#if>
@@ -113,7 +117,7 @@
 // *****************************************************************************
 // *****************************************************************************
 <#if BLE_BOOL_GATT_CLIENT == true>
-static BLE_DD_Config_T         ddConfig;
+BLE_DD_Config_T         g_ddConfig;
 </#if>
 
 // *****************************************************************************
@@ -207,7 +211,7 @@ void APP_BleStackEvtHandler(STACK_Event_T *p_stackEvt)
     BLE_DM_BleEventHandler(p_stackEvt);
 
     <#if BLE_BOOL_GATT_CLIENT == true>
-    BLE_DD_BleEventHandler(&ddConfig, p_stackEvt);
+    BLE_DD_BleEventHandler(&g_ddConfig, p_stackEvt);
         <#if BOOL_GCM_SCM == true>
     BLE_SCM_BleEventHandler(p_stackEvt);
         </#if>
@@ -522,7 +526,7 @@ static void APP_BleConfigAdvance(void)
         <#if GAP_EXT_ADV_DATA_LEN != 0>
     appAdvData.advHandle = ${GAP_EXT_ADV_ADV_SET_HANDLE};
     appAdvData.operation = BLE_GAP_EXT_ADV_DATA_OP_COMPLETE;
-    appAdvData.fragPreference = BLE_GAP_EXT_ADV_DATA_FRAG_PREF_ALL;
+    appAdvData.fragPreference = BLE_GAP_EXT_ADV_DATA_FRAG_ALL;
     appAdvData.advLen = sizeof(advData);
     appAdvData.p_advData=OSAL_Malloc(appAdvData.advLen);
     if(appAdvData.p_advData)
@@ -536,7 +540,7 @@ static void APP_BleConfigAdvance(void)
         <#if GAP_EXT_SCAN_RSP_DATA_LEN != 0>
     appScanRspData.advHandle = ${GAP_EXT_ADV_ADV_SET_HANDLE};
     appScanRspData.operation = BLE_GAP_EXT_ADV_DATA_OP_COMPLETE;
-    appScanRspData.fragPreference = BLE_GAP_EXT_ADV_DATA_FRAG_PREF_ALL;
+    appScanRspData.fragPreference = BLE_GAP_EXT_ADV_DATA_FRAG_ALL;
     appScanRspData.advLen = sizeof(scanRspData);
     appScanRspData.p_advData=OSAL_Malloc(appScanRspData.advLen);
     if(appScanRspData.p_advData)
@@ -597,7 +601,7 @@ static void APP_BleConfigAdvance(void)
             <#if GAP_EXT_ADV_DATA_LEN_2 != 0>
     appAdvData.advHandle = ${GAP_EXT_ADV_ADV_SET_HANDLE_2};
     appAdvData.operation = BLE_GAP_EXT_ADV_DATA_OP_COMPLETE;
-    appAdvData.fragPreference = BLE_GAP_EXT_ADV_DATA_FRAG_PREF_ALL;
+    appAdvData.fragPreference = BLE_GAP_EXT_ADV_DATA_FRAG_ALL;
     appAdvData.advLen = sizeof(advData2);
     appAdvData.p_advData=OSAL_Malloc(appAdvData.advLen);
     if(appAdvData.p_advData)
@@ -611,7 +615,7 @@ static void APP_BleConfigAdvance(void)
             <#if GAP_EXT_SCAN_RSP_DATA_LEN_2 != 0>
     appScanRspData.advHandle = ${GAP_EXT_ADV_ADV_SET_HANDLE_2};
     appScanRspData.operation = BLE_GAP_EXT_ADV_DATA_OP_COMPLETE;
-    appScanRspData.fragPreference = BLE_GAP_EXT_ADV_DATA_FRAG_PREF_ALL;
+    appScanRspData.fragPreference = BLE_GAP_EXT_ADV_DATA_FRAG_ALL;
     appScanRspData.advLen = sizeof(scanRspData2);
     appScanRspData.p_advData=OSAL_Malloc(appScanRspData.advLen);
     if(appScanRspData.p_advData)
@@ -721,9 +725,22 @@ static void APP_BleConfigAdvance(void)
 
     <#if BLE_BOOL_GATT_CLIENT == true>
     // Configure BLE_DD middleware parameters
-    ddConfig.waitForSecurity = false;
-    ddConfig.initDiscInCentral = true;
-    ddConfig.initDiscInPeripheral = false;
+        <#if BOOL_GCM_DD_WAIT_FOR_SEC == true>
+    g_ddConfig.waitForSecurity = true;
+        <#else>
+    g_ddConfig.waitForSecurity = false;
+        </#if>
+        <#if BOOL_GCM_DD_INIT_DISC_IN_CNTRL == true>
+    g_ddConfig.initDiscInCentral = true;
+        <#else>
+    g_ddConfig.initDiscInCentral = false;
+        </#if>
+        <#if BOOL_GCM_DD_INIT_DISC_IN_PER == true>
+    g_ddConfig.initDiscInPeripheral = true;
+        <#else>
+    g_ddConfig.initDiscInPeripheral = false;
+        </#if>
+    g_ddConfig.disableConnectedDisc = false;
     </#if>
 }
 
@@ -881,6 +898,10 @@ void APP_BleStackInitAdvance(void)
 
     <#if BLE_SYS_PTA_EN == true>
     APP_PtaInit();
+    </#if>
+
+    <#if __PROCESSOR == "WBZ451H">
+    APP_HpaInit();
     </#if>
 
     APP_BleConfigAdvance();

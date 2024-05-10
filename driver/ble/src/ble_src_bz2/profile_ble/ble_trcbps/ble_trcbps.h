@@ -99,17 +99,17 @@ extern "C" {
 /**@defgroup BLE_TRCBPS_PARA Definition of TRCBPS parameters
  * @brief The definition of BLE Transparent Credit Based Profile parameters.
  * @{ */
-#define BLE_TRCBPS_SDU_LEN_FIELD_LEN          0x02                                  /**< Length of the SDU length field. */
+#define BLE_TRCBPS_SDU_LEN_FIELD_LEN          (0x02U)                                  /**< Length of the SDU length field. */
 #define BLE_TRCBPS_CTRL_MTU                   BLE_ATT_MAX_MTU_LEN - BLE_TRCBPS_SDU_LEN_FIELD_LEN               /**< MTU size of control channel. */
 #define BLE_TRCBPS_DATA_MTU                   BLE_ATT_MAX_MTU_LEN - BLE_TRCBPS_SDU_LEN_FIELD_LEN               /**< MTU size of data channel. */
-#define BLE_TRCBPS_CTRL_MPS                   BLE_L2CAP_MAX_PDU_SIZE                /**< MPS size of control channel. */
-#define BLE_TRCBPS_DATA_MPS                   BLE_L2CAP_MAX_PDU_SIZE                /**< MPS size of data channel. */
+#define BLE_TRCBPS_CTRL_MPS                   BLE_L2CAP_MAX_PDU_SIZE                  /**< MPS size of control channel. */
+#define BLE_TRCBPS_DATA_MPS                   BLE_L2CAP_MAX_PDU_SIZE                  /**< MPS size of data channel. */
 
-#define BLE_TRCBPS_CTRL_MAX_CREDITS           (0x0002U)                                /**< Maximum credit value of control channel. */
-#define BLE_TRCBPS_CTRL_MAX_ACCU_CREDITS      (0x0001U)                                /**< Maximum accumulation credits which will be sent to the peer device of control channel. */
-#define BLE_TRCBPS_DATA_MAX_CREDITS           (0x0008U)                                /**< Maximum credit value of data channel. */
-#define BLE_TRCBPS_DATA_MAX_ACCU_CREDITS      (0x0005U)                                /**< Maximum accumulation credits which will be sent to the peer device of data channel. */
-#define BLE_TRCBPS_PERMISSION                 (0x00U)                                  /**< Permission setting. */
+#define BLE_TRCBPS_CTRL_MAX_CREDITS           (0x0002U)                               /**< Maximum credit value of control channel. */
+#define BLE_TRCBPS_CTRL_MAX_ACCU_CREDITS      (0x0001U)                               /**< Maximum accumulation credits which will be sent to the peer device of control channel. */
+#define BLE_TRCBPS_DATA_MAX_CREDITS           (0x0008U)                               /**< Maximum credit value of data channel. */
+#define BLE_TRCBPS_DATA_MAX_ACCU_CREDITS      (0x0005U)                               /**< Maximum accumulation credits which will be sent to the peer device of data channel. */
+#define BLE_TRCBPS_PERMISSION                 (0x00U)                                 /**< Permission setting. */
 
 /** @} */
 
@@ -139,7 +139,7 @@ extern "C" {
 /**@brief Enumeration type of BLE Transparent Credit Based Profile callback events. */
 typedef enum BLE_TRCBPS_EventId_T
 {
-    BLE_TRCBPS_EVT_CONNECTION_STATUS = 0x00,                              /**< Transparent Credit Based Profile Data/Control Channel connection status update event. See @ref BLE_TRCBPS_EvtConnStatus_T for event details. */
+    BLE_TRCBPS_EVT_CONNECTION_STATUS = 0x00U,                              /**< Transparent Credit Based Profile Data/Control Channel connection status update event. See @ref BLE_TRCBPS_EvtConnStatus_T for event details. */
     BLE_TRCBPS_EVT_RECEIVE_DATA,                                          /**< Transparent Credit Based Profile Data Channel received notification event. See @ref BLE_TRCBPS_EvtReceiveData_T for event details. */
     BLE_TRCBPS_EVT_VENDOR_CMD,                                            /**< Transparent Credit Based Profile vendor command received notification event. See @ref BLE_TRCBPS_EvtVendorCmd_T for event details. */
     BLE_TRCBPS_EVT_ERR_NO_MEM                                             /**< Profile internal error occurs due to insufficient heap memory. */
@@ -148,7 +148,7 @@ typedef enum BLE_TRCBPS_EventId_T
 /**@brief Enumeration type of BLE Transparent Credit Based Profile channel type. */
 typedef enum BLE_TRCBPS_ChanType_T
 {
-    BLE_TRCBPS_UNKNOWN_CHAN = 0x00,                                      /**< Unknown Channel. */
+    BLE_TRCBPS_UNKNOWN_CHAN = 0x00U,                                      /**< Unknown Channel. */
     BLE_TRCBPS_CTRL_CHAN,                                                /**< Control Channel. */
     BLE_TRCBPS_DATA_CHAN                                                 /**< Data Channel. */
 } BLE_TRCBPS_ChanType_T;

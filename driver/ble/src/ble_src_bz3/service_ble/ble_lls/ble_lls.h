@@ -65,20 +65,20 @@ extern "C" {
 /**@defgroup BLE_LLS_UUID_DEF BLE_LLS_UUID_DEF
  * @brief The definition of Link Loss Service UUID.
  * @{ */
-#define UUID_LINKLOSS_SERVICE                           0x1803  /**< Link Loss Service UUID. */
+#define UUID_LINKLOSS_SERVICE                           (0x1803U)  /**< Link Loss Service UUID. */
 /** @} */
 
 /**@defgroup BLE_ALERT_LEVEL_UUID_DEF BLE_ALERT_LEVEL_UUID_DEF
  * @brief The definition of Alert Level UUID.
  * @{ */
-#define UUID_ALERT_LEVEL                                0x2A06  /**< Alert Level UUID. */
+#define UUID_ALERT_LEVEL                                (0x2A06U)  /**< Alert Level UUID. */
 /** @} */
 
 
 /**@defgroup BLE_LLS_ASSIGN_HANDLE BLE_LLS_ASSIGN_HANDLE
  * @brief Assigned attribute handles of BLE Link Loss Service.
  * @{ */
-#define LLS_START_HDL                               0x00F0                                      /**< The start attribute handle of transparent service. */
+#define LLS_START_HDL                                   (0x00F0U)  /**< The start attribute handle of transparent service. */
 /** @} */
 
 /**@brief Definition of BLE Link Loss Service attribute handle */

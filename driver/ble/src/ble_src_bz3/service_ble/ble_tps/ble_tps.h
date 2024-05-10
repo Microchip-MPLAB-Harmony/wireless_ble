@@ -64,19 +64,19 @@ extern "C" {
 /**@defgroup BLE_TPS_UUID_DEF BLE_TPS_UUID_DEF
  * @brief The definition of Tx Power Service UUID.
  * @{ */
-#define UUID_TXPOWER_SERVICE                              0x1804  /**< Tx Power Service UUID. */
+#define UUID_TXPOWER_SERVICE                              (0x1804U)  /**< Tx Power Service UUID. */
 /** @} */
 
 /**@defgroup BLE_TX_POWER_LEVEL_UUID_DEF BLE_TX_POWER_LEVEL_UUID_DEF
  * @brief The definition of Tx Power Level UUID.
  * @{ */
-#define UUID_TXPOWER_LEVEL                                0x2A07  /**< Tx Power Level UUID. */
+#define UUID_TXPOWER_LEVEL                                (0x2A07U)  /**< Tx Power Level UUID. */
 /** @} */
 
 /**@defgroup BLE_TPS_ASSIGN_HANDLE BLE_TPS_ASSIGN_HANDLE
  * @brief Assigned attribute handles of BLE Tx Power Service.
  * @{ */
-#define TPS_START_HDL                                     0x139    /**< The start attribute handle of transparent service. */
+#define TPS_START_HDL                                     (0x139U)    /**< The start attribute handle of transparent service. */
 /** @} */
 
 /**@brief Definition of BLE Tx Power Service attribute handle */

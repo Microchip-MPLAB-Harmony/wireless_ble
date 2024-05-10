@@ -116,16 +116,16 @@ extern "C" {
 
 typedef enum BLE_PXPR_AlertLevel_T
 {
-    BLE_PXPR_ALERT_LEVEL_NO = 0x00,                 /**< Indicate alert level for No Alert. */
-    BLE_PXPR_ALERT_LEVEL_MILD = 0x01,               /**< Indicate alert level for Mild Alert. */
-    BLE_PXPR_ALERT_LEVEL_HIGH = 0x02,               /**< Indicate alert level for High Alert. */
+    BLE_PXPR_ALERT_LEVEL_NO = 0x00U,                 /**< Indicate alert level for No Alert. */
+    BLE_PXPR_ALERT_LEVEL_MILD = 0x01U,               /**< Indicate alert level for Mild Alert. */
+    BLE_PXPR_ALERT_LEVEL_HIGH = 0x02U,               /**< Indicate alert level for High Alert. */
 } BLE_PXPR_AlertLevel_T;
 
 /**@brief Enumeration type of BLE PXP Reporter callback events. */
 
 typedef enum BLE_PXPR_EventId_T
 {
-    BLE_PXPR_EVT_LLS_ALERT_LEVEL_WRITE_IND = 0x00,  /**< Event for Alert Level in Link Loss Service is written. See @ref BLE_PXPR_EvtAlertLevelWriteInd_T for event details.*/
+    BLE_PXPR_EVT_LLS_ALERT_LEVEL_WRITE_IND = 0x00U, /**< Event for Alert Level in Link Loss Service is written. See @ref BLE_PXPR_EvtAlertLevelWriteInd_T for event details.*/
     BLE_PXPR_EVT_IAS_ALERT_LEVEL_WRITE_IND,         /**< Event for Alert Level in Immediate Alert service is written. See @ref BLE_PXPR_EvtAlertLevelWriteInd_T for event details.*/
     BLE_PXPR_EVT_ERR_UNSPECIFIED_IND                /**< Profile internal unspecified error occurs. */
 }BLE_PXPR_EventId_T;

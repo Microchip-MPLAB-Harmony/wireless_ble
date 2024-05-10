@@ -57,24 +57,24 @@
 // *****************************************************************************
 // *****************************************************************************
 
-#define BLE_OTAPC_OP_CODE_RESPONSE            0x01
-#define BLE_OTAPC_OP_CODE_UPDATE_REQUEST      0x02
-#define BLE_OTAPC_OP_CODE_UPDATE_START        0x03
-#define BLE_OTAPC_OP_CODE_UPDATE_COMPLETE     0x04
-#define BLE_OTAPC_OP_CODE_RESET_REQUEST       0x05
+#define BLE_OTAPC_OP_CODE_RESPONSE                              (0x01U)
+#define BLE_OTAPC_OP_CODE_UPDATE_REQUEST                        (0x02U)
+#define BLE_OTAPC_OP_CODE_UPDATE_START                          (0x03U)
+#define BLE_OTAPC_OP_CODE_UPDATE_COMPLETE                       (0x04U)
+#define BLE_OTAPC_OP_CODE_RESET_REQUEST                         (0x05U)
 
 
 
-#define BLE_OTAPC_STATE_INIT                                    0x00
-#define BLE_OTAPC_STATE_CHAR_DISC_COMP                          0x01
-#define BLE_OTAPC_STATE_RETRY_CTRL_CCCD                         0x02
-#define BLE_OTAPC_STATE_WRITE_CTRL_CCCD                         0x03
-#define BLE_OTAPC_STATE_WAIT_SEC                                0x04
-#define BLE_OTAPC_STATE_CTRL_CCCD_ENABLED                       0x05
-#define BLE_OTAPC_STATE_RETRY_DATA_CCCD                         0x06
-#define BLE_OTAPC_STATE_WRITE_DATA_CCCD                         0x07
-#define BLE_OTAPC_STATE_DATA_CCCD_ENABLED                       0x08
-#define BLE_OTAPC_STATE_REQ_ALLOWED                             0x09
+#define BLE_OTAPC_STATE_INIT                                    (0x00U)
+#define BLE_OTAPC_STATE_CHAR_DISC_COMP                          (0x01U)
+#define BLE_OTAPC_STATE_RETRY_CTRL_CCCD                         (0x02U)
+#define BLE_OTAPC_STATE_WRITE_CTRL_CCCD                         (0x03U)
+#define BLE_OTAPC_STATE_WAIT_SEC                                (0x04U)
+#define BLE_OTAPC_STATE_CTRL_CCCD_ENABLED                       (0x05U)
+#define BLE_OTAPC_STATE_RETRY_DATA_CCCD                         (0x06U)
+#define BLE_OTAPC_STATE_WRITE_DATA_CCCD                         (0x07U)
+#define BLE_OTAPC_STATE_DATA_CCCD_ENABLED                       (0x08U)
+#define BLE_OTAPC_STATE_REQ_ALLOWED                             (0x09U)
 
 
 /**@defgroup UUID UUID
@@ -89,13 +89,13 @@
 /**@defgroup BLE_OTAPC_MAX_CONN_NBR Maximum connection number
  * @brief The definition of maximum allowed link number of OTA profile client connections.
  * @{ */
-#define BLE_OTAPC_MAX_CONN_NBR                BLE_GAP_MAX_LINK_NBR                     /**< Maximum allowed OTA profile client connections. */
+#define BLE_OTAPC_MAX_CONN_NBR                              BLE_GAP_MAX_LINK_NBR                     /**< Maximum allowed OTA profile client connections. */
 /** @} */
 
 /**@brief Enumeration type of BLE OTA profile characteristics. */
 typedef enum BLE_OTAPC_CharIndex_T
 {
-    OTAPC_INDEX_CHAR_FEATURE,                                /**< Index of OTA Feature Characteristic. */
+    OTAPC_INDEX_CHAR_FEATURE=0x01U,                          /**< Index of OTA Feature Characteristic. */
     OTAPC_INDEX_CHAR_CTRL,                                   /**< Index of OTA Control Point characteristic. */
     OTAPC_INDEX_CHAR_CTRL_CCCD,                              /**< Index of OTA Control Point CCCD. */
     OTAPC_INDEX_CHAR_DATA,                                   /**< Index of OTA Data Characteristic. */
@@ -109,7 +109,7 @@ typedef enum BLE_OTAPC_CharIndex_T
  * @{ */
 typedef enum BLE_OTAPC_State_T
 {
-    BLE_OTAPC_STATE_IDLE = 0x00,
+    BLE_OTAPC_STATE_IDLE = 0x00U,
     BLE_OTAPC_STATE_CONNECTED
 } BLE_OTAPC_State_T;
 /** @} */
@@ -129,7 +129,7 @@ typedef struct BLE_OTAPC_ConnList_T
     uint16_t                    attMtu;
     uint16_t                    maxFragSize;
     uint16_t                    accFragLen;
-    uint8_t                     connState;              /**< @ref BLE_OTAPC_STATE */
+    BLE_OTAPC_State_T           connState;              /**< @ref BLE_OTAPC_STATE */
     uint8_t                     fwExtFeature;
 } BLE_OTAPC_ConnList_T;
 
@@ -176,7 +176,7 @@ static void ble_otapc_InitCharList(uint8_t connIndex)
     s_otapcCharList[connIndex].connHandle = 0;
     s_otapcCharList[connIndex].p_charInfo = (BLE_DD_CharInfo_T *) &(s_otapcCharInfoList[connIndex]);
 
-    memset(s_otapcCharList[connIndex].p_charInfo, 0x00, sizeof(BLE_DD_CharInfo_T) * OTAPC_CHAR_NUM);
+    (void)memset(s_otapcCharList[connIndex].p_charInfo, 0x00, sizeof(BLE_DD_CharInfo_T) * (uint8_t)OTAPC_CHAR_NUM);
 }
 
 static BLE_OTAPC_ConnList_T *ble_otapc_GetConnListByHandle(uint16_t connHandle)
@@ -194,7 +194,7 @@ static BLE_OTAPC_ConnList_T *ble_otapc_GetConnListByHandle(uint16_t connHandle)
     return NULL;
 }
 
-static BLE_OTAPC_ConnList_T *ble_otapc_GetFreeConnList()
+static BLE_OTAPC_ConnList_T *ble_otapc_GetFreeConnList(void)
 {
     uint8_t i;
 
@@ -212,7 +212,7 @@ static BLE_OTAPC_ConnList_T *ble_otapc_GetFreeConnList()
 }
 
 
-static uint16_t ble_otapc_EnableCtrlCccd(BLE_OTAPC_ConnList_T *p_conn)
+static void ble_otapc_EnableCtrlCccd(BLE_OTAPC_ConnList_T *p_conn)
 {
     GATTC_WriteParams_T *p_writeParams;
     uint16_t result;
@@ -238,15 +238,9 @@ static uint16_t ble_otapc_EnableCtrlCccd(BLE_OTAPC_ConnList_T *p_conn)
         }
         OSAL_Free(p_writeParams);
     }
-    else
-    {
-        result = MBA_RES_OOM;
-    }
-
-    return result;
 }
 
-static uint16_t ble_otapc_EnableDataCccd(BLE_OTAPC_ConnList_T *p_conn)
+static void ble_otapc_EnableDataCccd(BLE_OTAPC_ConnList_T *p_conn)
 {
     GATTC_WriteParams_T *p_writeParams;
     uint16_t result;
@@ -272,12 +266,6 @@ static uint16_t ble_otapc_EnableDataCccd(BLE_OTAPC_ConnList_T *p_conn)
         }
         OSAL_Free(p_writeParams);
     }
-    else
-    {
-        result = MBA_RES_OOM;
-    }
-
-    return result;
 }
 
 static void ble_otapc_ProcGattReadResp(GATT_Event_T *p_event)
@@ -301,13 +289,13 @@ static void ble_otapc_ProcGattReadResp(GATT_Event_T *p_event)
             evt.eventId = BLE_OTAPC_EVT_FEATURE_IND;
             evt.eventField.evtFeatureInd.connHandle = p_conn->connHandle;
             evt.eventField.evtFeatureInd.suppImgType = p_event->eventField.onReadResp.readValue[0];
-            if (p_event->eventField.onReadResp.attrDataLength > 1)
+            if (p_event->eventField.onReadResp.attrDataLength > 1U)
 			{
                 evt.eventField.evtFeatureInd.fwExtFeaure = p_event->eventField.onReadResp.readValue[1];
             }
 			else
 			{
-                evt.eventField.evtFeatureInd.fwExtFeaure = 0x00;
+                evt.eventField.evtFeatureInd.fwExtFeaure = 0x00U;
 			}
 
             p_conn->fwExtFeature = evt.eventField.evtFeatureInd.fwExtFeaure;
@@ -358,6 +346,9 @@ static void ble_otapc_ProcGattWriteResp(GATT_Event_T *p_event)
         }
         break;
         default:
+        {
+            //Do nothing
+        }
         break;
     }
 }
@@ -432,6 +423,9 @@ static void ble_otapc_ProcGattNotification(GATT_Event_T *p_event)
             }
             break;
             default:
+            {
+                //Do nothing
+            }
             break;
         }
     }
@@ -469,7 +463,9 @@ static void ble_otapc_ProcGattErrorResp(GATT_Event_T *p_event)
     }
 
     if (s_otapcCharInfoList[p_conn->connIndex][OTAPC_INDEX_CHAR_CTRL_CCCD].charHandle != p_event->eventField.onError.attrHandle)
+    {
         return;
+    }
 
     if (p_conn->state != BLE_OTAPC_STATE_WRITE_CTRL_CCCD)
     {
@@ -480,8 +476,8 @@ static void ble_otapc_ProcGattErrorResp(GATT_Event_T *p_event)
     }
 
     /* Require security permission to access characteristics. Inform application. */
-    if ((p_event->eventField.onError.errCode == ATT_ERRCODE_INSUFFICIENT_ENCRYPTION) 
-        || (p_event->eventField.onError.errCode == ATT_ERRCODE_INSUFFICIENT_AUTHENTICATION))
+    if ((p_event->eventField.onError.errCode == ATT_ERR_INSUF_ENC) 
+        || (p_event->eventField.onError.errCode == ATT_ERR_INSUF_AUTHN))
     {
         p_conn->state = BLE_OTAPC_STATE_WAIT_SEC;
     
@@ -526,7 +522,7 @@ static void ble_otapc_GapEventProcess(BLE_GAP_Event_T *p_event)
             p_conn = ble_otapc_GetConnListByHandle(p_event->eventField.evtDisconnect.connHandle);
             if (p_conn != NULL)
             {
-                memset(p_conn, 0x00, sizeof(BLE_OTAPC_ConnList_T));
+                (void)memset(p_conn, 0x00, sizeof(BLE_OTAPC_ConnList_T));
                 ble_otapc_InitCharList(p_conn->connIndex);
             }
         }
@@ -534,7 +530,7 @@ static void ble_otapc_GapEventProcess(BLE_GAP_Event_T *p_event)
 
         case BLE_GAP_EVT_ENCRYPT_STATUS:
         {
-            if (p_event->eventField.evtEncryptStatus.status == BLE_GAP_ENCRYPT_SUCCESS)
+            if (p_event->eventField.evtEncryptStatus.status == GAP_STATUS_SUCCESS)
             {
                 p_conn = ble_otapc_GetConnListByHandle(p_event->eventField.evtEncryptStatus.connHandle);
                 if (p_conn != NULL)
@@ -569,6 +565,9 @@ static void ble_otapc_GapEventProcess(BLE_GAP_Event_T *p_event)
         break;
 
         default:
+        {
+            //Do nothing
+        }
         break;
     }
 }
@@ -649,7 +648,10 @@ static void ble_otapc_GattEventProcess(GATT_Event_T *p_event)
         break;
 
         default:
-            break;
+        {
+            //Do nothing
+        }
+        break;
     }
 }
 
@@ -664,7 +666,7 @@ uint16_t BLE_OTAPC_Init(void)
     uint8_t i;
     uint8_t svc[] = {UUID_OTA_SERVICE_16};
         
-    memset(s_otapcConnList, 0x00, sizeof(s_otapcConnList));
+    (void)memset(s_otapcConnList, 0x00, sizeof(s_otapcConnList));
 
     for (i = 0; i < BLE_OTAPC_MAX_CONN_NBR; i++)
     {
@@ -672,11 +674,11 @@ uint16_t BLE_OTAPC_Init(void)
     }
 
     disc.svcUuid.uuidLength = ATT_UUID_LENGTH_16;
-    memcpy(disc.svcUuid.uuid, svc, ATT_UUID_LENGTH_16);
+    (void)memcpy(disc.svcUuid.uuid, svc, ATT_UUID_LENGTH_16);
     disc.p_discInfo = NULL;
     disc.p_discChars = s_otapcDiscCharList;
     disc.p_charList = s_otapcCharList;
-    disc.discCharsNum = OTAPC_CHAR_NUM;
+    disc.discCharsNum = (uint8_t)OTAPC_CHAR_NUM;
     return BLE_DD_ServiceDiscoveryRegister(&disc);
 }
 
@@ -697,6 +699,9 @@ void BLE_OTAPC_BleEventHandler(STACK_Event_T *p_stackEvent)
         break;
 
         default:
+        {
+            //Do nothing
+        }
         break;
     }
 }
@@ -713,7 +718,9 @@ uint16_t BLE_OTAPC_FeatureDisc(uint16_t connHandle)
     }
 
     if (p_conn->state < BLE_OTAPC_STATE_DATA_CCCD_ENABLED)
+    {
         return MBA_RES_BAD_STATE;
+    }
 
     return GATTC_Read(connHandle, s_otapcCharInfoList[p_conn->connIndex][OTAPC_INDEX_CHAR_FEATURE].charHandle, 0);
 }
@@ -749,14 +756,14 @@ uint16_t BLE_OTAPC_UpdateRequest(uint16_t connHandle, BLE_OTAPC_Req_T * p_req)
         U32_TO_STREAM_LE(&p_buf, p_req->fwImageVer);
         U8_TO_STREAM(&p_buf, p_req->fwImageEnc);
 
-        if (p_conn->fwExtFeature & BLE_OTAPC_FW_FEATURE_MASK1)
+        if ((p_conn->fwExtFeature & BLE_OTAPC_FW_FEATURE_MASK1)!=0U)
         {
             U16_TO_STREAM_LE(&p_buf, p_req->fwImageChksum);
             U8_TO_STREAM(&p_buf, p_req->fwImageFileType);
             U16_TO_STREAM_LE(&p_buf, p_req->fwImageCrc16);
         }
 
-        p_writeParams->charLength = p_buf - p_writeParams->charValue;
+        p_writeParams->charLength = (uint16_t)((uint32_t)p_buf - (uint32_t)p_writeParams->charValue);
 
 
         p_writeParams->writeType = ATT_WRITE_REQ;
@@ -804,7 +811,7 @@ uint16_t BLE_OTAPC_UpdateStart(uint16_t connHandle, uint8_t imgType)
         p_buf = p_writeParams->charValue;
         U8_TO_STREAM(&p_buf, BLE_OTAPC_OP_CODE_UPDATE_START);
         U8_TO_STREAM(&p_buf, imgType);
-        p_writeParams->charLength = p_buf - p_writeParams->charValue;
+        p_writeParams->charLength = (uint16_t)((uint32_t)p_buf - (uint32_t)p_writeParams->charValue);
 
 
         p_writeParams->writeType = ATT_WRITE_REQ;
@@ -851,7 +858,7 @@ uint16_t BLE_OTAPC_FragmentDist(uint16_t connHandle, uint16_t length, uint8_t *p
     {
         p_writeParams->charHandle = s_otapcCharInfoList[p_conn->connIndex][OTAPC_INDEX_CHAR_DATA].charHandle;
         
-        memcpy(p_writeParams->charValue, p_data, length);
+        (void)memcpy(p_writeParams->charValue, p_data, length);
         p_writeParams->charLength = length;
         p_writeParams->writeType = ATT_WRITE_CMD;
         p_writeParams->valueOffset = 0x0000;
@@ -899,7 +906,7 @@ uint16_t BLE_OTAPC_UpdateComplete(uint16_t connHandle)
         
         p_buf = p_writeParams->charValue;
         U8_TO_STREAM(&p_buf, BLE_OTAPC_OP_CODE_UPDATE_COMPLETE);
-        p_writeParams->charLength = p_buf - p_writeParams->charValue;
+        p_writeParams->charLength = (uint16_t)((uint32_t)p_buf - (uint32_t)p_writeParams->charValue);
 
 
         p_writeParams->writeType = ATT_WRITE_REQ;
@@ -946,7 +953,7 @@ uint16_t BLE_OTAPC_DeviceReset(uint16_t connHandle)
         
         p_buf = p_writeParams->charValue;
         U8_TO_STREAM(&p_buf, BLE_OTAPC_OP_CODE_RESET_REQUEST);
-        p_writeParams->charLength = p_buf - p_writeParams->charValue;
+        p_writeParams->charLength = (uint16_t)((uint32_t)p_buf - (uint32_t)p_writeParams->charValue);
 
 
         p_writeParams->writeType = ATT_WRITE_REQ;
@@ -980,7 +987,7 @@ void BLE_OTAPC_BleDdEventHandler(BLE_DD_Event_T *p_event)
             if (p_conn != NULL)
             {
                 /* By checking the discovered handles exist or not. */
-                if (s_otapcCharList[p_conn->connIndex].p_charInfo[OTAPC_INDEX_CHAR_FEATURE].charHandle != 0)
+                if (s_otapcCharList[p_conn->connIndex].p_charInfo[OTAPC_INDEX_CHAR_FEATURE].charHandle != 0U)
                 {
                     p_conn->state = BLE_OTAPC_STATE_CHAR_DISC_COMP;
                     ble_otapc_EnableCtrlCccd(p_conn);
@@ -996,6 +1003,9 @@ void BLE_OTAPC_BleDdEventHandler(BLE_DD_Event_T *p_event)
         break;
 
         default:
+        {
+            //Do nothing
+        }
         break;
     }
 }

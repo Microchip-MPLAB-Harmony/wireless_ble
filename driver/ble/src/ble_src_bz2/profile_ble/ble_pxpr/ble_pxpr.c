@@ -61,9 +61,9 @@
 /**@defgroup BLE_PXPR_RETRY_TYPE Retrying type 
  * @brief The definition of BLE pxpr retry type
  * @{ */
-#define BLE_PXPR_RETRY_TYPE_WRITE_RESP         0x01    /**< Definition of response retry type write response. */
-#define BLE_PXPR_RETRY_TYPE_READ_RESP          0x02    /**< Definition of response retry type read response. */
-#define BLE_PXPR_RETRY_TYPE_ERR                0x03    /**< Definition of error retry type. */
+#define BLE_PXPR_RETRY_TYPE_WRITE_RESP         (0x01U)    /**< Definition of response retry type write response. */
+#define BLE_PXPR_RETRY_TYPE_READ_RESP          (0x02U)    /**< Definition of response retry type read response. */
+#define BLE_PXPR_RETRY_TYPE_ERR                (0x03U)    /**< Definition of error retry type. */
 /** @} */
 
 /**@addtogroup BLE_PXPR_DEFINES Defines
@@ -78,7 +78,7 @@
 
 typedef enum BLE_PXPR_State_T
 {
-    BLE_PXPR_STATE_IDLE = 0x00,
+    BLE_PXPR_STATE_IDLE = 0x00U,
     BLE_PXPR_STATE_CONNECTED
 } BLE_PXPR_State_T;
 
@@ -163,7 +163,7 @@ static BLE_PXPR_ConnList_T *ble_pxpr_GetFreeConnList(void)
 
     return NULL;
 }
-static void ble_pxpr_ConveyEvent(uint8_t eventId, uint8_t *p_eventField, uint8_t eventFieldLen)
+static void ble_pxpr_ConveyEvent(BLE_PXPR_EventId_T eventId, uint8_t *p_eventField, uint8_t eventFieldLen)
 {
     if (sp_pxprCbRoutine != NULL)
     {
@@ -179,36 +179,39 @@ static void ble_pxpr_ProcWrite(GATT_Event_T *p_event)
 {
     switch(p_event->eventField.onWrite.attrHandle)
     {
-        case LLS_HDL_CHARVAL_ALERT_LEVEL:
+        case (uint16_t)LLS_HDL_CHARVAL_ALERT_LEVEL:
         {
             uint8_t *p_value = p_event->eventField.onWrite.writeValue;
             BLE_PXPR_EvtAlertLevelWriteInd_T evtAlrtLvWriteInd;
 
-            STREAM_TO_U8(&s_pxprLlsAlertLevel, &p_value);
+            STREAM_TO_U8((uint8_t*)&s_pxprLlsAlertLevel, &p_value);
 
             evtAlrtLvWriteInd.connHandle = p_event->eventField.onWrite.connHandle;
             evtAlrtLvWriteInd.alertLevel = s_pxprLlsAlertLevel;
-            ble_pxpr_ConveyEvent(BLE_PXPR_EVT_LLS_ALERT_LEVEL_WRITE_IND, (uint8_t *) &evtAlrtLvWriteInd, sizeof(evtAlrtLvWriteInd));
+            ble_pxpr_ConveyEvent(BLE_PXPR_EVT_LLS_ALERT_LEVEL_WRITE_IND, (uint8_t *) &evtAlrtLvWriteInd, (uint8_t)sizeof(evtAlrtLvWriteInd));
         }
         break;
 
         #ifdef BLE_PXPR_IAS_ENABLE
-        case IAS_HDL_CHARVAL_ALERT_LEVEL:
+        case (uint16_t)IAS_HDL_CHARVAL_ALERT_LEVEL:
         {
             uint8_t *p_value = p_event->eventField.onWrite.writeValue;
-            uint8_t alertLevel;
+            BLE_PXPR_AlertLevel_T alertLevel;
             BLE_PXPR_EvtAlertLevelWriteInd_T evtAlrtLvWriteInd;
             
-            STREAM_TO_U8(&alertLevel, &p_value);
+            STREAM_TO_U8((uint8_t *)&alertLevel, &p_value);
 
             evtAlrtLvWriteInd.connHandle = p_event->eventField.onWrite.connHandle;
             evtAlrtLvWriteInd.alertLevel = alertLevel;
-            ble_pxpr_ConveyEvent(BLE_PXPR_EVT_IAS_ALERT_LEVEL_WRITE_IND, (uint8_t *) &evtAlrtLvWriteInd, sizeof(evtAlrtLvWriteInd));
+            ble_pxpr_ConveyEvent(BLE_PXPR_EVT_IAS_ALERT_LEVEL_WRITE_IND, (uint8_t *) &evtAlrtLvWriteInd, (uint8_t)sizeof(evtAlrtLvWriteInd));
         }
         break;
         #endif
 
         default:
+        {
+            //Do nothing
+        }
         break;
     }
 }
@@ -230,7 +233,7 @@ static void ble_pxpr_SendReadResponse(GATT_Event_T *p_event, uint8_t *p_value, u
 
     if (p_event->eventField.onRead.readType == ATT_READ_REQ)
     {
-        p_conn->p_retryData = OSAL_Malloc(sizeof(GATTS_SendReadRespParams_T) - (BLE_ATT_MAX_MTU_LEN - ATT_READ_RESP_HEADER_SIZE) + len);
+        p_conn->p_retryData = OSAL_Malloc(sizeof(GATTS_SendReadRespParams_T) - (BLE_ATT_MAX_MTU_LEN - ATT_READ_RESP_HEADER_SIZE) + (uint32_t)len);
         if (p_conn->p_retryData == NULL)
         {
             ble_pxpr_ConveyEvent(BLE_PXPR_EVT_ERR_UNSPECIFIED_IND, NULL, 0);
@@ -255,7 +258,7 @@ static void ble_pxpr_SendReadResponse(GATT_Event_T *p_event, uint8_t *p_value, u
         p_errRespParams = (GATTS_SendErrRespParams_T *)p_conn->p_retryData;
         p_errRespParams->reqOpcode = p_event->eventField.onRead.readType;
         p_errRespParams->attrHandle = p_event->eventField.onRead.attrHandle;
-        p_errRespParams->errorCode = ATT_ERRCODE_REQUEST_NOT_SUPPORT;
+        p_errRespParams->errorCode = ATT_ERR_REQUEST_NOT_SUPPORT;
         status = GATTS_SendErrorResponse(p_event->eventField.onRead.connHandle, p_errRespParams);
     }
 
@@ -269,14 +272,14 @@ static void ble_pxpr_ProcRead(GATT_Event_T *p_event)
 {
     switch(p_event->eventField.onRead.attrHandle)
     {
-        case LLS_HDL_CHARVAL_ALERT_LEVEL:
+        case (uint16_t)LLS_HDL_CHARVAL_ALERT_LEVEL:
         {
             ble_pxpr_SendReadResponse(p_event, &s_pxprLlsAlertLevel, 1);
         }
         break;
 
         #ifdef BLE_PXPR_TPS_ENABLE
-        case TPS_HDL_CHARVAL_TXPOWER_LEVEL:
+        case (uint16_t)TPS_HDL_CHARVAL_TXPOWER_LEVEL:
         {
             ble_pxpr_SendReadResponse(p_event, (uint8_t *)&s_pxprTpsTxPowerLevel, 1);
         }
@@ -284,6 +287,9 @@ static void ble_pxpr_ProcRead(GATT_Event_T *p_event)
         #endif
 
         default:
+        {
+            //Do nothing
+        }
         break;
     }
 }
@@ -370,6 +376,9 @@ static void ble_pxpr_GapEventProcess(BLE_GAP_Event_T *p_event)
         }
         break;
         default:
+        {
+            //Do nothing
+        }
         break;
     }
 }
@@ -391,6 +400,9 @@ static void ble_pxpr_GattEventProcess(GATT_Event_T *p_event)
         break;
 
         default:
+        {
+            //Do nothing
+        }
         break;
     }
 }
@@ -463,6 +475,9 @@ void BLE_PXPR_BleEventHandler(STACK_Event_T *p_stackEvent)
         break;
 
         default:
+        {
+            //Do nothing
+        }
         break;
     }
 }

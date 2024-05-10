@@ -67,11 +67,11 @@ static const uint8_t s_svcUuidTps[ATT_UUID_LENGTH_2] =                 {UINT16_T
 static const uint8_t s_chUuidTxPowerLevel[ATT_UUID_LENGTH_2] =         {UINT16_TO_BYTES(UUID_TXPOWER_LEVEL)};
 
 /* Tx Power Service Declaration */
-static uint16_t s_svcUuidTpsLen = sizeof(s_svcUuidTps);
+static uint16_t s_svcUuidTpsLen = (uint16_t)sizeof(s_svcUuidTps);
 
 /* Tx Power Level Characteristic Declaration */
 static const uint8_t s_charTxPowerLevel[] = {(ATT_PROP_READ), UINT16_TO_BYTES(TPS_HDL_CHARVAL_TXPOWER_LEVEL), UINT16_TO_BYTES(UUID_TXPOWER_LEVEL)};
-static const uint16_t s_charTxPowerLevelLen = sizeof (s_charTxPowerLevel);
+static const uint16_t s_charTxPowerLevelLen = (uint16_t)sizeof (s_charTxPowerLevel);
 
 /* Tx Power Level Characteristic Value */
 static uint8_t s_txPowerLevelVal[1] = {0};
@@ -85,7 +85,7 @@ static GATTS_Attribute_T s_tpsList[] = {
         (uint8_t *) g_gattUuidPrimSvc,
         (uint8_t *) s_svcUuidTps,
         (uint16_t *) & s_svcUuidTpsLen,
-        sizeof (s_svcUuidTps),
+        (uint16_t)sizeof (s_svcUuidTps),
         0,
         PERMISSION_READ
     },
@@ -94,7 +94,7 @@ static GATTS_Attribute_T s_tpsList[] = {
         (uint8_t *) g_gattUuidChar,
         (uint8_t *) s_charTxPowerLevel,
         (uint16_t *) & s_charTxPowerLevelLen,
-        sizeof (s_charTxPowerLevel),
+        (uint16_t)sizeof (s_charTxPowerLevel),
         0,
         PERMISSION_READ
     },
@@ -103,7 +103,7 @@ static GATTS_Attribute_T s_tpsList[] = {
         (uint8_t *) s_chUuidTxPowerLevel,
         (uint8_t *) s_txPowerLevelVal,
         (uint16_t *) & s_txPowerLevelValLen,
-        sizeof(s_txPowerLevelVal),
+        (uint16_t)sizeof(s_txPowerLevelVal),
         (SETTING_MANUAL_READ_RSP),
         PERMISSION_READ
     },
@@ -115,8 +115,8 @@ static GATTS_Service_T s_svcTps =
     NULL,
     (GATTS_Attribute_T *) s_tpsList,
     NULL,
-    TPS_START_HDL,
-    TPS_END_HDL,
+    (uint16_t)TPS_START_HDL,
+    (uint16_t)TPS_END_HDL,
     0
 };
 
@@ -128,5 +128,5 @@ static GATTS_Service_T s_svcTps =
 
 uint16_t BLE_TPS_Add(void)
 {
-    return GATTS_AddService(&s_svcTps, (TPS_END_HDL - TPS_START_HDL + 1));
+    return GATTS_AddService(&s_svcTps, (uint8_t)((uint16_t)TPS_END_HDL - (uint16_t)TPS_START_HDL + 1U));
 }

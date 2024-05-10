@@ -65,16 +65,16 @@
 /**@defgroup BLE_ANPC_UUID_ANS_SVC_UUID BLE_ANPC_UUID_ANS_SVC_UUID
  * @brief The definition of ANPC service UUID.
  * @{ */
-#define BLE_ANPC_UUID_ANS_SVC                (0x1811)   /**< ANPC procdure: Idle. */
+#define BLE_ANPC_UUID_ANS_SVC                 (0x1811U)   /**< ANPC procdure: Idle. */
 /** @} */
 
 /**@defgroup BLE_ANPC_PROC BLE_ANPC_PROC
  * @brief The definition of ANPC procedure in connect/disconnect process.
  * @{ */
-#define BLE_ANPC_ANPC_PROC_IDLE                0x00    /**< ANPC procdure: Idle. */
-#define BLE_ANPC_ANPC_PROC_ENABLE_NEW_CCCD     0x01    /**< ANPC procdure: Enable NEW CCCD. */
-#define BLE_ANPC_ANPC_PROC_ENABLE_UNREAD_CCCD  0x02    /**< ANPC procdure: Enable UNREAD CCCD. */
-#define BLE_ANPC_ANPC_PROC_ENABLE_SESSION      0x03    /**< ANPC procdure: Enable Control Point CCCD. */
+#define BLE_ANPC_ANPC_PROC_IDLE                (0x00U)    /**< ANPC procdure: Idle. */
+#define BLE_ANPC_ANPC_PROC_ENABLE_NEW_CCCD     (0x01U)    /**< ANPC procdure: Enable NEW CCCD. */
+#define BLE_ANPC_ANPC_PROC_ENABLE_UNREAD_CCCD  (0x02U)    /**< ANPC procdure: Enable UNREAD CCCD. */
+#define BLE_ANPC_ANPC_PROC_ENABLE_SESSION      (0x03U)    /**< ANPC procdure: Enable Control Point CCCD. */
 /** @} */
 
 /**@defgroup BLE_ANPC_MAX_CONN_NBR BLE_ANPC_MAX_CONN_NBR
@@ -100,7 +100,7 @@ typedef enum BLE_ANPC_CharAlertNotiIndex_T
  * @{ */
 typedef enum BLE_ANPC_State_T
 {
-    BLE_ANPC_STATE_IDLE = 0x00,   /**< Default state (Disconnected). */
+    BLE_ANPC_STATE_IDLE = 0x00U,   /**< Default state (Disconnected). */
     BLE_ANPC_STATE_CONNECTED      /**< Connected. */
 } BLE_ANPC_State_T;
 /** @} */
@@ -108,7 +108,7 @@ typedef enum BLE_ANPC_State_T
 /**@brief The structure contains information about BLE ANPC profile connection parameters for recording connection information. */
 typedef struct BLE_ANPC_ConnList_T
 {
-    int8_t            connIndex;  /**< Connection index associated with this connection. */
+    uint8_t           connIndex;  /**< Connection index associated with this connection. */
     BLE_ANPC_State_T  state;      /**< State associated with this connection. */
     uint16_t          connHandle; /**< Connection handle associated with this connection. */
 } BLE_ANPC_ConnList_T;
@@ -198,7 +198,7 @@ static void ble_anpc_InitAnsCharList(uint8_t connIndex)
 {
     (void)memset(&s_anpcAnsDiscInfo[connIndex], 0x0, sizeof(BLE_DD_DiscInfo_T));
     (void)memset(&s_anpcAnsCharList[connIndex], 0x0, sizeof(BLE_DD_CharList_T));
-    (void)memset(s_anpcAnsCharInfoList[connIndex], 0x0, sizeof(BLE_DD_CharInfo_T) * ANPC_CHARAN_CHAR_NUM);
+    (void)memset(s_anpcAnsCharInfoList[connIndex], 0x0, sizeof(BLE_DD_CharInfo_T) * (uint8_t)ANPC_CHARAN_CHAR_NUM);
     s_anpcAnsCharList[connIndex].p_charInfo = s_anpcAnsCharInfoList[connIndex];
 }
 
@@ -461,6 +461,9 @@ static void ble_anpc_GattEventProcess(GATT_Event_T *p_event)
         break;
 
         default:
+        {
+            //Do nothing
+        }
         break;
     }
 }
@@ -498,6 +501,9 @@ static void ble_anpc_GapEventProcess(BLE_GAP_Event_T *p_event)
         break;
 
         default:
+        {
+            //Do nothing
+        }
         break;
     }
 }
@@ -518,7 +524,7 @@ uint16_t BLE_ANPC_Init(void)
     anpDisc.p_discInfo = s_anpcAnsDiscInfo;
     anpDisc.p_discChars = anpcDiscAlertNotiCharList;
     anpDisc.p_charList = s_anpcAnsCharList;
-    anpDisc.discCharsNum = ANPC_CHARAN_CHAR_NUM;
+    anpDisc.discCharsNum = (uint8_t)ANPC_CHARAN_CHAR_NUM;
     return BLE_DD_ServiceDiscoveryRegister(&anpDisc);
 }
 
@@ -561,7 +567,7 @@ uint16_t BLE_ANPC_WriteAncp(uint16_t connHandle, uint8_t cmdId, uint8_t catId)
     p_writeParams = OSAL_Malloc(sizeof(GATTC_WriteParams_T));
     if (p_writeParams == NULL)
     {
-        result = MBA_RES_OOM;
+        return MBA_RES_OOM;
     }
     charHandle = s_anpcAnsCharList[p_conn->connIndex].p_charInfo[ANPC_INDEX_CHARAN_ANCP].charHandle;
     if (charHandle == 0U)
@@ -584,7 +590,7 @@ uint16_t BLE_ANPC_WriteAncp(uint16_t connHandle, uint8_t cmdId, uint8_t catId)
 
 uint16_t BLE_ANPC_GetCharList(uint16_t connHandle, uint16_t charUuid, BLE_ANPC_CharList_T *p_charList)
 {
-    uint8_t             num;
+    uint8_t             idx;
     uint16_t            desUuid;
     BLE_ANPC_ConnList_T *p_conn = ble_anpc_GetConnListByHandle(connHandle);
 
@@ -596,15 +602,15 @@ uint16_t BLE_ANPC_GetCharList(uint16_t connHandle, uint16_t charUuid, BLE_ANPC_C
         return MBA_RES_INVALID_PARA;
     } 
     (void)memset(p_charList, 0, sizeof(BLE_ANPC_CharList_T)); 
-    for (num = 0; num < ANPC_CHARAN_CHAR_NUM; num++)
+    for (idx = 0; idx < (uint8_t)ANPC_CHARAN_CHAR_NUM; idx++)
     {
-        BUF_LE_TO_U16(&desUuid, anpcDiscAlertNotiCharList[num]->p_uuid->uuid);
+        BUF_LE_TO_U16(&desUuid, anpcDiscAlertNotiCharList[idx]->p_uuid->uuid);
         if ((desUuid == charUuid) &&
-            ((anpcDiscAlertNotiCharList[num]->settings & CHAR_SET_DESCRIPTOR) != CHAR_SET_DESCRIPTOR))
+            ((anpcDiscAlertNotiCharList[idx]->settings & CHAR_SET_DESCRIPTOR) != CHAR_SET_DESCRIPTOR))
         {
-            p_charList->attrHandle = s_anpcAnsCharList[p_conn->connIndex].p_charInfo[num].attrHandle; 
-            p_charList->property   = s_anpcAnsCharList[p_conn->connIndex].p_charInfo[num].property;
-            p_charList->charHandle = s_anpcAnsCharList[p_conn->connIndex].p_charInfo[num].charHandle;
+            p_charList->attrHandle = s_anpcAnsCharList[p_conn->connIndex].p_charInfo[idx].attrHandle; 
+            p_charList->property   = s_anpcAnsCharList[p_conn->connIndex].p_charInfo[idx].property;
+            p_charList->charHandle = s_anpcAnsCharList[p_conn->connIndex].p_charInfo[idx].charHandle;
             break;
         }
     }
@@ -613,7 +619,7 @@ uint16_t BLE_ANPC_GetCharList(uint16_t connHandle, uint16_t charUuid, BLE_ANPC_C
 
 uint16_t BLE_ANPC_GetDescList(uint16_t connHandle, BLE_ANPC_DescList_T *p_descList)
 {
-    uint8_t             num, descNum = 0;
+    uint8_t             idx, descNum = 0;
     BLE_ANPC_ConnList_T *p_conn = ble_anpc_GetConnListByHandle(connHandle);
 
     if ((p_conn == NULL) || (p_descList == NULL))
@@ -621,16 +627,16 @@ uint16_t BLE_ANPC_GetDescList(uint16_t connHandle, BLE_ANPC_DescList_T *p_descLi
         return MBA_RES_INVALID_PARA;
     } 
     (void)memset(p_descList, 0, sizeof(BLE_ANPC_DescList_T)); 
-    for (num = 0; num < ANPC_CHARAN_CHAR_NUM; num++)
+    for (idx = 0; idx < (uint8_t)ANPC_CHARAN_CHAR_NUM; idx++)
     {
-        if ((anpcDiscAlertNotiCharList[num]->settings & CHAR_SET_DESCRIPTOR) && (s_anpcAnsCharList[p_conn->connIndex].p_charInfo[num].charHandle != 0))
+        if (((anpcDiscAlertNotiCharList[idx]->settings & CHAR_SET_DESCRIPTOR) != 0U) && (s_anpcAnsCharList[p_conn->connIndex].p_charInfo[idx].charHandle != 0U))
         {
-            p_descList->descInfo[descNum].attrHandle = s_anpcAnsCharList[p_conn->connIndex].p_charInfo[num].charHandle;
-            VARIABLE_COPY_TO_BUF(&p_descList->descInfo[descNum].uuid, anpcDiscAlertNotiCharList[num]->p_uuid->uuid, anpcDiscAlertNotiCharList[num]->p_uuid->uuidLength);
+            p_descList->descInfo[descNum].attrHandle = s_anpcAnsCharList[p_conn->connIndex].p_charInfo[idx].charHandle;
+            VARIABLE_COPY_TO_BUF(&p_descList->descInfo[descNum].uuid, anpcDiscAlertNotiCharList[idx]->p_uuid->uuid, anpcDiscAlertNotiCharList[idx]->p_uuid->uuidLength);
             descNum++;
         }
     }
-    p_descList->num = descNum; 
+    p_descList->totalNum = descNum; 
     return MBA_RES_SUCCESS;
 }
 
@@ -648,7 +654,7 @@ void BLE_ANPC_BleDdEventHandler(BLE_DD_Event_T *p_event)
                 ble_anpc_ConveyEvent(&evt);
                 return;
             } 
-            if (s_anpcAnsCharList[p_conn->connIndex].p_charInfo[ANPC_INDEX_CHARAN_ANCP].charHandle != 0)
+            if (s_anpcAnsCharList[p_conn->connIndex].p_charInfo[ANPC_INDEX_CHARAN_ANCP].charHandle != 0U)
             {
                 evt.eventId = BLE_ANPC_EVT_DISC_COMPLETE_IND;
                 evt.eventField.evtDiscComplete.connHandle  = p_event->eventField.evtDiscResult.connHandle;
@@ -660,6 +666,9 @@ void BLE_ANPC_BleDdEventHandler(BLE_DD_Event_T *p_event)
         break;
 
         default:
+        {
+            //Do nothing
+        }
         break;
     }
 }
@@ -681,6 +690,9 @@ void BLE_ANPC_BleEventHandler(STACK_Event_T *p_stackEvent)
         break;
 
         default:
+        {
+            //Do nothing
+        }
         break;
     }
 }

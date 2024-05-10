@@ -38,7 +38,7 @@ bleUtilDfu.setLabel('DFU module')
 bleUtilDfu.setDefaultValue(False)
 
 # External Flash Setting
-if( processor in pic32cx_bz3_family):
+if devFamily == "pic32cx_bz3_family":
     bleUtilDfuExt = libBLEStackComponent.createBooleanSymbol('BOOL_BLE_UTIL_DFU_EXT_FLASH', bleUtilDfu)
     bleUtilDfuExt.setLabel('Enable external flash')
     bleUtilDfuExt.setDefaultValue(False)

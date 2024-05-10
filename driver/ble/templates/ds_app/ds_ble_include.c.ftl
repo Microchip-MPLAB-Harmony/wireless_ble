@@ -3,6 +3,6 @@
 <#else>
 #include "app_ble_hci.h"
 </#if>
-<#if GAP_DSADV_EN>
+<#if GAP_ADVERTISING && (!BOOL_GAP_EXT_ADV) && GAP_DSADV_EN>
 #include "app_ble_dsadv.h"
 </#if>

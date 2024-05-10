@@ -1,125 +1,31 @@
-global gapGenTxPwrCap
-def gapGenTxPwrCap():
-    global devId
-    global txPwrCap
-    
-    if devId == 451:
-        if (Database.getSymbolValue("pic32cx_bz2_devsupport", 'ETSI_REGION') == True 
-            or Database.getSymbolValue("pic32cx_bz2_devsupport", 'KOREA_REGION') == True):
-            txPwrCap = 9
-        elif Database.getSymbolValue("pic32cx_bz2_devsupport", 'JAPAN_REGION') == True:
-            txPwrCap = 12
-        else:
-            txPwrCap = 15
-    elif devId == 450:
-        if (Database.getSymbolValue("pic32cx_bz2_devsupport", 'ETSI_REGION') == True 
-            or Database.getSymbolValue("pic32cx_bz2_devsupport", 'KOREA_REGION') == True
-            or Database.getSymbolValue("pic32cx_bz2_devsupport", 'JAPAN_REGION') == True):
-            txPwrCap = 11
-        else:
-            txPwrCap = 15
-    else: # pic32cx_bz3_family will be redefined in the future
-        if Database.getSymbolValue("pic32cx_bz3_devsupport", 'ETSI_REGION') == True:
-            txPwrCap = 11
-        else:
-            txPwrCap = 15
-        
-    #print "gapGenTxPwrCap devId={}, txPwrCap={}".format(devId,txPwrCap)
-
-global gapGenDefTxPwr
-def gapGenDefTxPwr(isLegacyAdv):
-    global devId
-    global txPwrCap
-
-    #print "gapGenDefTxPwr {}".format(devId)
-
-    if devId == 451:
-        if isLegacyAdv:
-            return txPwrCap
-        else:
-            return 15
-    elif devId == 450:
-        return 11
-    else:   #pic32cx_bz3_family
-        return 13
-
-global gapGenMaxTxPwr
-def gapGenMaxTxPwr(isLegacyAdv):
-    global devId
-    global antennaGain
-    global txPwrCap
-
-    #print "gapGenMaxTxPwr dev:{}, cap:{}, gain:{}".format(devId, txPwrCap, antennaGain)
-
-    if devId == 451:
-        if isLegacyAdv and txPwrCap < 15:
-            return min(12 + antennaGain, txPwrCap)
-        else:
-            return 12 + antennaGain
-    elif devId == 450:
-        if isLegacyAdv and txPwrCap < 15:
-            return min(6 + antennaGain, txPwrCap)
-        else:
-            return 6 + antennaGain
-    else:   #pic32cx_bz3_family
-        if isLegacyAdv and txPwrCap < 15:
-            return min(10 + antennaGain, 11)
-        else:
-            return 10 + antennaGain
-
-global gapGenMinTxPwr
-def gapGenMinTxPwr():
-    global devId
-    global antennaGain
-
-    if devId == 451:
-        return -29 + antennaGain
-    elif devId == 450:
-        return -25 + antennaGain
-    else:   #pic32cx_bz3_family
-        return -25 + antennaGain
-
-
 global gapConfigTxPwr
-def gapConfigTxPwr(component, regionChange):
-    global devId
-
-    if regionChange == True:
-        gapGenTxPwrCap()
+def gapConfigTxPwr(component, tpMaxNonFHSS, tpMaxFHSS, tpMin):
 
     gapTxPwr = component.getSymbolByID('GAP_CONN_TX_PWR')
-    gapTxPwr.setMax(gapGenMaxTxPwr(False))
-    gapTxPwr.setMin(gapGenMinTxPwr())
+    gapTxPwr.setMax(tpMaxFHSS)
+    gapTxPwr.setMin(tpMin)
+    gapTxPwr.setValue(gapTxPwr.getMax())
 
     gapTxPwr = component.getSymbolByID('GAP_ADV_TX_PWR')
-    gapTxPwr.setMax(gapGenMaxTxPwr(True))
-    gapTxPwr.setMin(gapGenMinTxPwr())
-    if devId == 451 and regionChange == True:
-        if gapTxPwr.getDefaultValue() != gapGenDefTxPwr(True):
-            # we cannot change symbol's default value here, so use dynamical value to simulate default value.
-            gapTxPwr.setValue(gapGenDefTxPwr(True))
-        else:
-            gapTxPwr.clearValue()
+    gapTxPwr.setMax(tpMaxNonFHSS)
+    gapTxPwr.setMin(tpMin)
+    gapTxPwr.setValue(gapTxPwr.getMax())
 
     gapTxPwr = component.getSymbolByID('GAP_EXT_ADV_TX_POWER')
-    gapTxPwr.setMax(gapGenMaxTxPwr(component.getSymbolValue('GAP_EXT_ADV_EVT_PROPERTIES') < 3))
-    gapTxPwr.setMin(gapGenMinTxPwr())
-    if devId == 451 and regionChange == True:
-        if component.getSymbolValue('GAP_EXT_ADV_EVT_PROPERTIES') < 3:
-            if gapTxPwr.getDefaultValue() != gapGenDefTxPwr(True):
-                gapTxPwr.setValue(gapGenDefTxPwr(True))
-            else:
-                gapTxPwr.clearValue()
+    if (component.getSymbolValue('GAP_EXT_ADV_EVT_PROPERTIES') < 3):
+        gapTxPwr.setMax(tpMaxNonFHSS)
+    else:
+        gapTxPwr.setMax(tpMaxFHSS)
+    gapTxPwr.setMin(tpMin)
+    gapTxPwr.setValue(gapTxPwr.getMax())
 
     gapTxPwr = component.getSymbolByID('GAP_EXT_ADV_TX_POWER_2')
-    gapTxPwr.setMax(gapGenMaxTxPwr(component.getSymbolValue('GAP_EXT_ADV_EVT_PROPERTIES_2') < 3))
-    gapTxPwr.setMin(gapGenMinTxPwr())
-    if devId == 451 and regionChange == True:
-        if component.getSymbolValue('GAP_EXT_ADV_EVT_PROPERTIES_2') < 3:
-            if gapTxPwr.getDefaultValue() != gapGenDefTxPwr(True):
-                gapTxPwr.setValue(gapGenDefTxPwr(True))
-            else:
-                gapTxPwr.clearValue()
+    if (component.getSymbolValue('GAP_EXT_ADV_EVT_PROPERTIES_2') < 3):
+        gapTxPwr.setMax(tpMaxNonFHSS)
+    else:
+        gapTxPwr.setMax(tpMaxFHSS)
+    gapTxPwr.setMin(tpMin)
+    gapTxPwr.setValue(gapTxPwr.getMax())
 
 def bleDevNameCheck(symbol, event):
     name = event["value"]
@@ -147,24 +53,19 @@ def gapLegacyAdvVisibility(symbol, event):
 
 def gapExtAdvEvtPropVisibility(symbol, event):
     symbol.setVisible(not event["value"] < 3)
-    
-def gapExtAdvTxPwr(symbol, event):
-    global devId
 
+def gapExtAdvTxPwr(symbol, event):
     if event["id"] == "GAP_EXT_ADV_ADV_SET_2":
         symbol.setVisible(event["value"])
         return
-    symbol.setMax(gapGenMaxTxPwr(event["value"] < 3))
-    symbol.setMin(gapGenMinTxPwr())
-    
-    if devId == 451:
-        if symbol.getDefaultValue() != gapGenDefTxPwr(event["value"] < 3):
-            # we cannot change symbol's default value here, so use dynamical value to simulate default value.
-            symbol.setValue(gapGenDefTxPwr(event["value"] < 3))
-        else:
-            symbol.clearValue()
-    
-    
+
+    if (event["value"] < 3):
+        symbol.setMax(txPwrMaxNonFHSS)
+    else:
+        symbol.setMax(txPwrMaxFHSS)
+    symbol.setMin(txPwrMin)
+    symbol.setValue(symbol.getMax())
+
 global bleStackCheckHexFormat
 def bleStackCheckHexFormat(hexValue):
     if (len(hexValue) % 2 != 0) or not all(c in string.hexdigits for c in hexValue):
@@ -685,25 +586,11 @@ def gapLegacyScanVisibility(symbol, event):
     global gapScan
     symbol.setVisible(not gapExtScanEn.getValue() and gapScan.getValue())
 
-global sendRTCSupportMessage
-def sendRTCSupportMessage(rtcRequiredValue):
 
-    processor = Variables.get("__PROCESSOR")
-    if( processor in pic32cx_bz2_family):
-        Database.sendMessage("pic32cx_bz2_devsupport", "RTC_SUPPORT", {"target": "pic32cx_bz2_devsupport",
-                                                    "source": "BLE_STACK_LIB",
-                                                    "rtcRequired": rtcRequiredValue})
-    else:
-        Database.sendMessage("pic32cx_bz3_devsupport", "RTC_SUPPORT", {"target": "pic32cx_bz3_devsupport",
-                                                    "source": "BLE_STACK_LIB",
-                                                    "rtcRequired": rtcRequiredValue})
 global sendDeepSleepEnableMessage
 def sendDeepSleepEnableMessage(dsEnable):
-    processor = Variables.get("__PROCESSOR")
-    if( processor in pic32cx_bz2_family):
-        Database.sendMessage("pic32cx_bz2_devsupport", "DEEP_SLEEP_ENABLE", {"isEnabled":dsEnable})
-    else:
-        Database.sendMessage("pic32cx_bz3_devsupport", "DEEP_SLEEP_ENABLE", {"isEnabled":dsEnable})
+    Database.sendMessage(devSupp, "DEEP_SLEEP_ENABLE", {"target": devSupp,
+                                                    "source": "BLE_STACK_LIB","isEnabled":dsEnable})
 
 
 def deepSleepEnabledChange(symbol, event):
@@ -720,16 +607,8 @@ def deepSleepEnabledChange(symbol, event):
         symbol.setVisible(False)
 
     if dsadvEn == True:
-        if sysSleepEn.getValue()==False:
-            #print('BLEStack:deepSleepEnabledChange value={}'.format(str(value))) 
-            sendRTCSupportMessage(True)
-
         sendDeepSleepEnableMessage(True)
     else:
-        if sysSleepEn.getValue()==False:
-            #print('BLEStack:deepSleepEnabledChange value={}'.format(str(value)))
-            sendRTCSupportMessage(False)
-
         sendDeepSleepEnableMessage(False)
 
 global getValueLen
@@ -803,14 +682,6 @@ def formatInt2HexBytesInvert(intValue, byteList, chkLen):
 ############################################################################
 ### GAP Settings ###
 ############################################################################
-
-if devSup != None:
-    if devSup.getSymbolValue('CUSTOM_ANT_ENABLE') == True:
-        antennaGain = devSup.getSymbolValue('CUSTOM_ANT_GAIN')
-    else:
-        antennaGain = devSup.getSymbolByID('CUSTOM_ANT_GAIN').getDefaultValue()
-gapGenTxPwrCap()
-
 
 # GAP Menu
 menuGAP = libBLEStackComponent.createMenuSymbol('GAP_MENU', None)
@@ -962,11 +833,11 @@ gapExtAdvEn.setDependencies(gapConfigVisibility, ["GAP_ADVERTISING"])
 # Advertising Tx Power
 gapAdvTxPwr = libBLEStackComponent.createIntegerSymbol('GAP_ADV_TX_PWR', gapAdvertising)
 gapAdvTxPwr.setLabel('Advertising TX Power (dBm)')
-gapAdvTxPwr.setDefaultValue(gapGenDefTxPwr(True))
-gapAdvTxPwr.setMax(gapGenMaxTxPwr(True))
-gapAdvTxPwr.setMin(gapGenMinTxPwr())
+gapAdvTxPwr.setMax(txPwrMaxNonFHSS)
+gapAdvTxPwr.setMin(txPwrMin)
+gapAdvTxPwr.setDefaultValue(gapAdvTxPwr.getMax())
 gapAdvTxPwr.setVisible(True)
-gapAdvTxPwr.setDescription("Advertising TX Power")
+gapAdvTxPwr.setDescription("Radiative Tx Power (EIRP). EIRP = Conductive Tx Power + Antenna Gain.")
 gapAdvTxPwr.setDependencies(gapLegacyAdvVisibility, ["BOOL_GAP_EXT_ADV","GAP_ADVERTISING"])
 
 
@@ -1126,9 +997,13 @@ gapExtAdvFiltPolicy.setDisplayMode('Description')
 # Advertising Tx Power
 gapExtAdvTxPower = libBLEStackComponent.createIntegerSymbol("GAP_EXT_ADV_TX_POWER", gapExtAdvAdvSet)
 gapExtAdvTxPower.setLabel("Advertising TX Power(Unit: dBm)")
-gapExtAdvTxPower.setDefaultValue(gapGenDefTxPwr(gapExtAdvEvtProp.getValue() < 3))
-gapExtAdvTxPower.setMin(gapGenMinTxPwr())
-gapExtAdvTxPower.setMax(gapGenMaxTxPwr(gapExtAdvEvtProp.getValue() < 3))
+if (gapExtAdvEvtProp.getValue() < 3):
+    gapExtAdvTxPower.setMax(txPwrMaxNonFHSS)
+else:
+    gapExtAdvTxPower.setMax(txPwrMaxFHSS)
+gapExtAdvTxPower.setMin(txPwrMin)
+gapExtAdvTxPower.setDefaultValue(gapExtAdvTxPower.getMax())
+gapExtAdvTxPower.setDescription("Radiative Tx Power (EIRP). EIRP = Conductive Tx Power + Antenna Gain.")
 gapExtAdvTxPower.setDependencies(gapExtAdvTxPwr, ["GAP_EXT_ADV_EVT_PROPERTIES"])
 
 
@@ -1589,10 +1464,14 @@ gapExtAdvFiltPolicy.setDependencies(gapConfigVisibility, ["GAP_EXT_ADV_ADV_SET_2
 # Advertising Tx Power
 gapExtAdvTxPower = libBLEStackComponent.createIntegerSymbol("GAP_EXT_ADV_TX_POWER_2", gapExtAdvAdvSet2)
 gapExtAdvTxPower.setLabel("Advertising TX Power(Unit: dBm)")
-gapExtAdvTxPower.setDefaultValue(gapGenDefTxPwr(gapExtAdvEvtProp2.getValue() < 3))
-gapExtAdvTxPower.setMin(gapGenMinTxPwr())
-gapExtAdvTxPower.setMax(gapGenMaxTxPwr(gapExtAdvEvtProp2.getValue() < 3))
+if (gapExtAdvEvtProp2.getValue() < 3):
+    gapExtAdvTxPower.setMax(txPwrMaxNonFHSS)
+else:
+    gapExtAdvTxPower.setMax(txPwrMaxFHSS)
+gapExtAdvTxPower.setMin(txPwrMin)
+gapExtAdvTxPower.setDefaultValue(gapExtAdvTxPower.getMax())
 gapExtAdvTxPower.setVisible(False)
+gapExtAdvTxPower.setDescription("Radiative Tx Power (EIRP). EIRP = Conductive Tx Power + Antenna Gain.")
 gapExtAdvTxPower.setDependencies(gapExtAdvTxPwr, ["GAP_EXT_ADV_ADV_SET_2", "GAP_EXT_ADV_EVT_PROPERTIES_2"])
 
 
@@ -2575,8 +2454,8 @@ gapDirectTestMode.setDescription("Include Direct Test Mode module")
 # Connection Tx Power
 gapConnTxPwr = libBLEStackComponent.createIntegerSymbol('GAP_CONN_TX_PWR', menuGAP)
 gapConnTxPwr.setLabel('Connection TX Power (dBm)')
-gapConnTxPwr.setDefaultValue(gapGenDefTxPwr(False))
-gapConnTxPwr.setMax(gapGenMaxTxPwr(False))
-gapConnTxPwr.setMin(gapGenMinTxPwr())
+gapConnTxPwr.setMax(txPwrMaxFHSS)
+gapConnTxPwr.setMin(txPwrMin)
+gapConnTxPwr.setDefaultValue(gapConnTxPwr.getMax())
 gapConnTxPwr.setVisible(True)
-gapConnTxPwr.setDescription("Connection TX Power")
+gapConnTxPwr.setDescription("Radiative Tx Power (EIRP). EIRP = Conductive Tx Power + Antenna Gain.")

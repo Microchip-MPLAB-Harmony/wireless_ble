@@ -67,11 +67,11 @@ static const uint8_t s_svcUuidIas[ATT_UUID_LENGTH_2] =                 {UINT16_T
 static const uint8_t s_chUuidAlertLevel[ATT_UUID_LENGTH_2] =             {UINT16_TO_BYTES(UUID_ALERT_LEVEL)};
 
 /* Immediate Alert Service Declaration */
-static uint16_t s_svcUuidIasLen = sizeof(s_svcUuidIas);
+static uint16_t s_svcUuidIasLen = (uint16_t)sizeof(s_svcUuidIas);
 
 /* Immediate Alert Alert Level Characteristic Declaration */
 static const uint8_t s_charIasAlertLevel[] = {(ATT_PROP_WRITE_CMD), UINT16_TO_BYTES(IAS_HDL_CHARVAL_ALERT_LEVEL), UINT16_TO_BYTES(UUID_ALERT_LEVEL)};
-static const uint16_t s_charIasAlertLevelLen = sizeof (s_charIasAlertLevel);
+static const uint16_t s_charIasAlertLevelLen = (uint16_t)sizeof (s_charIasAlertLevel);
 
 /* Immediate Alert Alert Level Characteristic Value */
 static uint8_t s_iasAlertLevelVal[1] = {0};
@@ -85,7 +85,7 @@ static GATTS_Attribute_T s_iasList[] = {
         (uint8_t *) g_gattUuidPrimSvc,
         (uint8_t *) s_svcUuidIas,
         (uint16_t *) & s_svcUuidIasLen,
-        sizeof (s_svcUuidIas),
+        (uint16_t)sizeof (s_svcUuidIas),
         0,
         PERMISSION_READ
     },
@@ -94,7 +94,7 @@ static GATTS_Attribute_T s_iasList[] = {
         (uint8_t *) g_gattUuidChar,
         (uint8_t *) s_charIasAlertLevel,
         (uint16_t *) & s_charIasAlertLevelLen,
-        sizeof (s_charIasAlertLevel),
+        (uint16_t)sizeof (s_charIasAlertLevel),
         0,
         PERMISSION_READ
     },
@@ -103,9 +103,9 @@ static GATTS_Attribute_T s_iasList[] = {
         (uint8_t *) s_chUuidAlertLevel,
         (uint8_t *) s_iasAlertLevelVal,
         (uint16_t *) & s_iasAlertLevelValLen,
-        sizeof(s_iasAlertLevelVal),
+        (uint16_t)sizeof(s_iasAlertLevelVal),
         0,
-        PERMISSION_WRITE
+        PERMISSION_WRITE | PERMISSION_WRITE_ENC
     },
 };
 
@@ -115,8 +115,8 @@ static GATTS_Service_T s_svcIas =
     NULL,
     (GATTS_Attribute_T *) s_iasList,
     NULL,
-    IAS_START_HDL,
-    IAS_END_HDL,
+    (uint16_t)IAS_START_HDL,
+    (uint16_t)IAS_END_HDL,
     0
 };
 
@@ -128,5 +128,5 @@ static GATTS_Service_T s_svcIas =
 
 uint16_t BLE_IAS_Add(void)
 {
-    return GATTS_AddService(&s_svcIas, (IAS_END_HDL - IAS_START_HDL + 1));
+    return GATTS_AddService(&s_svcIas, (uint8_t)((uint16_t)IAS_END_HDL - (uint16_t)IAS_START_HDL + 1U));
 }
