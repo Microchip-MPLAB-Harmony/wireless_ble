@@ -48,11 +48,13 @@ This release includes additions and improvements to PIC32CX-BZ2 and PIC32CX-BZ3 
 
 ### Known Issues/Limitations
 + **PIC32CX-BZ2**
-	+ The connection might be terminated under multiple links conditions due to MIC error. (#3534)
-	+ The connection might be terminated under multiple links conditions due to the missing reception of the LL_CHANNEL_MAP_IND PDU if DUT plays as peripheral role. (#3548)
+	+ The connection might be terminated under multiple-link conditions due to MIC error. (#3534)
+	+ The connection might be terminated under multiple-link conditions due to the missing reception of the LL_CHANNEL_MAP_IND PDU if DUT plays as peripheral role. (#3548)
+	+ The combo system with the central role will fail to establish the sixth BLE connection after Zigbee provisioning. (#3890)
 
 + **PIC32CX-BZ3**
-	+ The connection might be terminated under multiple links conditions due to the missing reception of the LL_CHANNEL_MAP_IND PDU if DUT plays as peripheral role. (#1125)
+	+ The connection might be terminated under multiple-link conditions due to the missing reception of the LL_CHANNEL_MAP_IND PDU if DUT plays as peripheral role. (#1125)
+	+ The connection might be terminated under multiple-link conditions due to RF bandwidth conflicts when the DUT plays the role of a BLE peripheral. (#1152)
 
 ### Development Tools
 + [MPLAB X v6.20](https://www.microchip.com/mplab/mplab-x-ide)
