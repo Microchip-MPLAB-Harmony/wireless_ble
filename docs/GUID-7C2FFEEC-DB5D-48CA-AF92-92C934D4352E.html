@@ -1,0 +1,322 @@
+<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-us" lang="en-us" data-whc_version="24.1">
+    <head><link rel="shortcut icon" href="oxygen-webhelp\template\resources/images/favicon.ico"/><link rel="icon" href="oxygen-webhelp\template\resources/images/favicon.ico"/><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><meta name="description" content="typedef struct BLE_OTAPS_DevInfo_T { uint32_t fwImageVer; } BLE_OTAPS_DevInfo_T; The structure contains current device information. It should be used to response the event BLE_OTAPS_EVT_UPDATE_REQ . ..."/><meta name="copyright" content="(C) Copyright 2024"/><meta name="generator" content="DITA-OT"/><title>1.1.2.3.4.2.3.8 BLE_OTAPS_DevInfo_T</title><!--  Generated with Oxygen version 24.1, build number 2022062014.  --><meta name="wh-path2root" content=""/><meta name="wh-toc-id" content="&lt;?xml version=&#34;1.0&#34; encoding=&#34;UTF-8&#34;?&gt;&lt;?workdir /D:\InfoShare\Data\Publish\Data\mnxeugsprob\work\temp?&gt;&lt;?workdir-uri file:/D:/InfoShare/Data/Publish/Data/mnxeugsprob/work/temp/?&gt;&lt;?path2project?&gt;&lt;?path2project-uri ./?&gt;&lt;?path2rootmap-uri ./?&gt;&lt;topic xmlns:dita-ot=&#34;http://dita-ot.sourceforge.net/ns/201007/dita-ot&#34; xmlns:ditaarch=&#34;http://dita.oasis-open.org/architecture/2005/&#34; class=&#34;- topic/topic &#34; ditaarch:DITAArchVersion=&#34;2.0&#34; specializations=&#34;@props/audience @props/deliveryTarget @props/otherprops @props/platform @props/product&#34; id=&#34;ble-otaps-devinfo-t&#34; xtrf=&#34;file:/D:/InfoShare/Data/Publish/Data/mnxeugsprob/work/3/en-US/GUID-7C2FFEEC-DB5D-48CA-AF92-92C934D4352E.md&#34; xtrc=&#34;topic:1;184:15&#34; domains=&#34;a(props audience) a(props deliveryTarget) a(props otherprops) a(props platform) a(props product)&#34;&gt;&lt;title class=&#34;- topic/title &#34; xtrf=&#34;file:/D:/InfoShare/Data/Publish/Data/mnxeugsprob/work/3/en-US/GUID-7C2FFEEC-DB5D-48CA-AF92-92C934D4352E.md&#34; xtrc=&#34;title:1;184:15&#34;&gt;BLE_OTAPS_DevInfo_T&lt;/title&gt;&lt;body class=&#34;- topic/body &#34; xtrf=&#34;file:/D:/InfoShare/Data/Publish/Data/mnxeugsprob/work/3/en-US/GUID-7C2FFEEC-DB5D-48CA-AF92-92C934D4352E.md&#34; xtrc=&#34;body:1;184:15&#34;/&gt;&lt;related-links class=&#34;- topic/related-links &#34;&gt;&lt;linkpool class=&#34;- topic/linkpool &#34; mapkeyref=&#34;GUID-24032B9A-02CD-4AB8-BAD8-7DDB234DE7EA&#34; xtrc=&#34;topicref:812;6:127856&#34; xtrf=&#34;file:/D:/InfoShare/Data/Publish/Data/mnxeugsprob/work/3/en-US/GUID-24032B9A-02CD-4AB8-BAD8-7DDB234DE7EA.ditamap&#34;&gt;&lt;link class=&#34;- topic/link &#34; format=&#34;dita&#34; href=&#34;GUID-4EAA8368-F1C7-4125-A844-2BFFE5CAF2F9.xml&#34; mapclass=&#34;- map/topicref &#34; role=&#34;parent&#34; scope=&#34;local&#34; type=&#34;topic&#34; xtrc=&#34;topicref:804;6:126611&#34; xtrf=&#34;file:/D:/InfoShare/Data/Publish/Data/mnxeugsprob/work/3/en-US/GUID-24032B9A-02CD-4AB8-BAD8-7DDB234DE7EA.ditamap&#34;&gt;&lt;?ditaot usertext?&gt;&lt;linktext class=&#34;- topic/linktext &#34;&gt;&lt;?ditaot gentext?&gt;Structures&lt;/linktext&gt;&lt;?ditaot genshortdesc?&gt;&lt;desc class=&#34;- topic/desc &#34;/&gt;&lt;/link&gt;&lt;/linkpool&gt;&lt;/related-links&gt;&lt;topic class=&#34;- topic/topic &#34; ditaarch:DITAArchVersion=&#34;2.0&#34; specializations=&#34;@props/audience @props/deliveryTarget @props/otherprops @props/platform @props/product&#34; id=&#34;c&#34; xtrf=&#34;file:/D:/InfoShare/Data/Publish/Data/mnxeugsprob/work/3/en-US/GUID-7C2FFEEC-DB5D-48CA-AF92-92C934D4352E.md&#34; xtrc=&#34;topic:2;184:15&#34; domains=&#34;a(props audience) a(props deliveryTarget) a(props otherprops) a(props platform) a(props product)&#34;&gt;&lt;title class=&#34;- topic/title &#34; xtrf=&#34;file:/D:/InfoShare/Data/Publish/Data/mnxeugsprob/work/3/en-US/GUID-7C2FFEEC-DB5D-48CA-AF92-92C934D4352E.md&#34; xtrc=&#34;title:2;184:15&#34;&gt;C&lt;/title&gt;&lt;body class=&#34;- topic/body &#34; xtrf=&#34;file:/D:/InfoShare/Data/Publish/Data/mnxeugsprob/work/3/en-US/GUID-7C2FFEEC-DB5D-48CA-AF92-92C934D4352E.md&#34; xtrc=&#34;body:2;184:15&#34;&gt;&lt;codeblock class=&#34;+ topic/pre pr-d/codeblock &#34; xml:space=&#34;preserve&#34; outputclass=&#34;c&#34; xtrf=&#34;file:/D:/InfoShare/Data/Publish/Data/mnxeugsprob/work/3/en-US/GUID-7C2FFEEC-DB5D-48CA-AF92-92C934D4352E.md&#34; xtrc=&#34;codeblock:1;184:15&#34;&gt;typedef struct BLE_OTAPS_DevInfo_T { uint32_t fwImageVer; } BLE_OTAPS_DevInfo_T;&lt;/codeblock&gt;&lt;/body&gt;&lt;/topic&gt;&lt;topic class=&#34;- topic/topic &#34; ditaarch:DITAArchVersion=&#34;2.0&#34; specializations=&#34;@props/audience @props/deliveryTarget @props/otherprops @props/platform @props/product&#34; id=&#34;description&#34; xtrf=&#34;file:/D:/InfoShare/Data/Publish/Data/mnxeugsprob/work/3/en-US/GUID-7C2FFEEC-DB5D-48CA-AF92-92C934D4352E.md&#34; xtrc=&#34;topic:3;184:15&#34; domains=&#34;a(props audience) a(props deliveryTarget) a(props otherprops) a(props platform) a(props product)&#34;&gt;&lt;title class=&#34;- topic/title &#34; xtrf=&#34;file:/D:/InfoShare/Data/Publish/Data/mnxeugsprob/work/3/en-US/GUID-7C2FFEEC-DB5D-48CA-AF92-92C934D4352E.md&#34; xtrc=&#34;title:3;184:15&#34;&gt;Description&lt;/title&gt;&lt;body class=&#34;- topic/body &#34; xtrf=&#34;file:/D:/InfoShare/Data/Publish/Data/mnxeugsprob/work/3/en-US/GUID-7C2FFEEC-DB5D-48CA-AF92-92C934D4352E.md&#34; xtrc=&#34;body:3;184:15&#34;&gt;&lt;p class=&#34;- topic/p &#34; xtrf=&#34;file:/D:/InfoShare/Data/Publish/Data/mnxeugsprob/work/3/en-US/GUID-7C2FFEEC-DB5D-48CA-AF92-92C934D4352E.md&#34; xtrc=&#34;p:1;184:15&#34;&gt;The structure contains current device information.&lt;/p&gt;&lt;p class=&#34;- topic/p &#34; xtrf=&#34;file:/D:/InfoShare/Data/Publish/Data/mnxeugsprob/work/3/en-US/GUID-7C2FFEEC-DB5D-48CA-AF92-92C934D4352E.md&#34; xtrc=&#34;p:2;184:15&#34;&gt;It should be used to response the event &lt;b class=&#34;+ topic/ph hi-d/b &#34; xtrf=&#34;file:/D:/InfoShare/Data/Publish/Data/mnxeugsprob/work/3/en-US/GUID-7C2FFEEC-DB5D-48CA-AF92-92C934D4352E.md&#34; xtrc=&#34;b:1;184:15&#34;&gt;&lt;xref class=&#34;- topic/xref &#34; href=&#34;GUID-F3177CD0-E008-4DCD-AA8E-40F6DC495A8A.md&#34; dita-ot:orig-format=&#34;markdown&#34; format=&#34;dita&#34; xtrf=&#34;file:/D:/InfoShare/Data/Publish/Data/mnxeugsprob/work/3/en-US/GUID-7C2FFEEC-DB5D-48CA-AF92-92C934D4352E.md&#34; xtrc=&#34;xref:1;184:15&#34; type=&#34;topic&#34;&gt;&lt;?ditaot usertext?&gt;BLE_OTAPS_EVT_UPDATE_REQ&lt;/xref&gt;&lt;/b&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/topic&gt;&lt;topic class=&#34;- topic/topic &#34; ditaarch:DITAArchVersion=&#34;2.0&#34; specializations=&#34;@props/audience @props/deliveryTarget @props/otherprops @props/platform @props/product&#34; id=&#34;field-documentation&#34; xtrf=&#34;file:/D:/InfoShare/Data/Publish/Data/mnxeugsprob/work/3/en-US/GUID-7C2FFEEC-DB5D-48CA-AF92-92C934D4352E.md&#34; xtrc=&#34;topic:4;184:15&#34; domains=&#34;a(props audience) a(props deliveryTarget) a(props otherprops) a(props platform) a(props product)&#34;&gt;&lt;title class=&#34;- topic/title &#34; xtrf=&#34;file:/D:/InfoShare/Data/Publish/Data/mnxeugsprob/work/3/en-US/GUID-7C2FFEEC-DB5D-48CA-AF92-92C934D4352E.md&#34; xtrc=&#34;title:4;184:15&#34;&gt;Field Documentation&lt;/title&gt;&lt;body class=&#34;- topic/body &#34; xtrf=&#34;file:/D:/InfoShare/Data/Publish/Data/mnxeugsprob/work/3/en-US/GUID-7C2FFEEC-DB5D-48CA-AF92-92C934D4352E.md&#34; xtrc=&#34;body:4;184:15&#34;&gt;&lt;table class=&#34;- topic/table &#34; xtrf=&#34;file:/D:/InfoShare/Data/Publish/Data/mnxeugsprob/work/3/en-US/GUID-7C2FFEEC-DB5D-48CA-AF92-92C934D4352E.md&#34; xtrc=&#34;table:1;184:15&#34;&gt;&lt;tgroup class=&#34;- topic/tgroup &#34; cols=&#34;2&#34; xtrf=&#34;file:/D:/InfoShare/Data/Publish/Data/mnxeugsprob/work/3/en-US/GUID-7C2FFEEC-DB5D-48CA-AF92-92C934D4352E.md&#34; xtrc=&#34;tgroup:1;184:15&#34;&gt;&lt;colspec class=&#34;- topic/colspec &#34; colname=&#34;col1&#34; xtrf=&#34;file:/D:/InfoShare/Data/Publish/Data/mnxeugsprob/work/3/en-US/GUID-7C2FFEEC-DB5D-48CA-AF92-92C934D4352E.md&#34; xtrc=&#34;colspec:1;184:15&#34; colnum=&#34;1&#34;/&gt;&lt;colspec class=&#34;- topic/colspec &#34; colname=&#34;col2&#34; xtrf=&#34;file:/D:/InfoShare/Data/Publish/Data/mnxeugsprob/work/3/en-US/GUID-7C2FFEEC-DB5D-48CA-AF92-92C934D4352E.md&#34; xtrc=&#34;colspec:2;184:15&#34; colnum=&#34;2&#34;/&gt;&lt;thead class=&#34;- topic/thead &#34; xtrf=&#34;file:/D:/InfoShare/Data/Publish/Data/mnxeugsprob/work/3/en-US/GUID-7C2FFEEC-DB5D-48CA-AF92-92C934D4352E.md&#34; xtrc=&#34;thead:1;184:15&#34;&gt;&lt;row class=&#34;- topic/row &#34; xtrf=&#34;file:/D:/InfoShare/Data/Publish/Data/mnxeugsprob/work/3/en-US/GUID-7C2FFEEC-DB5D-48CA-AF92-92C934D4352E.md&#34; xtrc=&#34;row:1;184:15&#34;&gt;&lt;entry class=&#34;- topic/entry &#34; align=&#34;left&#34; xtrf=&#34;file:/D:/InfoShare/Data/Publish/Data/mnxeugsprob/work/3/en-US/GUID-7C2FFEEC-DB5D-48CA-AF92-92C934D4352E.md&#34; xtrc=&#34;entry:1;184:15&#34; colname=&#34;col1&#34; dita-ot:x=&#34;1&#34; dita-ot:y=&#34;1&#34;&gt;Field&lt;/entry&gt;&lt;entry class=&#34;- topic/entry &#34; align=&#34;left&#34; xtrf=&#34;file:/D:/InfoShare/Data/Publish/Data/mnxeugsprob/work/3/en-US/GUID-7C2FFEEC-DB5D-48CA-AF92-92C934D4352E.md&#34; xtrc=&#34;entry:2;184:15&#34; colname=&#34;col2&#34; dita-ot:x=&#34;2&#34; dita-ot:y=&#34;1&#34;&gt;Description&lt;/entry&gt;&lt;/row&gt;&lt;/thead&gt;&lt;tbody class=&#34;- topic/tbody &#34; xtrf=&#34;file:/D:/InfoShare/Data/Publish/Data/mnxeugsprob/work/3/en-US/GUID-7C2FFEEC-DB5D-48CA-AF92-92C934D4352E.md&#34; xtrc=&#34;tbody:1;184:15&#34;&gt;&lt;row class=&#34;- topic/row &#34; xtrf=&#34;file:/D:/InfoShare/Data/Publish/Data/mnxeugsprob/work/3/en-US/GUID-7C2FFEEC-DB5D-48CA-AF92-92C934D4352E.md&#34; xtrc=&#34;row:2;184:15&#34;&gt;&lt;entry class=&#34;- topic/entry &#34; align=&#34;left&#34; xtrf=&#34;file:/D:/InfoShare/Data/Publish/Data/mnxeugsprob/work/3/en-US/GUID-7C2FFEEC-DB5D-48CA-AF92-92C934D4352E.md&#34; xtrc=&#34;entry:3;184:15&#34; colname=&#34;col1&#34; dita-ot:x=&#34;1&#34; dita-ot:y=&#34;2&#34;&gt;fwImageVer&lt;/entry&gt;&lt;entry class=&#34;- topic/entry &#34; align=&#34;left&#34; xtrf=&#34;file:/D:/InfoShare/Data/Publish/Data/mnxeugsprob/work/3/en-US/GUID-7C2FFEEC-DB5D-48CA-AF92-92C934D4352E.md&#34; xtrc=&#34;entry:4;184:15&#34; colname=&#34;col2&#34; dita-ot:x=&#34;2&#34; dita-ot:y=&#34;2&#34;&gt;The version of current firmware image.&lt;/entry&gt;&lt;/row&gt;&lt;/tbody&gt;&lt;/tgroup&gt;&lt;/table&gt;&lt;/body&gt;&lt;/topic&gt;&lt;/topic&gt;"/><meta name="wh-source-relpath" content="GUID-7C2FFEEC-DB5D-48CA-AF92-92C934D4352E.md"/><meta name="wh-out-relpath" content="GUID-7C2FFEEC-DB5D-48CA-AF92-92C934D4352E.html"/>
+    <!-- Latest compiled and minified Bootstrap CSS -->
+    <link rel="stylesheet" type="text/css" href="./oxygen-webhelp/lib/bootstrap/css/bootstrap.min.css"/>
+    
+    <link rel="stylesheet" href="./oxygen-webhelp/lib/jquery-ui/jquery-ui.min.css"/>
+    
+    <!-- Template default styles  -->
+    <link rel="stylesheet" type="text/css" href="./oxygen-webhelp/app/topic-page.css?buildId=2022062014"/>
+    
+    
+    <script src="./oxygen-webhelp/lib/jquery/jquery-3.5.1.min.js"></script>
+    
+    <script data-main="./oxygen-webhelp/app/topic-page.js" src="./oxygen-webhelp/lib/requirejs/require.js"></script>
+<link rel="stylesheet" type="text/css" href="oxygen-webhelp/template/microchip.css?buildId=2022062014"/><link rel="stylesheet" type="text/css" href="oxygen-webhelp/template/notes.css?buildId=2022062014"/>
+<script src="mchp-context-help.js"></script>
+<link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600,300" rel="stylesheet" type="text/css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" async="" type="text/javascript"></script>
+    <script src="https://assets.adobedtm.com/6a72a357eb48/a636c708c7fe/launch-0b0023397020.min.js"></script><!-- Adobe Analytics -->
+</head>
+
+    <body id="ble-otaps-devinfo-t" class="wh_topic_page frmBody">
+        <a href="#wh_topic_body" class="sr-only sr-only-focusable">
+            Jump to main content
+        </a>
+        
+        
+        
+        
+        <header class="navbar navbar-default wh_header">
+    <div class="container-fluid">
+        <div class="wh_header_flex_container navbar-nav navbar-expand-md navbar-dark">
+            <div class="wh_logo_and_publication_title_container">
+                <div class="wh_logo_and_publication_title">
+                    
+                    <a href="index.html" class=" wh_logo d-none d-sm-block "><img src="oxygen-webhelp\template\resources/images/microchip.png" alt="MPLAB Harmony Wireless BLE &#xA;    "/></a>
+                    <div class=" wh_publication_title "><a href="index.html">MPLAB Harmony Wireless BLE 
+    </a></div>
+                    
+                </div>
+                
+                
+            </div>
+
+            <div class="wh_top_menu_and_indexterms_link collapse navbar-collapse" id="wh_top_menu_and_indexterms_link">
+                
+                
+                
+                
+            </div>
+        </div>
+    </div>
+</header>
+        
+        
+         
+        
+        <div class=" wh_search_input navbar-form wh_topic_page_search search " role="form">
+            
+            
+            
+            <form id="searchForm" method="get" role="search" action="search.html"><div class="d-flex justify-contents-around"><div class="flex-grow-1"></div><div class="position-relative flex-grow-1"><input type="search" placeholder="Search " class="wh_search_textfield" id="textToSearch" name="searchQuery" aria-label="Search query" required="required"/><button type="submit" class="wh_search_button" aria-label="Search"><span class="search_input_text">Search</span></button></div><div class="align-self-center flex-grow-1 ml-2"><div class="d-flex justify-content-end"><div class="dropdown"><a style="font-size: 1em; padding: 7px 12px !important;" class="btn py-3 px-3 btn-outline-light dropdown-toggle" href="#" role="button" id="devicesMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Product Pages</a><div style="font-size: 1em;" class="dropdown-menu" aria-labelledby="devicesMenu"><a class="dropdown-item" target="_blank" href="https://www.microchip.com/en-us/product/pic32cx-bz2">PIC32CX-BZ2</a><a class="dropdown-item" target="_blank" href="https://www.microchip.com/en-us/product/wbz450"> WBZ450</a><a class="dropdown-item" target="_blank" href="https://www.microchip.com/en-us/product/wbz451"> WBZ451</a><a class="dropdown-item" target="_blank" href="https://www.microchip.com/en-us/product/pic32cx-bz3"> PIC32CX-BZ3</a><a class="dropdown-item" target="_blank" href="https://www.microchip.com/en-us/product/wbz350"> WBZ350</a><a class="dropdown-item" target="_blank" href="https://www.microchip.com/en-us/product/wbz351"> WBZ351</a></div></div></div></div></div></form>
+            
+            <div class="mchp-color-stripe-grid-container">
+  <div class="mchp-main-bar mchp-orange-bar"></div>
+  <div class="mchp-main-bar mchp-blue-bar"></div>
+  <div class="mchp-main-bar mchp-green-bar"></div>
+</div>
+            
+        </div>
+        
+        <div class="container-fluid" id="wh_topic_container">
+            <div class="row">
+
+                <nav class="wh_tools d-print-none navbar-expand-md" aria-label="Tools">
+                    
+                    <div data-tooltip-position="bottom" class=" wh_breadcrumb "><ol class="d-print-none"><li><span class="home"><a href="index.html"><span>Home</span></a></span></li><li><div class="topicref" data-id="GUID-1DE7F398-A485-4143-964B-2CB21E5F4B26"><div class="title"><a href="GUID-1DE7F398-A485-4143-964B-2CB21E5F4B26.html"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1</ph>
+BLE Software</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div></li><li><div class="topicref" data-id="GUID-1F6AF334-EDDF-4C37-8BAE-9B246FD37EE5"><div class="title"><a href="GUID-1F6AF334-EDDF-4C37-8BAE-9B246FD37EE5.html"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1</ph>
+Wireless BLE v1.3</a></div></div></li><li><div class="topicref" data-id="GUID-79157BDE-86A8-4660-98CA-D67BF921F154"><div class="title"><a href="GUID-79157BDE-86A8-4660-98CA-D67BF921F154.html"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2</ph>
+BLE Software API</a></div></div></li><li><div class="topicref" data-id="GUID-0C50046A-98EA-4DA8-9171-8A060D2F890B"><div class="title"><a href="GUID-0C50046A-98EA-4DA8-9171-8A060D2F890B.html"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.3</ph>
+BLE Profile</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div></li><li><div class="topicref" data-id="GUID-0B5B8D98-C91A-4CFF-ABFA-245F9ED08A70"><div class="title"><a href="GUID-0B5B8D98-C91A-4CFF-ABFA-245F9ED08A70.html"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.3.4</ph>
+Microchip Over The Air (OTA) Profile</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div></li><li><div class="topicref" data-id="GUID-86F988CB-FD87-4448-86C2-5DC8644E254F"><div class="title"><a href="GUID-86F988CB-FD87-4448-86C2-5DC8644E254F.html"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.3.4.2</ph>
+Microchip OTA Profile Server Role</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div></li><li><div class="topicref" data-id="GUID-4EAA8368-F1C7-4125-A844-2BFFE5CAF2F9"><div class="title"><a href="GUID-4EAA8368-F1C7-4125-A844-2BFFE5CAF2F9.html"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.3.4.2.3</ph>
+Structures</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div></li><li class="active"><div class="topicref" data-id="ble-otaps-devinfo-t"><div class="title"><a href="GUID-7C2FFEEC-DB5D-48CA-AF92-92C934D4352E.html"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.3.4.2.3.8</ph>
+BLE_OTAPS_DevInfo_T</a></div></div></li></ol></div>
+                    
+                    
+                    
+                    <div class="wh_right_tools">
+                        <button class="wh_hide_highlight" aria-label="Toggle search highlights" title="Toggle search highlights"></button>
+                        <button class="webhelp_expand_collapse_sections" data-next-state="collapsed" aria-label="Collapse sections" title="Collapse sections"></button>
+                        
+                        
+                        
+                        
+                        <div class=" wh_print_link print d-none d-md-inline-block "><button onClick="window.print()" title="Print this page" aria-label="Print this page"></button></div>
+                        
+                        <button type="button" id="wh_toc_button" class="custom-toggler navbar-toggler collapsed wh_toggle_button navbar-light" aria-expanded="false" aria-label="Toggle publishing table of content" aria-controls="wh_publication_toc">
+                            <span class="navbar-toggler-icon"></span>
+                        </button>
+                    </div>
+                    
+                </nav>
+            </div>
+            
+            <div class="row" style="margin-top: -1em;"><div class="col-lg-7 col-md-7 col-sm-12 offset-lg-3 offset-md-3 text-right border-bottom mb-1"><h2 class="text-dark header_title">
+    </h2></div></div>
+            
+            
+            <div class="wh_content_area">
+                <div class="row">
+                    
+                        <nav id="wh_publication_toc" class="col-lg-3 col-md-3 col-sm-12 d-md-block d-none d-print-none" aria-label="Table of Contents Container">
+                            <div id="wh_publication_toc_content">
+		                        
+                            	<div class=" wh_publication_toc " data-tooltip-position="right"><span class="expand-button-action-labels"><span id="button-expand-action" role="button" aria-label="Expand"></span><span id="button-collapse-action" role="button" aria-label="Collapse"></span><span id="button-pending-action" role="button" aria-label="Pending"></span></span><ul role="tree" aria-label="Table of Contents"><li role="treeitem" aria-expanded="true"><div data-tocid="GUID-1DE7F398-A485-4143-964B-2CB21E5F4B26-d13878e11" class="topicref" data-id="GUID-1DE7F398-A485-4143-964B-2CB21E5F4B26" data-state="expanded"><span role="button" tabindex="0" aria-labelledby="button-collapse-action GUID-1DE7F398-A485-4143-964B-2CB21E5F4B26-d13878e11-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-1DE7F398-A485-4143-964B-2CB21E5F4B26.html" id="GUID-1DE7F398-A485-4143-964B-2CB21E5F4B26-d13878e11-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1</ph>
+BLE Software</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div><ul role="group" class="navbar-nav nav-list"><li role="treeitem" aria-expanded="true"><div data-tocid="GUID-1F6AF334-EDDF-4C37-8BAE-9B246FD37EE5-d13878e21" class="topicref" data-id="GUID-1F6AF334-EDDF-4C37-8BAE-9B246FD37EE5" data-state="expanded"><span role="button" tabindex="0" aria-labelledby="button-collapse-action GUID-1F6AF334-EDDF-4C37-8BAE-9B246FD37EE5-d13878e21-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-1F6AF334-EDDF-4C37-8BAE-9B246FD37EE5.html" id="GUID-1F6AF334-EDDF-4C37-8BAE-9B246FD37EE5-d13878e21-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1</ph>
+Wireless BLE v1.3</a></div></div><ul role="group" class="navbar-nav nav-list"><li role="treeitem" aria-expanded="false"><div data-tocid="GUID-DFE1CA7F-A3A4-45E7-8C93-8074C4AC5D05-d13878e29" class="topicref" data-id="GUID-DFE1CA7F-A3A4-45E7-8C93-8074C4AC5D05" data-state="not-ready"><span role="button" tabindex="0" aria-labelledby="button-expand-action GUID-DFE1CA7F-A3A4-45E7-8C93-8074C4AC5D05-d13878e29-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-DFE1CA7F-A3A4-45E7-8C93-8074C4AC5D05.html" id="GUID-DFE1CA7F-A3A4-45E7-8C93-8074C4AC5D05-d13878e29-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.1</ph>
+BLE Software Specification</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div></li><li role="treeitem" aria-expanded="true"><div data-tocid="GUID-79157BDE-86A8-4660-98CA-D67BF921F154-d13878e133" class="topicref" data-id="GUID-79157BDE-86A8-4660-98CA-D67BF921F154" data-state="expanded"><span role="button" tabindex="0" aria-labelledby="button-collapse-action GUID-79157BDE-86A8-4660-98CA-D67BF921F154-d13878e133-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-79157BDE-86A8-4660-98CA-D67BF921F154.html" id="GUID-79157BDE-86A8-4660-98CA-D67BF921F154-d13878e133-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2</ph>
+BLE Software API</a></div></div><ul role="group" class="navbar-nav nav-list"><li role="treeitem" aria-expanded="false"><div data-tocid="GUID-BCDDE166-F3AD-498B-9900-257827609467-d13878e141" class="topicref" data-id="GUID-BCDDE166-F3AD-498B-9900-257827609467" data-state="not-ready"><span role="button" tabindex="0" aria-labelledby="button-expand-action GUID-BCDDE166-F3AD-498B-9900-257827609467-d13878e141-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-BCDDE166-F3AD-498B-9900-257827609467.html" id="GUID-BCDDE166-F3AD-498B-9900-257827609467-d13878e141-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.1</ph>
+BLE Stack</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div></li><li role="treeitem" aria-expanded="false"><div data-tocid="GUID-6A7C78FE-1473-4B99-B2C9-01CDC06FE578-d13878e4287" class="topicref" data-id="GUID-6A7C78FE-1473-4B99-B2C9-01CDC06FE578" data-state="not-ready"><span role="button" tabindex="0" aria-labelledby="button-expand-action GUID-6A7C78FE-1473-4B99-B2C9-01CDC06FE578-d13878e4287-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-6A7C78FE-1473-4B99-B2C9-01CDC06FE578.html" id="GUID-6A7C78FE-1473-4B99-B2C9-01CDC06FE578-d13878e4287-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.2</ph>
+BLE Middleware</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div></li><li role="treeitem" aria-expanded="true"><div data-tocid="GUID-0C50046A-98EA-4DA8-9171-8A060D2F890B-d13878e5378" class="topicref" data-id="GUID-0C50046A-98EA-4DA8-9171-8A060D2F890B" data-state="expanded"><span role="button" tabindex="0" aria-labelledby="button-collapse-action GUID-0C50046A-98EA-4DA8-9171-8A060D2F890B-d13878e5378-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-0C50046A-98EA-4DA8-9171-8A060D2F890B.html" id="GUID-0C50046A-98EA-4DA8-9171-8A060D2F890B-d13878e5378-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.3</ph>
+BLE Profile</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div><ul role="group" class="navbar-nav nav-list"><li role="treeitem" aria-expanded="false"><div data-tocid="GUID-60C31EFB-81A9-4DDB-877F-CA13A1D7D247-d13878e5388" class="topicref" data-id="GUID-60C31EFB-81A9-4DDB-877F-CA13A1D7D247" data-state="not-ready"><span role="button" tabindex="0" aria-labelledby="button-expand-action GUID-60C31EFB-81A9-4DDB-877F-CA13A1D7D247-d13878e5388-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-60C31EFB-81A9-4DDB-877F-CA13A1D7D247.html" id="GUID-60C31EFB-81A9-4DDB-877F-CA13A1D7D247-d13878e5388-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.3.1</ph>
+Apple Notification Center Service (ANCS)</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div></li><li role="treeitem" aria-expanded="false"><div data-tocid="GUID-22F0200D-B99D-400A-8FF1-542F5DC9C283-d13878e5683" class="topicref" data-id="GUID-22F0200D-B99D-400A-8FF1-542F5DC9C283" data-state="not-ready"><span role="button" tabindex="0" aria-labelledby="button-expand-action GUID-22F0200D-B99D-400A-8FF1-542F5DC9C283-d13878e5683-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-22F0200D-B99D-400A-8FF1-542F5DC9C283.html" id="GUID-22F0200D-B99D-400A-8FF1-542F5DC9C283-d13878e5683-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.3.2</ph>
+Alert Notification Profile (ANP)</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div></li><li role="treeitem" aria-expanded="false"><div data-tocid="GUID-A51A755A-E84F-4AA8-8DB7-D2A3A0F7161F-d13878e6179" class="topicref" data-id="GUID-A51A755A-E84F-4AA8-8DB7-D2A3A0F7161F" data-state="not-ready"><span role="button" tabindex="0" aria-labelledby="button-expand-action GUID-A51A755A-E84F-4AA8-8DB7-D2A3A0F7161F-d13878e6179-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-A51A755A-E84F-4AA8-8DB7-D2A3A0F7161F.html" id="GUID-A51A755A-E84F-4AA8-8DB7-D2A3A0F7161F-d13878e6179-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.3.3</ph>
+HID Over GATT Profile</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div></li><li role="treeitem" aria-expanded="true"><div data-tocid="GUID-0B5B8D98-C91A-4CFF-ABFA-245F9ED08A70-d13878e6438" class="topicref" data-id="GUID-0B5B8D98-C91A-4CFF-ABFA-245F9ED08A70" data-state="expanded"><span role="button" tabindex="0" aria-labelledby="button-collapse-action GUID-0B5B8D98-C91A-4CFF-ABFA-245F9ED08A70-d13878e6438-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-0B5B8D98-C91A-4CFF-ABFA-245F9ED08A70.html" id="GUID-0B5B8D98-C91A-4CFF-ABFA-245F9ED08A70-d13878e6438-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.3.4</ph>
+Microchip Over The Air (OTA) Profile</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div><ul role="group" class="navbar-nav nav-list"><li role="treeitem" aria-expanded="false"><div data-tocid="GUID-EAF054B2-80EE-4739-80F4-7830F504B27B-d13878e6448" class="topicref" data-id="GUID-EAF054B2-80EE-4739-80F4-7830F504B27B" data-state="not-ready"><span role="button" tabindex="0" aria-labelledby="button-expand-action GUID-EAF054B2-80EE-4739-80F4-7830F504B27B-d13878e6448-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-EAF054B2-80EE-4739-80F4-7830F504B27B.html" id="GUID-EAF054B2-80EE-4739-80F4-7830F504B27B-d13878e6448-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.3.4.1</ph>
+Microchip OTA Profile Client Role</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div></li><li role="treeitem" aria-expanded="true"><div data-tocid="GUID-86F988CB-FD87-4448-86C2-5DC8644E254F-d13878e6715" class="topicref" data-id="GUID-86F988CB-FD87-4448-86C2-5DC8644E254F" data-state="expanded"><span role="button" tabindex="0" aria-labelledby="button-collapse-action GUID-86F988CB-FD87-4448-86C2-5DC8644E254F-d13878e6715-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-86F988CB-FD87-4448-86C2-5DC8644E254F.html" id="GUID-86F988CB-FD87-4448-86C2-5DC8644E254F-d13878e6715-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.3.4.2</ph>
+Microchip OTA Profile Server Role</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div><ul role="group" class="navbar-nav nav-list"><li role="treeitem" aria-expanded="false"><div data-tocid="GUID-99787238-8749-43FB-8EC5-5076715C6586-d13878e6725" class="topicref" data-id="GUID-99787238-8749-43FB-8EC5-5076715C6586" data-state="not-ready"><span role="button" tabindex="0" aria-labelledby="button-expand-action GUID-99787238-8749-43FB-8EC5-5076715C6586-d13878e6725-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-99787238-8749-43FB-8EC5-5076715C6586.html" id="GUID-99787238-8749-43FB-8EC5-5076715C6586-d13878e6725-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.3.4.2.1</ph>
+Defines</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div></li><li role="treeitem" aria-expanded="false"><div data-tocid="GUID-3CEC6A55-4A7A-40B2-A955-06E240196F95-d13878e6767" class="topicref" data-id="GUID-3CEC6A55-4A7A-40B2-A955-06E240196F95" data-state="not-ready"><span role="button" tabindex="0" aria-labelledby="button-expand-action GUID-3CEC6A55-4A7A-40B2-A955-06E240196F95-d13878e6767-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-3CEC6A55-4A7A-40B2-A955-06E240196F95.html" id="GUID-3CEC6A55-4A7A-40B2-A955-06E240196F95-d13878e6767-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.3.4.2.2</ph>
+Enums</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div></li><li role="treeitem" aria-expanded="true"><div data-tocid="GUID-4EAA8368-F1C7-4125-A844-2BFFE5CAF2F9-d13878e6785" class="topicref" data-id="GUID-4EAA8368-F1C7-4125-A844-2BFFE5CAF2F9" data-state="expanded"><span role="button" tabindex="0" aria-labelledby="button-collapse-action GUID-4EAA8368-F1C7-4125-A844-2BFFE5CAF2F9-d13878e6785-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-4EAA8368-F1C7-4125-A844-2BFFE5CAF2F9.html" id="GUID-4EAA8368-F1C7-4125-A844-2BFFE5CAF2F9-d13878e6785-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.3.4.2.3</ph>
+Structures</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div><ul role="group" class="navbar-nav nav-list"><li role="treeitem"><div data-tocid="ble-otaps-eventcb-t-d13878e6795" class="topicref" data-id="ble-otaps-eventcb-t" data-state="leaf"><span role="button" class="wh-expand-btn"></span><div class="title"><a href="GUID-F9473BB2-15E4-4CD2-98FF-9B9F158A16E1.html" id="ble-otaps-eventcb-t-d13878e6795-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.3.4.2.3.1</ph>
+BLE_OTAPS_EventCb_T</a></div></div></li><li role="treeitem"><div data-tocid="ble-otaps-eventfield-t-d13878e6803" class="topicref" data-id="ble-otaps-eventfield-t" data-state="leaf"><span role="button" class="wh-expand-btn"></span><div class="title"><a href="GUID-E7F605CC-EA38-45BF-BD03-CA6D1A93BE50.html" id="ble-otaps-eventfield-t-d13878e6803-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.3.4.2.3.2</ph>
+BLE_OTAPS_EventField_T</a></div></div></li><li role="treeitem"><div data-tocid="ble-otaps-evtupdatingind-t-d13878e6811" class="topicref" data-id="ble-otaps-evtupdatingind-t" data-state="leaf"><span role="button" class="wh-expand-btn"></span><div class="title"><a href="GUID-99591034-AC02-4E1D-B750-D2DE3A2A3C06.html" id="ble-otaps-evtupdatingind-t-d13878e6811-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.3.4.2.3.3</ph>
+BLE_OTAPS_EvtUpdatingInd_T</a></div></div></li><li role="treeitem"><div data-tocid="ble-otaps-event-t-d13878e6819" class="topicref" data-id="ble-otaps-event-t" data-state="leaf"><span role="button" class="wh-expand-btn"></span><div class="title"><a href="GUID-6EAC2060-F2E6-4C7B-8A88-FF61D9F48B61.html" id="ble-otaps-event-t-d13878e6819-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.3.4.2.3.4</ph>
+BLE_OTAPS_Event_T</a></div></div></li><li role="treeitem"><div data-tocid="ble-otaps-evtstartind-t-d13878e6827" class="topicref" data-id="ble-otaps-evtstartind-t" data-state="leaf"><span role="button" class="wh-expand-btn"></span><div class="title"><a href="GUID-433DC6E6-5494-4A91-8212-39E5B2039F77.html" id="ble-otaps-evtstartind-t-d13878e6827-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.3.4.2.3.5</ph>
+BLE_OTAPS_EvtStartInd_T</a></div></div></li><li role="treeitem"><div data-tocid="ble-otaps-evtupdatereq-t-d13878e6835" class="topicref" data-id="ble-otaps-evtupdatereq-t" data-state="leaf"><span role="button" class="wh-expand-btn"></span><div class="title"><a href="GUID-A3702509-FE68-4F09-8735-0FE47BD093F5.html" id="ble-otaps-evtupdatereq-t-d13878e6835-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.3.4.2.3.6</ph>
+BLE_OTAPS_EvtUpdateReq_T</a></div></div></li><li role="treeitem"><div data-tocid="ble-otaps-evtcompleteind-t-d13878e6843" class="topicref" data-id="ble-otaps-evtcompleteind-t" data-state="leaf"><span role="button" class="wh-expand-btn"></span><div class="title"><a href="GUID-DD9C9FD7-34EB-4636-8E95-2B72521AC371.html" id="ble-otaps-evtcompleteind-t-d13878e6843-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.3.4.2.3.7</ph>
+BLE_OTAPS_EvtCompleteInd_T</a></div></div></li><li role="treeitem" class="active"><div data-tocid="ble-otaps-devinfo-t-d13878e6851" class="topicref" data-id="ble-otaps-devinfo-t" data-state="leaf"><span role="button" class="wh-expand-btn"></span><div class="title"><a href="GUID-7C2FFEEC-DB5D-48CA-AF92-92C934D4352E.html" id="ble-otaps-devinfo-t-d13878e6851-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.3.4.2.3.8</ph>
+BLE_OTAPS_DevInfo_T</a></div></div></li></ul></li><li role="treeitem" aria-expanded="false"><div data-tocid="GUID-95AA5A7D-9316-4F7D-9AB8-839345072AEA-d13878e6859" class="topicref" data-id="GUID-95AA5A7D-9316-4F7D-9AB8-839345072AEA" data-state="not-ready"><span role="button" tabindex="0" aria-labelledby="button-expand-action GUID-95AA5A7D-9316-4F7D-9AB8-839345072AEA-d13878e6859-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-95AA5A7D-9316-4F7D-9AB8-839345072AEA.html" id="GUID-95AA5A7D-9316-4F7D-9AB8-839345072AEA-d13878e6859-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.3.4.2.4</ph>
+Functions</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div></li></ul></li><li role="treeitem" aria-expanded="false"><div data-tocid="GUID-72939995-D3EF-4DAB-9085-937F8B45B744-d13878e6933" class="topicref" data-id="GUID-72939995-D3EF-4DAB-9085-937F8B45B744" data-state="not-ready"><span role="button" tabindex="0" aria-labelledby="button-expand-action GUID-72939995-D3EF-4DAB-9085-937F8B45B744-d13878e6933-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-72939995-D3EF-4DAB-9085-937F8B45B744.html" id="GUID-72939995-D3EF-4DAB-9085-937F8B45B744-d13878e6933-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.3.4.3</ph>
+Message Sequence Chart</a></div></div></li></ul></li><li role="treeitem" aria-expanded="false"><div data-tocid="GUID-2CF55892-78B6-4613-8381-4745A1A047E0-d13878e6957" class="topicref" data-id="GUID-2CF55892-78B6-4613-8381-4745A1A047E0" data-state="not-ready"><span role="button" tabindex="0" aria-labelledby="button-expand-action GUID-2CF55892-78B6-4613-8381-4745A1A047E0-d13878e6957-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-2CF55892-78B6-4613-8381-4745A1A047E0.html" id="GUID-2CF55892-78B6-4613-8381-4745A1A047E0-d13878e6957-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.3.5</ph>
+Proximity Profile (PXP)</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div></li><li role="treeitem" aria-expanded="false"><div data-tocid="GUID-4E4DAE13-1BCF-48DE-864E-DC821097161F-d13878e7371" class="topicref" data-id="GUID-4E4DAE13-1BCF-48DE-864E-DC821097161F" data-state="not-ready"><span role="button" tabindex="0" aria-labelledby="button-expand-action GUID-4E4DAE13-1BCF-48DE-864E-DC821097161F-d13878e7371-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-4E4DAE13-1BCF-48DE-864E-DC821097161F.html" id="GUID-4E4DAE13-1BCF-48DE-864E-DC821097161F-d13878e7371-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.3.6</ph>
+Transparent Credit Based Profile (TRCBP)</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div></li><li role="treeitem" aria-expanded="false"><div data-tocid="GUID-DFBCBE4D-2E2C-4162-947B-30CDF6F3ADCB-d13878e7681" class="topicref" data-id="GUID-DFBCBE4D-2E2C-4162-947B-30CDF6F3ADCB" data-state="not-ready"><span role="button" tabindex="0" aria-labelledby="button-expand-action GUID-DFBCBE4D-2E2C-4162-947B-30CDF6F3ADCB-d13878e7681-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-DFBCBE4D-2E2C-4162-947B-30CDF6F3ADCB.html" id="GUID-DFBCBE4D-2E2C-4162-947B-30CDF6F3ADCB-d13878e7681-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.3.7</ph>
+Transparent Profile (TRP)</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div></li></ul></li></ul></li></ul></li><li role="treeitem" aria-expanded="false"><div data-tocid="GUID-CFC8AE9F-F620-4D4D-9665-E08FFE0763EB-d13878e8169" class="topicref" data-id="GUID-CFC8AE9F-F620-4D4D-9665-E08FFE0763EB" data-state="not-ready"><span role="button" tabindex="0" aria-labelledby="button-expand-action GUID-CFC8AE9F-F620-4D4D-9665-E08FFE0763EB-d13878e8169-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-CFC8AE9F-F620-4D4D-9665-E08FFE0763EB.html" id="GUID-CFC8AE9F-F620-4D4D-9665-E08FFE0763EB-d13878e8169-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.2</ph>
+Wireless BLE v1.2</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div></li></ul></li><li role="treeitem" aria-expanded="false"><div data-tocid="GUID-BDEB1D88-52CC-42E2-AA49-89B9BA4DBDAE-d13878e16300" class="topicref" data-id="GUID-BDEB1D88-52CC-42E2-AA49-89B9BA4DBDAE" data-state="not-ready"><span role="button" tabindex="0" aria-labelledby="button-expand-action GUID-BDEB1D88-52CC-42E2-AA49-89B9BA4DBDAE-d13878e16300-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-BDEB1D88-52CC-42E2-AA49-89B9BA4DBDAE.html" id="GUID-BDEB1D88-52CC-42E2-AA49-89B9BA4DBDAE-d13878e16300-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">2</ph>
+BLE Document</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div></li><li role="treeitem" aria-expanded="false"><div data-tocid="GUID-0FB3F908-88EE-45CE-94F5-E97AF9049C9B-d13878e17723" class="topicref backmatter backmatter_parent" data-id="GUID-0FB3F908-88EE-45CE-94F5-E97AF9049C9B" data-state="not-ready"><span role="button" tabindex="0" aria-labelledby="button-expand-action GUID-0FB3F908-88EE-45CE-94F5-E97AF9049C9B-d13878e17723-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-0FB3F908-88EE-45CE-94F5-E97AF9049C9B.html" id="GUID-0FB3F908-88EE-45CE-94F5-E97AF9049C9B-d13878e17723-link">Microchip Information</a></div></div></li></ul></div>
+		                        
+                            </div>
+                        </nav>
+                    
+                    
+                    <div class="col-lg-7 col-md-9 col-sm-12" id="wh_topic_body">
+                        <button id="wh_close_publication_toc_button" class="close-toc-button d-none" aria-label="Toggle publishing table of content" aria-controls="wh_publication_toc" aria-expanded="true">
+                            <span class="close-toc-icon-container">
+                                <span class="close-toc-icon"></span>     
+                            </span>
+                        </button>
+                        <button id="wh_close_topic_toc_button" class="close-toc-button d-none" aria-label="Toggle topic table of content" aria-controls="wh_topic_toc" aria-expanded="true">
+                            <span class="close-toc-icon-container">
+                                <span class="close-toc-icon"></span>     
+                            </span>
+                        </button>
+                        
+                        <div class=" wh_topic_content body "><main role="main"><article role="article" aria-labelledby="ariaid-title1"><h1 class="- topic/title title topictitle1" id="ariaid-title1" style="">BLE_OTAPS_DevInfo_T</h1><div class="- topic/body body"></div><article class="- topic/topic topic nested1" aria-labelledby="ariaid-title2" id="c"><h2 class="- topic/title title topictitle2" id="ariaid-title2" style=""> C</h2><div class="- topic/body body"><pre class="+ topic/pre pr-d/codeblock pre codeblock c"><strong class="hl-keyword">typedef</strong> <strong class="hl-keyword">struct</strong> BLE_OTAPS_DevInfo_T
+{
+    uint32_t  fwImageVer;
+} BLE_OTAPS_DevInfo_T;</pre></div></article><article class="- topic/topic topic nested1" aria-labelledby="ariaid-title3" id="description"><h2 class="- topic/title title topictitle2" id="ariaid-title3" style=""> Description</h2><div class="- topic/body body"><p class="- topic/p p">The structure contains current device information.</p><p class="- topic/p p">It should be used to response the event <strong class="+ topic/ph hi-d/b ph b"><a class="- topic/xref xref" href="GUID-F3177CD0-E008-4DCD-AA8E-40F6DC495A8A.html">BLE_OTAPS_EVT_UPDATE_REQ</a></strong>.</p></div></article><article class="- topic/topic topic nested1" aria-labelledby="ariaid-title4" id="field-documentation"><h2 class="- topic/title title topictitle2" id="ariaid-title4" style=""> Field Documentation</h2><div class="- topic/body body"><div class="table-container"><table class="- topic/table table" data-cols="2"><caption></caption><colgroup><col/><col/></colgroup><thead class="- topic/thead thead"><tr class="- topic/row"><th class="- topic/entry entry align-left colsep-0 rowsep-0" id="field-documentation__entry__1">Field</th><th class="- topic/entry entry align-left colsep-0 rowsep-0" id="field-documentation__entry__2">Description</th></tr></thead><tbody class="- topic/tbody tbody"><tr class="- topic/row"><td class="- topic/entry entry align-left colsep-0 rowsep-0" headers="field-documentation__entry__1">fwImageVer</td><td class="- topic/entry entry align-left colsep-0 rowsep-0" headers="field-documentation__entry__2">The version of current firmware image.</td></tr></tbody></table></div></div></article></article></main></div>
+                        
+                        
+                        
+                        
+                        
+                        
+                    </div>
+                    
+                        <nav role="navigation" id="wh_topic_toc" aria-label="On this page" class="col-lg-2 d-none d-lg-block navbar d-print-none"> 
+                            <div id="wh_topic_toc_content">
+		                        
+	                            <div class=" wh_topic_toc "><div class="wh_topic_label">On this page</div><ul><li class="topic-item"><a href="#c" data-tocid="c"> C</a></li><li class="topic-item"><a href="#description" data-tocid="description"> Description</a></li><li class="topic-item"><a href="#field-documentation" data-tocid="field-documentation"> Field Documentation</a></li></ul></div>
+	                        	
+                        	</div>
+                        </nav>
+                    
+                </div>
+            </div>
+            
+            
+            
+        </div> 
+        <footer class="navbar navbar-default wh_footer">
+  <div class=" footer-container mx-auto ">
+    <div class="footer">
+  <div class="mchp-wh-footer">
+    <div class="mchp-footer">
+      <div class="mchp-footer-tier1">
+        <div class="spacer"></div>
+        <div class="mchp-footer-container">
+          <div class="mchp-footer-links mchp-social-media-links">
+            <div class="mchp-component-items">
+              <div class="mchp-component-item">
+                <a class="cmp-image__link" href="https://www.facebook.com/pages/Microchip-Technology-Inc/20320981741" target="_blank">
+                  <img class="cmp-image__image" alt="Microchip Facebook" src="oxygen-webhelp/template/resources/images/201016-corp-facebook.png"/>
+                </a>
+              </div>
+              <div class="mchp-component-item">
+                <a class="cmp-image__link" href="https://www.linkedin.com/company/microchip-technology" target="_blank">
+                  <img class="cmp-image__image" alt="Microchip LinkedIn" src="oxygen-webhelp/template/resources/images/201016-corp-linkedin.png"/>
+                </a>
+              </div>
+              <div class="mchp-component-item">
+                <a class="cmp-image__link" href="https://twitter.com/MicrochipTech" target="_blank">
+                  <img class="cmp-image__image" alt="Microchip Twitter" src="oxygen-webhelp/template/resources/images/201016-corp-twitter.png"/>
+                </a>
+              </div>
+              <div class="mchp-component-item">
+                <a class="cmp-image__link" href="https://www.youtube.com/user/MicrochipTechnology" target="_blank">
+                  <img class="cmp-image__image" alt="Microchip YouTube" src="oxygen-webhelp/template/resources/images/201016-corp-youtube.png"/>
+                </a>
+              </div>
+              <div class="mchp-component-item">
+                <a class="cmp-image__link" href="https://www.instagram.com/microchiptechnologyinc/" target="_blank">
+                  <img class="cmp-image__image" alt="Microchip Instagram" src="oxygen-webhelp/template/resources/images/201016-corp-instagram.png"/>
+                </a>
+              </div>
+              <div class="mchp-component-item">
+                <a class="cmp-image__link" href="https://www.weibo.com/microchiptech" target="_blank">
+                  <img class="cmp-image__image" alt="Microchip Weibo" src="oxygen-webhelp/template/resources/images/201016-corp-weibo.png"/>
+                </a>
+              </div>
+              <div class="mchp-component-item">
+                <a class="cmp-image__link" href="https://www.microchip.com/en-us/about/blog" target="_blank">
+                  <img class="cmp-image__image" alt="Microchip Blog" src="oxygen-webhelp/template/resources/images/201016-corp-blog.png"/>
+                </a>
+              </div>
+            </div>
+          </div>
+          <div class="mchp-footer-links">
+            <div class="mchp-component-items">
+              <div class="mchp-component-item">
+                <div class="link">
+                  <a href="https://www.microchip.com/about-us/contact-us" class="mchp-link__link">Contact</a>
+                  <span class="mchp-link__separator">|</span>
+                </div>
+              </div>
+              <div class="mchp-component-item ">
+                <div class="link">
+                  <a href="https://www.microchip.com/en-us/about/legal-information" class="mchp-link__link">Legal</a>
+                  <span class="mchp-link__separator">|</span>
+                </div>
+              </div>
+              <div class="mchp-component-item ">
+                <div class="link">
+                  <a href="https://www.microchip.com/en-us/about/legal-information/privacy-policy" class="mchp-link__link">Privacy Policy</a>
+                  <span class="mchp-link__separator">|</span>
+                </div>
+              </div>
+              <div class="mchp-component-item ">
+                <div class="link">
+                  <a href="https://www.microchip.com/en-us/about/legal-information/microchip-cookie-statement" class="mchp-link__link">Cookies</a>
+                  <span class="mchp-link__separator">|</span>
+                </div>
+              </div>
+              <div class="mchp-component-item">
+                <div class="link">
+                  <a href="https://careers.microchip.com/" class="mchp-link__link">Careers</a>
+                  <span class="mchp-link__separator"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mchp-footer-newsletter">
+            <div class="cmp-text">
+              <p>Stay on the leading edge with our blog</p>
+            </div>
+            <div class="mchp-button-wrapper">
+              <a role="button" href="https://www.microchip.com/en-us/about/blog" class="mchp-button mchp-button-regular solid">
+                <span class="mchp-button__span">MicroSolutions</span>
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="graphic">
+          <img src="oxygen-webhelp/template/resources/images/footer-graphic.png"/>
+        </div>
+      </div>
+      <div class="mchp-footer-tier2">
+        <p class="mchp-copyright">© Copyright 1998-2022 Microchip Technology Inc. All rights reserved.</p>
+      </div>
+    </div>
+  </div>
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async="true" src="https://www.googletagmanager.com/gtag/js?id=UA-2724382-19"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];  
+    function gtag(){dataLayer.push(arguments);}  
+    gtag('js', new Date());   
+    gtag('config', 'UA-2724382-19');
+  </script>
+  
+  <script type="text/javascript">_satellite.pageBottom();</script><!-- Adobe Analytics -->
+  <script type="text/javascript" src="mchp-js/prepend.js"></script><!-- Package for viewing PDFs on mobile devices -->
+  
+</div>
+  </div>
+</footer>
+        
+        <div id="go2top" class="d-print-none">
+            <span class="oxy-icon oxy-icon-up"></span>
+        </div>
+        
+        <div id="modal_img_large" class="modal">
+            <span class="close oxy-icon oxy-icon-remove"></span>
+            <div id="modal_img_container"></div>
+            <div id="caption"></div>
+        </div>
+        
+        
+        
+       
+        </body>
+</html>

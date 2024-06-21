@@ -1,0 +1,1 @@
+define({"topics":[{"title":"<ph>1.2.2.2.2.1.1<\/ph>\nLog type","href":"GUID-654D5ACE-F64F-4D92-8675-41DB4B465DB1.html","attributes":{"data-id":"log-type"},"menu":{"hasChildren":false},"tocID":"log-type-d13878e12792","topics":[]}]});

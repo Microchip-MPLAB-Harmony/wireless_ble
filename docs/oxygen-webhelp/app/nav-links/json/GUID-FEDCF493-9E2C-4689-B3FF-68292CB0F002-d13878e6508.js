@@ -1,0 +1,1 @@
+define({"topics":[{"title":"<ph>1.1.2.3.4.1.2.1<\/ph>\nBLE_OTAPC_EventId_T","href":"GUID-19484883-2CB0-4497-A6CF-3A4254BBF654.html","attributes":{"data-id":"ble-otapc-eventid-t"},"menu":{"hasChildren":false},"tocID":"ble-otapc-eventid-t-d13878e6518","topics":[]}]});

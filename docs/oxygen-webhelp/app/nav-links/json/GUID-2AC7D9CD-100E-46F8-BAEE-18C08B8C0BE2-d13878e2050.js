@@ -1,0 +1,1 @@
+define({"topics":[{"title":"<ph>1.1.2.1.2.2.1<\/ph>\nGATT_EventId_T","href":"GUID-20EFFBD2-7D3F-40CA-B85C-8FD3202D9933.html","attributes":{"data-id":"gatt-eventid-t"},"menu":{"hasChildren":false},"tocID":"gatt-eventid-t-d13878e2060","topics":[]}]});

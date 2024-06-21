@@ -1,0 +1,1 @@
+define({"topics":[{"title":"<ph>1.2.2.1.1.2.1<\/ph>\nBLE_GAP_EventId_T","href":"GUID-ADCFB5AA-F06E-4ED9-9227-592A5CE40F39.html","attributes":{"data-id":"ble-gap-eventid-t"},"menu":{"hasChildren":false},"tocID":"ble-gap-eventid-t-d13878e8848","topics":[]}]});

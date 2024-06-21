@@ -1,0 +1,1 @@
+define({"topics":[{"title":"<ph>1.1.2.3.4.2.2.1<\/ph>\nBLE_OTAPS_EventId_T","href":"GUID-F3177CD0-E008-4DCD-AA8E-40F6DC495A8A.html","attributes":{"data-id":"ble-otaps-eventid-t"},"menu":{"hasChildren":false},"tocID":"ble-otaps-eventid-t-d13878e6777","topics":[]}]});

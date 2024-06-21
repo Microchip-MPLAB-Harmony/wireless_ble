@@ -1,0 +1,1 @@
+define({"topics":[{"title":"<ph>1.2.2.1.5.4.1<\/ph>\nSTACK_EventRegister","href":"GUID-E07C38D5-A4A3-436F-B8CA-33C3491DD12C.html","attributes":{"data-id":"stack-eventregister"},"menu":{"hasChildren":false},"tocID":"stack-eventregister-d13878e11815","topics":[]}]});

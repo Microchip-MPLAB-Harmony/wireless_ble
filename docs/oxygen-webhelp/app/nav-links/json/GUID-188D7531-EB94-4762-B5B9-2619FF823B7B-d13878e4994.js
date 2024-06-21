@@ -1,0 +1,1 @@
+define({"topics":[{"title":"<ph>1.1.2.2.4.1.1<\/ph>\nNumber of discovering characteristics of GATT service","href":"GUID-21BDD2E5-0993-4F18-A076-B875949E9A71.html","attributes":{"data-id":"number-of-discovering-characteristics-of-gatt-service"},"menu":{"hasChildren":false},"tocID":"number-of-discovering-characteristics-of-gatt-service-d13878e5004","topics":[]}]});

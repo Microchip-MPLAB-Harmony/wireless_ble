@@ -1,0 +1,1 @@
+define({"topics":[{"title":"<ph>2.3.4.3.1<\/ph>\nTRCBS Characteristic Discovery","shortdesc":"<p class=\"shortdesc\"\/>","href":"GUID-6854D233-FE74-4634-AF20-2F770D2E2C47.html","attributes":{"data-id":"GUID-6854D233-FE74-4634-AF20-2F770D2E2C47"},"menu":{"hasChildren":false},"tocID":"GUID-6854D233-FE74-4634-AF20-2F770D2E2C47-d13878e17001","topics":[]}]});

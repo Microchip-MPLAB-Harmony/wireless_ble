@@ -1,0 +1,1 @@
+define({"topics":[{"title":"<ph>2.2.4.3.1<\/ph>\nTransparent Service Characteristic Discovery","shortdesc":"<p class=\"shortdesc\"\/>","href":"GUID-745702A8-66B7-49B6-BB96-B70389BA7B5A.html","attributes":{"data-id":"GUID-745702A8-66B7-49B6-BB96-B70389BA7B5A"},"menu":{"hasChildren":false},"tocID":"GUID-745702A8-66B7-49B6-BB96-B70389BA7B5A-d13878e16720","topics":[]}]});
