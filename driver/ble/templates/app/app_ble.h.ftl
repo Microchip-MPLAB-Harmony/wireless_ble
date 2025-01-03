@@ -52,16 +52,20 @@
 
 #include <stdint.h>
 #include <string.h>
+<#if BLE_VIRTUAL_SNIFFER_EN == true>
 #include "bt_sys_log.h"
+</#if>
 #include "stack_mgr.h"
 #include "mba_error_defs.h"
 #include "gap_defs.h"
 #include "ble_gap.h"
+<#if GAP_CENTRAL == true || GAP_PERIPHERAL == true>
 #include "ble_l2cap.h"
 #include "ble_smp.h"
 #include "gatt.h"
-<#if BLE_BOOL_GATT_CLIENT == true>
+    <#if BLE_BOOL_GATT_CLIENT == true>
 #include "ble_gcm/ble_dd.h"
+    </#if>
 </#if>
 
 
@@ -79,8 +83,10 @@ extern "C" {
 // *****************************************************************************
 // *****************************************************************************
 
-<#if BLE_BOOL_GATT_CLIENT == true>
+<#if GAP_CENTRAL == true || GAP_PERIPHERAL == true>
+    <#if BLE_BOOL_GATT_CLIENT == true>
 extern BLE_DD_Config_T         g_ddConfig;
+    </#if>
 </#if>
 
 // *****************************************************************************
@@ -179,7 +185,7 @@ void APP_BleStackInitAdvance(void);
 */
 void APP_BleStackEvtHandler(STACK_Event_T *p_stackEvt);
 
-
+<#if BLE_VIRTUAL_SNIFFER_EN == true>
 /*******************************************************************************
   Function:
     void APP_BleStackLogHandler(BT_SYS_LogEvent_T *p_logEvt)
@@ -199,6 +205,7 @@ void APP_BleStackEvtHandler(STACK_Event_T *p_stackEvt);
 
 */
 void APP_BleStackLogHandler(BT_SYS_LogEvent_T *p_logEvt);
+</#if>
 
 //DOM-IGNORE-BEGIN
 #ifdef __cplusplus

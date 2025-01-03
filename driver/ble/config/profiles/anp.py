@@ -5,11 +5,27 @@ if devFamily == "pic32cx_bz2_family":
     srcPath = "ble_src_bz2"
 elif devFamily == "pic32cx_bz3_family":
     srcPath = "ble_src_bz3"
+elif devFamily == "pic32cx_bz6_family":
+    srcPath = "ble_src_bz6"
 else:
     print("Device not support")
 
 def bleAnpEnable(symbol, event):
     symbol.setEnabled(event["value"])
+
+def bleAnpsHanlderEnable(symbol, event):
+
+    if (anpMenuServer.getValue() == True) and (Database.getSymbolValue("BLE_STACK_LIB", "DISABLE_APP_CODE_GEN") == False):
+        symbol.setEnabled(True)
+    else:
+        symbol.setEnabled(False)
+
+def bleAnpcHanlderEnable(symbol, event):
+
+    if (anpMenuClient.getValue() == True) and (Database.getSymbolValue("BLE_STACK_LIB", "DISABLE_APP_CODE_GEN") == False):
+        symbol.setEnabled(True)
+    else:
+        symbol.setEnabled(False)
 
 def anpClientConfig(symbol, event):
     if event["value"] == True:
@@ -91,7 +107,7 @@ def instantiateComponent(profileAnpComponent):
     bleAnpsAppSourceFile.setProjectPath('app_ble')
     bleAnpsAppSourceFile.setType('Source')
     bleAnpsAppSourceFile.setEnabled(False)
-    bleAnpsAppSourceFile.setDependencies(bleAnpEnable, ["ANP_BOOL_SERVER"])
+    bleAnpsAppSourceFile.setDependencies(bleAnpsHanlderEnable, ["ANP_BOOL_SERVER", "BLE_STACK_LIB.DISABLE_APP_CODE_GEN"])
 
     # Add app_anps_handler.h file - static file
     bleAnpsAppHeaderFile = profileAnpComponent.createFileSymbol(None, None)
@@ -102,7 +118,7 @@ def instantiateComponent(profileAnpComponent):
     bleAnpsAppHeaderFile.setProjectPath('app_ble')
     bleAnpsAppHeaderFile.setType('HEADER')
     bleAnpsAppHeaderFile.setEnabled(False)
-    bleAnpsAppHeaderFile.setDependencies(bleAnpEnable, ["ANP_BOOL_SERVER"])
+    bleAnpsAppHeaderFile.setDependencies(bleAnpsHanlderEnable, ["ANP_BOOL_SERVER", "BLE_STACK_LIB.DISABLE_APP_CODE_GEN"])
 
 
     # Add ble_anpc.c file - static file
@@ -138,7 +154,7 @@ def instantiateComponent(profileAnpComponent):
     bleAnpcAppSourceFile.setProjectPath('app_ble')
     bleAnpcAppSourceFile.setType('Source')
     bleAnpcAppSourceFile.setEnabled(False)
-    bleAnpcAppSourceFile.setDependencies(bleAnpEnable, ["ANP_BOOL_CLIENT"])
+    bleAnpcAppSourceFile.setDependencies(bleAnpcHanlderEnable, ["ANP_BOOL_CLIENT", "BLE_STACK_LIB.DISABLE_APP_CODE_GEN"])
 
     # Add app_anpc_handler.h file - static file
     bleAnpcAppHeaderFile = profileAnpComponent.createFileSymbol(None, None)
@@ -149,7 +165,7 @@ def instantiateComponent(profileAnpComponent):
     bleAnpcAppHeaderFile.setProjectPath('app_ble')
     bleAnpcAppHeaderFile.setType('HEADER')
     bleAnpcAppHeaderFile.setEnabled(False)
-    bleAnpcAppHeaderFile.setDependencies(bleAnpEnable, ["ANP_BOOL_CLIENT"])
+    bleAnpcAppHeaderFile.setDependencies(bleAnpcHanlderEnable, ["ANP_BOOL_CLIENT", "BLE_STACK_LIB.DISABLE_APP_CODE_GEN"])
 
 def finalizeComponent(profileAnpComponent):
     print('Finalizing: {}'.format(profileAnpComponent.getID()))
@@ -177,3 +193,18 @@ def onAttachmentConnected(source, target):
         if anpMenuClient.getValue() == True:
             Database.setSymbolValue("BLE_STACK_LIB", "BLE_BOOL_GATT_CLIENT", True)
             Database.setSymbolValue("BLE_STACK_LIB", "APP_ANP_CLIENT", True)
+
+def handleMessage(messageID, args):
+    '''
+    message formats
+        CONTROLLER_ONLY_MODE_ENABLED: Controller Only Mode is enabled
+            payload:    {
+                        'target':       <this module>
+                        'source':       <module name>
+                        }
+    '''
+    bleServiceProfileComponentIDs = []
+
+    if(messageID == "CONTROLLER_ONLY_MODE_ENABLED"):
+        bleServiceProfileComponentIDs.append(args["target"])
+        Database.deactivateComponents(bleServiceProfileComponentIDs)

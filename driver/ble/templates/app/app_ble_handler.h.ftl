@@ -54,15 +54,17 @@
 #include <string.h>
 #include "gap_defs.h"
 #include "ble_gap.h"
+<#if GAP_CENTRAL == true || GAP_PERIPHERAL == true>
 #include "ble_l2cap.h"
 #include "ble_smp.h"
 #include "gatt.h"
 #include "ble_dtm.h"
 #include "ble_dm/ble_dm.h"
-<#if BLE_BOOL_GATT_CLIENT == true>
+    <#if BLE_BOOL_GATT_CLIENT == true>
 #include "ble_gcm/ble_dd.h"
-    <#if BOOL_GCM_SCM == true>
+        <#if BOOL_GCM_SCM == true>
 #include "ble_gcm/ble_scm.h"
+        </#if>
     </#if>
 </#if>
 
@@ -104,6 +106,7 @@ extern "C" {
 */
 void APP_BleGapEvtHandler(BLE_GAP_Event_T *p_event);
 
+<#if GAP_CENTRAL == true || GAP_PERIPHERAL == true>
 /*******************************************************************************
   Function:
     void APP_BleL2capEvtHandler( BLE_L2CAP_Event_T *p_event )
@@ -183,6 +186,50 @@ void APP_BleSmpEvtHandler(BLE_SMP_Event_T *p_event);
 
 */
 void APP_DmEvtHandler(BLE_DM_Event_T *p_event);
+
+    <#if BLE_BOOL_GATT_CLIENT == true>
+/*******************************************************************************
+  Function:
+    void APP_DdEvtHandler( BLE_DD_Event_T *p_event )
+
+  Summary:
+     BLE application DD event handler.
+
+  Description:
+
+  Precondition:
+
+  Parameters:
+    None.
+
+  Returns:
+    None.
+
+*/
+void APP_DdEvtHandler(BLE_DD_Event_T *p_event);
+        <#if BOOL_GCM_SCM == true>
+/*******************************************************************************
+  Function:
+    void APP_ScmEvtHandler( BLE_SCM_Event_T *p_event )
+
+  Summary:
+     BLE application SCM event handler.
+
+  Description:
+
+  Precondition:
+
+  Parameters:
+    None.
+
+  Returns:
+    None.
+
+*/
+void APP_ScmEvtHandler(BLE_SCM_Event_T *p_event);
+        </#if>
+    </#if>
+</#if>
 
 //DOM-IGNORE-BEGIN
 #ifdef __cplusplus

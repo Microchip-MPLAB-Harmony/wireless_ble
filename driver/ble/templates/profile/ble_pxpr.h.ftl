@@ -31,33 +31,16 @@
     ble_pxpr.h
 
   Summary:
-    This file contains the BLE Proximity Profile Reporter functions for application user.
+    Interface for the BLE Proximity Profile Reporter used by application developers.
 
   Description:
-    This file contains the BLE Proximity Profile Reporter functions for application user.
+    This header file provides function prototypes and definitions for the
+    application layer to interact with the BLE Proximity Profile Reporter.
+    It facilitates communication and data exchange with remote proximity devices.
  *******************************************************************************/
-
-
-/**
- * @addtogroup BLE_PXPR
- * @{
- * @brief Header file for the BLE Proximity profile reporter library.
- * @note Definitions and prototypes for the BLE Proximity profile reporter stack layer application programming interface.
- */
 #ifndef BLE_PXPR_H
 #define BLE_PXPR_H
 
-// *****************************************************************************
-// *****************************************************************************
-// Section: Macros for support feature
-// *****************************************************************************
-// *****************************************************************************
-/**@addtogroup BLE_PXPR_SUPP_SVC_DEFINES Defines
- * @{ */
-
-/**@defgroup BLE_PXPR_SUPP_SVC Supported service
- * @brief The definition of supported service.
- * @{ */
 <#if PXP_SERVER_IAS == true>
 #define BLE_PXPR_IAS_ENABLE        /* Enable Immediate Alert Service */    /**< Feature of PXP Reporter supporting optional Immediate Alert Service. */
 <#else>
@@ -65,14 +48,9 @@
 </#if>
 <#if PXP_SERVER_TPS == true>
 #define BLE_PXPR_TPS_ENABLE        /* Enable TX Power Service */           /**< Feature of PXP Reporter supporting optional Tx Power Service. */
-/** @} */
 <#else>
 //#define BLE_PXPR_TPS_ENABLE        /* Enable TX Power Service */           /**< Feature of PXP Reporter supporting optional Tx Power Service. */
 </#if>
-
-/**@} */ //BLE_PXPR_SUPP_SVC_DEFINES
-
-
 
 // *****************************************************************************
 // *****************************************************************************
@@ -93,27 +71,40 @@
 
 // DOM-IGNORE-BEGIN
 #ifdef __cplusplus  // Provide C++ Compatibility
-
 extern "C" {
-
 #endif
 // DOM-IGNORE-END
 
+/** 
+ * @addtogroup BLE_PROFILE BLE Profile
+ * @{
+ */
+
+/** 
+ * @addtogroup BLE_PXP BLE Proximity Profile
+ * @{
+ */
+
+/**
+ * @defgroup BLE_PXPR BLE Proximity Profile Reporter
+ * 
+ * @brief Provides a interface for the BLE Proximity Profile Reporter.
+ * @note This section documents the API for the BLE Proximity Profile Reporter.
+ *          It includes definitions, function prototypes, and other resources
+ *          required to manage the Proximity Profile in a BLE application.
+ * @{
+ */
 // *****************************************************************************
 // *****************************************************************************
 // Section: Macros
 // *****************************************************************************
 // *****************************************************************************
-/**@addtogroup BLE_PXPR_DEFINES Defines
- * @{ */
+/**
+ * @addtogroup BLE_PXPR_ENUMS Enumerations
+ * @{
+ */
 
-/**@} */ //BLE_PXPR_DEFINES
-
-/**@addtogroup BLE_PXPR_ENUMS Enumerations
- * @{ */
-
-/**@brief Enumeration type of BLE PXP Reporter alert levels. */
-
+/** @brief Enumeration for BLE Proximity Profile Reporter (PXP Reporter) alert levels. */
 typedef enum BLE_PXPR_AlertLevel_T
 {
     BLE_PXPR_ALERT_LEVEL_NO = 0x00U,                 /**< Indicate alert level for No Alert. */
@@ -121,115 +112,130 @@ typedef enum BLE_PXPR_AlertLevel_T
     BLE_PXPR_ALERT_LEVEL_HIGH = 0x02U,               /**< Indicate alert level for High Alert. */
 } BLE_PXPR_AlertLevel_T;
 
-/**@brief Enumeration type of BLE PXP Reporter callback events. */
 
+/** @brief Enumeration for BLE PXP Reporter callback event identifiers. */
 typedef enum BLE_PXPR_EventId_T
 {
-    BLE_PXPR_EVT_LLS_ALERT_LEVEL_WRITE_IND = 0x00U, /**< Event for Alert Level in Link Loss Service is written. See @ref BLE_PXPR_EvtAlertLevelWriteInd_T for event details.*/
-    BLE_PXPR_EVT_IAS_ALERT_LEVEL_WRITE_IND,         /**< Event for Alert Level in Immediate Alert service is written. See @ref BLE_PXPR_EvtAlertLevelWriteInd_T for event details.*/
-    BLE_PXPR_EVT_ERR_UNSPECIFIED_IND                /**< Profile internal unspecified error occurs. */
+    BLE_PXPR_EVT_LLS_ALERT_LEVEL_WRITE_IND = 0x00U, /**< Indicates that the Alert Level characteristic in the Link Loss Service has been written to. 
+                                                          See @ref BLE_PXPR_EvtAlertLevelWriteInd_T for event details.*/
+    BLE_PXPR_EVT_IAS_ALERT_LEVEL_WRITE_IND,         /**< Indicates that the Alert Level characteristic in the Immediate Alert Service has been written to. 
+                                                          See @ref BLE_PXPR_EvtAlertLevelWriteInd_T for event details.*/
+    BLE_PXPR_EVT_ERR_UNSPECIFIED_IND                /**< Indicates an unspecified internal error within the profile. */
 }BLE_PXPR_EventId_T;
 
 
-/**@} */ //BLE_PXPR_ENUMS
+/** @} */ //BLE_PXPR_ENUMS
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Data Types
 // *****************************************************************************
 // *****************************************************************************
-/**@addtogroup BLE_PXPR_STRUCTS Structures
- * @{ */
+/**
+ * @addtogroup BLE_PXPR_STRUCTS Structures
+ * @{
+ */
 
-/**@brief Data structure for @ref BLE_PXPR_EVT_LLS_ALERT_LEVEL_WRITE_IND, @ref BLE_PXPR_EVT_IAS_ALERT_LEVEL_WRITE_IND event. */
+/** @brief Structure for the @ref BLE_PXPR_EVT_LLS_ALERT_LEVEL_WRITE_IND, @ref BLE_PXPR_EVT_IAS_ALERT_LEVEL_WRITE_IND event. */
 typedef struct BLE_PXPR_EvtAlertLevelWriteInd_T
 {
-    uint16_t                            connHandle;       /**< The connection handle to request writing alert level. */
-    BLE_PXPR_AlertLevel_T               alertLevel;       /**< The level that the request wants to write. See @ref BLE_PXPR_AlertLevel_T for the detail. */
+    uint16_t                            connHandle;               /**< Connection handle associated with the write request. */
+    BLE_PXPR_AlertLevel_T               alertLevel;               /**< Desired alert level to be written. See @ref BLE_PXPR_AlertLevel_T. */
 } BLE_PXPR_EvtAlertLevelWriteInd_T;
 
 
-/**@brief Union of BLE PXP Reporter callback event data types.*/
+/** @brief Union of BLE Proximity Profile Reporter callback event data types. */
 typedef union
 {
-    BLE_PXPR_EvtAlertLevelWriteInd_T    evtLlsAlertLevelWriteInd;       /**< Handle @ref BLE_PXPR_EVT_LLS_ALERT_LEVEL_WRITE_IND. */
-    BLE_PXPR_EvtAlertLevelWriteInd_T    evtIasAlertLevelWriteInd;       /**< Handle @ref BLE_PXPR_EVT_IAS_ALERT_LEVEL_WRITE_IND. */
+    BLE_PXPR_EvtAlertLevelWriteInd_T    evtLlsAlertLevelWriteInd; /**< Data for @ref BLE_PXPR_EVT_LLS_ALERT_LEVEL_WRITE_IND event. */
+    BLE_PXPR_EvtAlertLevelWriteInd_T    evtIasAlertLevelWriteInd; /**< Data for @ref BLE_PXPR_EVT_IAS_ALERT_LEVEL_WRITE_IND event. */
 } BLE_PXPR_EventField_T;
 
 
-/**@brief BLE PXP Reporter callback event.*/
+/** @brief BLE Proximity Profile Reporter callback event structure. */
 typedef struct  BLE_PXPR_Event_T
 {
-    BLE_PXPR_EventId_T                  eventId;            /**< Event ID. See @ref BLE_PXPR_EventId_T.  */
-    BLE_PXPR_EventField_T               eventField;         /**< Event field. */
+    BLE_PXPR_EventId_T                  eventId;                  /**< Identifier for the event type. See @ref BLE_PXPR_EventId_T. */
+    BLE_PXPR_EventField_T               eventField;               /**< Data associated with the event. See @ref BLE_PXPR_EventField_T. */
 } BLE_PXPR_Event_T;
 
 
-/**@brief BLE PXP Reporter callback type. This callback function sends BLE PXP Reporter events to the application. */
+/** 
+ * @brief Type definition for the callback function used by the BLE PXP Reporter.
+ *
+ * @param p_event Pointer to the event structure containing the event ID and data.
+ */
 typedef void(*BLE_PXPR_EventCb_T)(BLE_PXPR_Event_T *p_event);
 
-/**@} */ //BLE_PXPR_STRUCTS
+/** @} */ //BLE_PXPR_STRUCTS
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Function Prototypes
 // *****************************************************************************
 // *****************************************************************************
-/**@addtogroup BLE_PXPR_FUNS Functions
- * @{ */
+/**
+ * @addtogroup BLE_PXPR_FUNS Functions
+ * @{
+ */
 
-/**@brief Initialize BLE PXP Reporter.
+/**
+ * @brief Initializes the BLE Proximity Profile (PXP) Reporter.
  *
- * @retval MBA_RES_SUCCESS          Success to initialize PXP reporter.
- * @retval MBA_RES_FAIL             Fail to initialize PXP reporter.
+ * @retval MBA_RES_SUCCESS          The PXP reporter was successfully initialized.
+ * @retval MBA_RES_FAIL             The PXP reporter failed to initialize.
  *
  */
 uint16_t BLE_PXPR_Init(void);
 
 
 /**
- * @brief Register BLE PXP Reporter callback.\n
- *       Application must call this API after starting BLE PXP Reporter procedure.
+ * @brief Registers a callback function for BLE PXP Reporter events.
  *
- *
- * @param[in] routine        Client callback function.
+ * @param[in] routine               The function to be called when a PXP Reporter event occurs.
  *
  */
 void BLE_PXPR_EventRegister(BLE_PXPR_EventCb_T routine);
 
 
 /**
- * @brief Set Alert Level value of Link Loss Service (LLS) table.
+ * @brief Sets the Alert Level for the Link Loss Service (LLS).
  *
+ * @param[in] level                 The desired Alert Level to be set. See @ref BLE_PXPR_AlertLevel_T.
  *
- * @param[in] level                         Alert level.
- *
- * @retval MBA_RES_SUCCESS                  Successfully set alert level.
- * @retval MBA_RES_INVALID_PARA             Invalid parameters.
+ * @retval MBA_RES_SUCCESS          The alert level was successfully set.
+ * @retval MBA_RES_INVALID_PARA     The provided parameters are invalid.
  */
 uint16_t BLE_PXPR_SetLlsAlertLevel(BLE_PXPR_AlertLevel_T level);
 
 
 /**
- * @brief Set Tx Power Level value of Tx Power Service table.
+ * @brief Sets the Transmission Power Level for the Tx Power Service.
  *
- *
- * @param[in] level                         Successfully set tx power level.
+ * @param[in] level                 The desired Tx Power Level to be set.
  *
  */
 void BLE_PXPR_SetTxPowerLevel(int8_t level);
 
 
-/**@brief Handle BLE_Stack events.
- *       This API should be called in the application while caching BLE_Stack events.
+/**
+ * @brief Handles BLE_Stack events.
+ * 
+ * @note This function should be called when BLE Stack events occur.
  *
- * @param[in] p_stackEvent          Pointer to BLE_Stack events buffer.
+ * @param[in] p_stackEvent          Pointer to the BLE Stack event data structure.
  *
 */
 void BLE_PXPR_BleEventHandler(STACK_Event_T *p_stackEvent);
 
 
-/**@} */ //BLE_PXPR_FUNS
+/** @} */ //BLE_PXPR_FUNS
+
+/** @} */
+
+/** @} */
+
+/** @} */
 
 //DOM-IGNORE-BEGIN
 #ifdef __cplusplus
@@ -237,10 +243,4 @@ void BLE_PXPR_BleEventHandler(STACK_Event_T *p_stackEvent);
 #endif
 //DOM-IGNORE-END
 
-#endif
-
-/**
-  @}
-*/
-
-
+#endif//BLE_PXPR_H

@@ -7,6 +7,8 @@ if devFamily == "pic32cx_bz2_family":
     srcPath = "ble_src_bz2"
 elif devFamily == "pic32cx_bz3_family":
     srcPath = "ble_src_bz3"
+elif devFamily == "pic32cx_bz6_family":
+    srcPath = "ble_src_bz6"
 else:
     print("Device not support")
 
@@ -61,6 +63,10 @@ def genCtrlUuid(symbol, event):
 
     symbol.setValue(', '.join(svcUUID))
 
+def trcbsEnableConfigChange(symbol, event):
+
+    symbol.setValue(event["value"])
+
 def instantiateComponent(svcBLE_TRCBSComponent):
     global trcbsServiceUUID
     global trcbsPsmTxUUID
@@ -111,6 +117,19 @@ def instantiateComponent(svcBLE_TRCBSComponent):
     checkedTrcbsCtrlUUID.setVisible(False)
     checkedTrcbsCtrlUUID.setDependencies(genCtrlUuid, ["TRCBS_CTRL_UUID"])
 
+    ##########################
+    # Config Enable
+    ##########################
+    trcbsEnableConfig = svcBLE_TRCBSComponent.createBooleanSymbol('TRCBS_ENABLE_CONFIG', None)
+    trcbsEnableConfig.setLabel('Enable Config')
+    trcbsEnableConfig.setDefaultValue(False)
+    trcbsEnableConfig.setVisible(False)
+    trcbsEnableConfig.setDependencies(trcbsEnableConfigChange, ["BLE_STACK_LIB.BLE_ENABLE_OUTPUT_CONFIG"])
+    if (Database.getSymbolValue("BLE_STACK_LIB", 'BLE_ENABLE_OUTPUT_CONFIG') != None):
+        trcbsEnableConfig.setValue(Database.getSymbolValue("BLE_STACK_LIB", 'BLE_ENABLE_OUTPUT_CONFIG'))
+    else:
+        trcbsEnableConfig.setValue(False)
+
     # Add ble_trcbs.c file
     bleTrcbsSourceFile = svcBLE_TRCBSComponent.createFileSymbol(None, None)
     bleTrcbsSourceFile.setSourcePath('driver/ble/src/' + srcPath + '/service_ble/ble_trcbs/ble_trcbs.c')
@@ -133,6 +152,13 @@ def instantiateComponent(svcBLE_TRCBSComponent):
     bleTrcbsHeaderFile.setEnabled(True)
     bleTrcbsHeaderFile.setMarkup(True)
 
+    # Add the configuration of TRCBS to configuration.h
+    bleTrcbsHeaderConfigFile = svcBLE_TRCBSComponent.createFileSymbol(None, None)
+    bleTrcbsHeaderConfigFile.setType('STRING')
+    bleTrcbsHeaderConfigFile.setOutputName('core.LIST_SYSTEM_CONFIG_H_APPLICATION_CONFIGURATION')
+    bleTrcbsHeaderConfigFile.setSourcePath('driver/ble/templates/service/ble_trcbs_config.h.ftl')
+    bleTrcbsHeaderConfigFile.setMarkup(True)
+
 
 def finalizeComponent(svcBLE_TRCBSComponent):
     Log.writeInfoMessage('Finalizing: {}'.format(svcBLE_TRCBSComponent.getID()))
@@ -141,3 +167,18 @@ def finalizeComponent(svcBLE_TRCBSComponent):
     for r in requiredComponents:
         if r not in activeComponents:
             res = Database.activateComponents([r])
+
+def handleMessage(messageID, args):
+    '''
+    message formats
+        CONTROLLER_ONLY_MODE_ENABLED: Controller Only Mode is enabled
+            payload:    {
+                        'target':       <this module>
+                        'source':       <module name>
+                        }
+    '''
+    bleServiceProfileComponentIDs = []
+
+    if(messageID == "CONTROLLER_ONLY_MODE_ENABLED"):
+        bleServiceProfileComponentIDs.append(args["target"])
+        Database.deactivateComponents(bleServiceProfileComponentIDs)

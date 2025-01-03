@@ -21,39 +21,58 @@
 # ANY WAY RELATED TO THIS SOFTWARE WILL NOT EXCEED THE AMOUNT OF FEES, IF ANY,
 # THAT YOU HAVE PAID DIRECTLY TO MICROCHIP FOR THIS SOFTWARE.
 ##############################################################################
-
-def loadModule():
-    print('Load Module: Harmony Wireless')
-
+'''
     pic32cx_bz2_family = {'PIC32CX1012BZ25048',
                           'PIC32CX1012BZ25032',
                           'PIC32CX1012BZ24032',
                           'WBZ451',
                           'WBZ450',
                           'WBZ451H',
-                          }
+                         }
 
     pic32cx_bz3_family = {'PIC32CX5109BZ31032',
                           'PIC32CX5109BZ31048',
                           'WBZ351',
                           'WBZ350',
-                          }
+                         }
+    
+    pic32cx_bz6_family = {'PIC32CX2051BZ62132',
+                          'PIC32CX2051BZ62064',
+                          'PIC32CX2051BZ66048',
+                          'WBZ653',
+                          'WBZ652',
+                          'WBZ651',
+                         }
+'''
+def loadModule():
+    print('Load Module: Harmony Wireless')
 
-    processor = Variables.get('__PROCESSOR')
-    print('processor={}'.format(processor))
+    print('processor={}'.format(Variables.get("__PROCESSOR")))
 
-    if( processor in pic32cx_bz2_family):
-        ## PIC32CX-BZ Radio stacks
-        execfile(Module.getPath() + '/config/module_pic32cx_bz2_ble.py')
+    if ("PIC32CX" in Variables.get("__PROCESSOR")) or ("WBZ" in Variables.get("__PROCESSOR")) or ("PIC32WM" in Variables.get("__PROCESSOR")):
+        if "BZ2" in Variables.get("__PROCESSOR") or "WBZ45" in Variables.get("__PROCESSOR"):
+            ## PIC32CX-BZ Radio stacks
+            execfile(Module.getPath() + '/config/module_pic32cx_bz2_ble.py')
         
-        execfile(Module.getPath() + '/config/module_ble_service.py')
+            execfile(Module.getPath() + '/config/module_ble_service.py')
         
-        execfile(Module.getPath() + '/config/module_ble_profile.py')
+            execfile(Module.getPath() + '/config/module_ble_profile.py')
 
-    elif( processor in pic32cx_bz3_family):
-        ## PIC32CX-BZ3 Radio stacks
-        execfile(Module.getPath() + '/config/module_pic32cx_bz3_ble.py')
+        elif "BZ3" in Variables.get("__PROCESSOR") or "WBZ35" in Variables.get("__PROCESSOR"):
+            ## PIC32CX-BZ3 Radio stacks
+            execfile(Module.getPath() + '/config/module_pic32cx_bz3_ble.py')
         
-        execfile(Module.getPath() + '/config/module_pic32cx_bz3_ble_service.py')
+            execfile(Module.getPath() + '/config/module_ble_service.py')
         
-        execfile(Module.getPath() + '/config/module_pic32cx_bz3_ble_profile.py')
+            execfile(Module.getPath() + '/config/module_ble_profile.py')
+
+        elif "BZ6" in Variables.get("__PROCESSOR") or "WBZ65" in Variables.get("__PROCESSOR"):
+            ## PIC32CX-BZ6 Radio stacks
+            execfile(Module.getPath() + '/config/module_pic32cx_bz6_ble.py')
+        
+            execfile(Module.getPath() + '/config/module_pic32cx_bz6_ble_service.py')
+        
+            execfile(Module.getPath() + '/config/module_pic32cx_bz6_ble_profile.py')
+
+        else:
+            return "Not Support"

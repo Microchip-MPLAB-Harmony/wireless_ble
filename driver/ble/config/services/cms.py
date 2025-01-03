@@ -1,15 +1,20 @@
 import re
 
+execfile(Module.getPath() + '/driver/ble/config/dev_info.py')
+devFamily = GetDeviceFamily()
+
 cmsSvcMaxCount          = 5
 cmsSvcConfMenu          = []
 cmsSvcName              = []
 cmsSvcUUID              = []
+cmsSvcMinKeySize        = []
 cmsSvcCharNum           = []
 cmsFileSrc              = []
 cmsFileHdr              = []
 
 cmsSvcCharMaxCount      = 10
 cmsSvcCharConfMenu      = []
+
 ################################################################################
 #### Component ####
 ################################################################################
@@ -272,7 +277,6 @@ def instantiateComponent(serviceCmsComponent):
         cmnt.setLabel("**** Service UUID must be 2 bytes or 16 bytes and should input in hexidecimal(LSB). ****")
         #gattCmnt.setDependencies(gattUuidCheck, ["CMS_STR_SVC_UUID_" + str(count)])
 
-
         cmsSvcCharNum.append(count)
         cmsSvcCharNum[count] = serviceCmsComponent.createIntegerSymbol("CMS_INT_SVC_CHAR_COUNT_" + str(count), cmsSvcConfMenu[count])
         cmsSvcCharNum[count].setLabel("Number of Characteristics")
@@ -497,3 +501,18 @@ def finalizeComponent(serviceCmsComponent):
     for r in requiredComponents:
         if r not in activeComponents:
             res = Database.activateComponents([r])
+
+def handleMessage(messageID, args):
+    '''
+    message formats
+        CONTROLLER_ONLY_MODE_ENABLED: Controller Only Mode is enabled
+            payload:    {
+                        'target':       <this module>
+                        'source':       <module name>
+                        }
+    '''
+    bleServiceProfileComponentIDs = []
+
+    if(messageID == "CONTROLLER_ONLY_MODE_ENABLED"):
+        bleServiceProfileComponentIDs.append(args["target"])
+        Database.deactivateComponents(bleServiceProfileComponentIDs)

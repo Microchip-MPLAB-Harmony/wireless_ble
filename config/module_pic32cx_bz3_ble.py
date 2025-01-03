@@ -33,3 +33,4 @@ bleStackLibComponent.addDependency('PIC32CX_BZ3_DevSupport_Dependency', 'Device_
 #bleStackLibComponent.addDependency("BLE_CRYPTO", "LIB_CRYPTO", None, True, True)
 #bleStackLibComponent.addDependency("BLE_WolfCrypt_Dependency", "LIB_WOLFCRYPT", None, False, True)
 bleStackLibComponent.addCapability('BLE_Stack_Capability', 'BLE_STACK', True)
+bleStackLibComponent.setHelpKeyword("WIRELESS_BLE_SW")

@@ -1,9 +1,11 @@
+def dfuDmaEnable(symbol, event):
+    if event["id"] == "BOOL_BLE_UTIL_DFU":
+        if Database.getSymbolValue("core", "DMA_ENABLE") != None:
+            Database.setSymbolValue("core", "DMAC_ENABLE_CH_15", event["value"])
+            
 def dfuExtFlashEnable(symbol, event):
     if event["id"] == "BOOL_BLE_UTIL_DFU":
         symbol.setVisible(event["value"])
-        if Database.getSymbolValue("core", "DMA_ENABLE") != None:
-            Database.setSymbolValue("core", "DMAC_ENABLE_CH_15", event["value"])
-            Database.setSymbolValue("core", "DMA_ENABLE", event["value"])
 
     if event["value"] == True and symbol.getValue() == True:
         Database.activateComponents(["qspi", "drv_sst26"])
@@ -25,6 +27,7 @@ menuBleUtil.setDescription("UTILITY SETTINGS")
 
 
 # BLE Virtual Sniffer Setting
+global bleVirtualSniffer
 bleVirtualSniffer = libBLEStackComponent.createBooleanSymbol('BLE_VIRTUAL_SNIFFER_EN', menuBleUtil)
 bleVirtualSniffer.setLabel('Enable BLE Virtual Sniffer')
 bleVirtualSniffer.setDescription('Enable BLE Virtual Sniffer')
@@ -36,7 +39,9 @@ bleVirtualSniffer.setVisible(True)
 bleUtilDfu = libBLEStackComponent.createBooleanSymbol('BOOL_BLE_UTIL_DFU', menuBleUtil)
 bleUtilDfu.setLabel('DFU module')
 bleUtilDfu.setDefaultValue(False)
-
+if ((devFamily == "pic32cx_bz3_family") or (devFamily == "pic32cx_bz6_family")):
+    bleUtilDfu.setDependencies(dfuDmaEnable, ["BOOL_BLE_UTIL_DFU"])
+    
 # External Flash Setting
 if devFamily == "pic32cx_bz3_family":
     bleUtilDfuExt = libBLEStackComponent.createBooleanSymbol('BOOL_BLE_UTIL_DFU_EXT_FLASH', bleUtilDfu)

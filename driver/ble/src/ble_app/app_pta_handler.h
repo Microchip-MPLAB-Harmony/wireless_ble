@@ -81,7 +81,7 @@ extern "C" {
   Returns:
     None.
 */
-void APP_PtaInit();
+void APP_PtaInit(void);
 
 //DOM-IGNORE-BEGIN
 #ifdef __cplusplus

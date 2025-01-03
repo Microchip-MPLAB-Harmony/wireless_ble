@@ -5,11 +5,20 @@ if devFamily == "pic32cx_bz2_family":
     srcPath = "ble_src_bz2"
 elif devFamily == "pic32cx_bz3_family":
     srcPath = "ble_src_bz3"
+elif devFamily == "pic32cx_bz6_family":
+    srcPath = "ble_src_bz6"
 else:
     print("Device not support")
 
 def bleTrcbpEnable(symbol, event):
     symbol.setEnabled(event["value"])
+
+def bleTrcbpHanlderEnable(symbol, event):
+
+    if (trcbpMenuServer.getValue() == True) and (Database.getSymbolValue("BLE_STACK_LIB", "DISABLE_APP_CODE_GEN") == False):
+        symbol.setEnabled(True)
+    else:
+        symbol.setEnabled(False)
 
 def trcbpServerConfig(symbol, event):
     if event["value"] == True:
@@ -74,7 +83,7 @@ def instantiateComponent(profileTrcbpComponent):
     bleTrcbpsHeaderFile.setMarkup(True)
     bleTrcbpsHeaderFile.setDependencies(bleTrcbpEnable, ["TRCBP_BOOL_SERVER"])
 
-    # Add app_trcbps.c file - static file
+    # Add app_trcbps_handler.c file - static file
     bleTrcbpsAppSourceFile = profileTrcbpComponent.createFileSymbol(None, None)
     bleTrcbpsAppSourceFile.setSourcePath('driver/ble/src/ble_app/app_trcbps_handler.c')
     bleTrcbpsAppSourceFile.setOutputName('app_trcbps_handler.c')
@@ -83,9 +92,9 @@ def instantiateComponent(profileTrcbpComponent):
     bleTrcbpsAppSourceFile.setProjectPath('app_ble')
     bleTrcbpsAppSourceFile.setType('Source')
     bleTrcbpsAppSourceFile.setEnabled(False)
-    bleTrcbpsAppSourceFile.setDependencies(bleTrcbpEnable, ["TRCBP_BOOL_SERVER"])
-    
-    # Add app_trcbps.h file - static file
+    bleTrcbpsAppSourceFile.setDependencies(bleTrcbpHanlderEnable, ["TRCBP_BOOL_SERVER", "BLE_STACK_LIB.DISABLE_APP_CODE_GEN"])
+
+    # Add app_trcbps_handler.h file - static file
     bleTrcbpsAppHeaderFile = profileTrcbpComponent.createFileSymbol(None, None)
     bleTrcbpsAppHeaderFile.setSourcePath('driver/ble/src/ble_app/app_trcbps_handler.h')
     bleTrcbpsAppHeaderFile.setOutputName('app_trcbps_handler.h')
@@ -94,7 +103,7 @@ def instantiateComponent(profileTrcbpComponent):
     bleTrcbpsAppHeaderFile.setProjectPath('app_ble')
     bleTrcbpsAppHeaderFile.setType('HEADER')
     bleTrcbpsAppHeaderFile.setEnabled(False)
-    bleTrcbpsAppHeaderFile.setDependencies(bleTrcbpEnable, ["TRCBP_BOOL_SERVER"])
+    bleTrcbpsAppHeaderFile.setDependencies(bleTrcbpHanlderEnable, ["TRCBP_BOOL_SERVER", "BLE_STACK_LIB.DISABLE_APP_CODE_GEN"])
 
     # Add ble_trcbpc.c file
     #bleTrcbpsSourceFile = profileTrcbpComponent.createFileSymbol(None, None)
@@ -164,3 +173,18 @@ def onAttachmentConnected(source, target):
 
         if trcbpMenuServer.getValue() == True:
             Database.setSymbolValue("BLE_STACK_LIB", "APP_TRCBP_SERVER", True)
+
+def handleMessage(messageID, args):
+    '''
+    message formats
+        CONTROLLER_ONLY_MODE_ENABLED: Controller Only Mode is enabled
+            payload:    {
+                        'target':       <this module>
+                        'source':       <module name>
+                        }
+    '''
+    bleServiceProfileComponentIDs = []
+
+    if(messageID == "CONTROLLER_ONLY_MODE_ENABLED"):
+        bleServiceProfileComponentIDs.append(args["target"])
+        Database.deactivateComponents(bleServiceProfileComponentIDs)

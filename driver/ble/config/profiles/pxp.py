@@ -5,9 +5,27 @@ if devFamily == "pic32cx_bz2_family":
     srcPath = "ble_src_bz2"
 elif devFamily == "pic32cx_bz3_family":
     srcPath = "ble_src_bz3"
+elif devFamily == "pic32cx_bz6_family":
+    srcPath = "ble_src_bz6"
+else:
+    print("Device not support")
 
 def blePxpEnable(symbol, event):
     symbol.setEnabled(event["value"])
+
+def blePxpsHanlderEnable(symbol, event):
+
+    if (pxpMenuServer.getValue() == True) and (Database.getSymbolValue("BLE_STACK_LIB", "DISABLE_APP_CODE_GEN") == False):
+        symbol.setEnabled(True)
+    else:
+        symbol.setEnabled(False)
+
+def blePxpcHanlderEnable(symbol, event):
+
+    if (pxpMenuClient.getValue() == True) and (Database.getSymbolValue("BLE_STACK_LIB", "DISABLE_APP_CODE_GEN") == False):
+        symbol.setEnabled(True)
+    else:
+        symbol.setEnabled(False)
 
 def pxpClientConfig(symbol, event):
     if event["value"] == True:
@@ -139,7 +157,7 @@ def instantiateComponent(profilePxpComponent):
     blePxprAppSourceFile.setProjectPath('app_ble')
     blePxprAppSourceFile.setType('Source')
     blePxprAppSourceFile.setEnabled(False)
-    blePxprAppSourceFile.setDependencies(blePxpEnable, ["PXP_BOOL_SERVER"])
+    blePxprAppSourceFile.setDependencies(blePxpsHanlderEnable, ["PXP_BOOL_SERVER", "BLE_STACK_LIB.DISABLE_APP_CODE_GEN"])
 
     # Add app_pxpr_handler.h file - static file
     blePxprAppHeaderFile = profilePxpComponent.createFileSymbol(None, None)
@@ -150,7 +168,7 @@ def instantiateComponent(profilePxpComponent):
     blePxprAppHeaderFile.setProjectPath('app_ble')
     blePxprAppHeaderFile.setType('HEADER')
     blePxprAppHeaderFile.setEnabled(False)
-    blePxprAppHeaderFile.setDependencies(blePxpEnable, ["PXP_BOOL_SERVER"])
+    blePxprAppHeaderFile.setDependencies(blePxpsHanlderEnable, ["PXP_BOOL_SERVER", "BLE_STACK_LIB.DISABLE_APP_CODE_GEN"])
 
 
     # Add ble_pxpm.c file - static file
@@ -186,7 +204,7 @@ def instantiateComponent(profilePxpComponent):
     blePxpmAppSourceFile.setProjectPath('app_ble')
     blePxpmAppSourceFile.setType('Source')
     blePxpmAppSourceFile.setEnabled(False)
-    blePxpmAppSourceFile.setDependencies(blePxpEnable, ["PXP_BOOL_CLIENT"])
+    blePxpmAppSourceFile.setDependencies(blePxpcHanlderEnable, ["PXP_BOOL_CLIENT", "BLE_STACK_LIB.DISABLE_APP_CODE_GEN"])
 
     # Add app_pxpm_handler.h file - static file
     blePxpmAppHeaderFile = profilePxpComponent.createFileSymbol(None, None)
@@ -197,7 +215,7 @@ def instantiateComponent(profilePxpComponent):
     blePxpmAppHeaderFile.setProjectPath('app_ble')
     blePxpmAppHeaderFile.setType('HEADER')
     blePxpmAppHeaderFile.setEnabled(False)
-    blePxpmAppHeaderFile.setDependencies(blePxpEnable, ["PXP_BOOL_CLIENT"])
+    blePxpmAppHeaderFile.setDependencies(blePxpcHanlderEnable, ["PXP_BOOL_CLIENT", "BLE_STACK_LIB.DISABLE_APP_CODE_GEN"])
 
 
 def finalizeComponent(profilePxpComponent):
@@ -226,3 +244,18 @@ def onAttachmentConnected(source, target):
         if pxpMenuClient.getValue() == True:
             Database.setSymbolValue("BLE_STACK_LIB", "BLE_BOOL_GATT_CLIENT", True)
             Database.setSymbolValue("BLE_STACK_LIB", "APP_PXP_CLIENT", True)
+
+def handleMessage(messageID, args):
+    '''
+    message formats
+        CONTROLLER_ONLY_MODE_ENABLED: Controller Only Mode is enabled
+            payload:    {
+                        'target':       <this module>
+                        'source':       <module name>
+                        }
+    '''
+    bleServiceProfileComponentIDs = []
+
+    if(messageID == "CONTROLLER_ONLY_MODE_ENABLED"):
+        bleServiceProfileComponentIDs.append(args["target"])
+        Database.deactivateComponents(bleServiceProfileComponentIDs)

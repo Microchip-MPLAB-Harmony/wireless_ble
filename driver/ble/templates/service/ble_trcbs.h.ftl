@@ -22,7 +22,7 @@
 *******************************************************************************/
 
 /*******************************************************************************
-  BLE Transparent Credit Based Service Header File
+  BLE Transparent Credit Based Service (TRCBS) Header File
 
   Company:
     Microchip Technology Inc.
@@ -31,95 +31,124 @@
     ble_trcbs.h
 
   Summary:
-    This file contains the BLE Transparent Credit Based Service functions for application user.
+    Interface for the BLE Transparent Credit Based Service,facilitating the 
+    use of TRCBS in BLE applications.
 
   Description:
-    This file contains the BLE Transparent Credit Based Service functions for application user.
+    Provides function prototypes and constants necessary for the integration and
+    use of TRCBS in BLE applications, enabling efficient data communication.
  *******************************************************************************/
 
-
-/**
- * @addtogroup BLE_TRCBS BLE_TRCBS
- * @{
- * @brief Header file for the BLE Transparent Credit Based Service library.
- * @note Definitions and prototypes for the BLE Transparent Credit Based Service stack layer application programming interface.
- */
 #ifndef BLE_TRCBS_H
 #define BLE_TRCBS_H
 
+<#if TRCBS_ENABLE_CONFIG == true>
+#include "configuration.h"
+</#if>
+
 // DOM-IGNORE-BEGIN
 #ifdef __cplusplus  // Provide C++ Compatibility
-
 extern "C" {
-
 #endif
 // DOM-IGNORE-END
 
+/**
+ * @addtogroup BLE_SERVICE BLE Service
+ * @{
+ */
+
+/**
+ * @addtogroup BLE_TRCBS BLE Transparent Credit Based Service (TRCBS)
+ * @brief Provides the interface for BLE Transparent Credit Based Service.
+ * @note This section documents the API for the BLE TRCBS, including
+ *          definitions, functions, and data structures necessary for application
+ *          developers to utilize the service in BLE communication
+ * @{
+ */
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Macros
 // *****************************************************************************
 // *****************************************************************************
+/**
+ * @addtogroup BLE_TRCBS_DEFINES Defines
+ * @{
+ */
 
-
-/**@defgroup UUID UUID
- * @brief The definition of UUID
- * @{ */
+/**
+ * @defgroup BLE_TRCBS_UUID_DEF BLE Transparent Credit Based Service UUID definitions
+ * @brief UUIDs for the BLE Transparent Credit Based Service characteristics.
+ * @{
+ */
+<#if TRCBS_ENABLE_CONFIG == true>
+#define UUID_MCHP_PROPRIETARY_SERVICE_TRCB_16                      CONFIG_BLE_SVC_TRCBS_UUID_MCHP_PROPRIETARY_SERVICE_TRCB_16
+#define UUID_MCHP_TRCB_L2CAP_PSM_16                                CONFIG_BLE_SVC_TRCBS_UUID_MCHP_TRCB_L2CAP_PSM_16
+#define UUID_MCHP_TRCB_CTRL_16                                     CONFIG_BLE_SVC_TRCBS_UUID_MCHP_TRCB_CTRL_16
+<#else>
 #define UUID_MCHP_PROPRIETARY_SERVICE_TRCB_16                      ${CHECKED_TRCBS_SERVICE_UUID}    /* Service UUID */
 #define UUID_MCHP_TRCB_L2CAP_PSM_16                                ${CHECKED_TRCBS_PSM_UUID}    /* PSM UUID */
 #define UUID_MCHP_TRCB_CTRL_16                                     ${CHECKED_TRCBS_CTRL_UUID}    /* CTRL UUID */
+</#if>
 /** @} */
 
-/**@defgroup BLE_TRCB_ASSIGN_HANDLE BLE_TRCB_ASSIGN_HANDLE
- * @brief Assigned attribute handles of BLE Transparent Credit Based Service.
- * @{ */
-#define BLE_TRCB_START_HDL                                        (0x00C0U)                /**< The start attribute handle of BLE Transparent Credit Based service. */
-/** @} */
-
-
-/**@defgroup BLE_TRCB_PSM BLE_TRCB_PSM
+/**
+ * @defgroup BLE_TRCBS_PSM TRCPB PSM definition
  * @brief The definition of BLE Transparent Credit Based PSM.
- * @{ */
-#define BLE_TRCB_DATA_PSM                                         (0x0081U)                /**< PSM value of data channel. */
+ * @{
+ */
+#define BLE_TRCB_DATA_PSM                                 (0x0081U)                         /**< PSM for the BLE Transparent Credit Based data channel. */
 /** @} */
 
+/**
+ * @defgroup BLE_TRCBS_ASSIGN_HANDLE TRCBS assigned handles
+ * @brief Handles associated with the BLE Transparent Credit Based Service attributes.
+ * @{
+ */
+#define BLE_TRCB_START_HDL                                (0x00C0U)                         /**< Start handle for the BLE Transparent Credit Based service. */
 
-/**@brief Definition of BLE Transparent Credit Based Service attribute handle */
+/* Enumeration of attribute handles for the BLE Transparent Credit Based Service. */
 typedef enum BLE_TRCB_AttributeHandle_T
 {
-    BLE_TRCB_HDL_SRV = BLE_TRCB_START_HDL,                               /**< Handle of Primary Service of BLE Transparent Credit Based Service. */
-    BLE_TRCB_HDL_CHAR_CTRL,                                              /**< Handle of Transparent Credit Based Control characteristic. */
-    BLE_TRCB_HDL_CHARVAL_CTRL,                                           /**< Handle of Transparent Credit Based Control characteristic value. */
-    BLE_TRCB_HDL_CCCD_CTRL,                                              /**< Handle of Transparent Credit Based Control characteristic CCCD. */
-    BLE_TRCB_HDL_CHAR_L2CAP_PSM,                                         /**< Handle of Transparent Credit Based L2CAP PSM characteristic. */
-    BLE_TRCB_HDL_CHARVAL_L2CAP_PSM                                       /**< Handle of Transparent Credit Based L2CAP PSM characteristic value. */
+    BLE_TRCB_HDL_SRV = BLE_TRCB_START_HDL,                                                  /**< Handle for the BLE Transparent Credit Based Service primary service. */
+    BLE_TRCB_HDL_CHAR_CTRL,                                                                 /**< Handle for the BLE Transparent Credit Based Control characteristic. */
+    BLE_TRCB_HDL_CHARVAL_CTRL,                                                              /**< Handle for the BLE Transparent Credit Based Control characteristic value. */
+    BLE_TRCB_HDL_CCCD_CTRL,                                                                 /**< Handle for the BLE Transparent Credit Based Control CCCD value. */
+    BLE_TRCB_HDL_CHAR_L2CAP_PSM,                                                            /**< Handle for the BLE Transparent Credit Based L2CAP PSM characteristic. */
+    BLE_TRCB_HDL_CHARVAL_L2CAP_PSM                                                          /**< Handle for the BLE Transparent Credit Based L2CAP PSM characteristic value. */
 }BLE_TRCB_AttributeHandle_T;
 
-
-/**@defgroup BLE_TRCB_ASSIGN_HANDLE BLE_TRCB_ASSIGN_HANDLE
- * @brief Assigned attribute handles of BLE Transparent Credit Based Service.
- * @{ */
-#define BLE_TRCB_END_HDL                                         BLE_TRCB_HDL_CHARVAL_L2CAP_PSM         /**< The end attribute handle of BLE Transparent Credit Based Service. */
+#define BLE_TRCB_END_HDL                                  BLE_TRCB_HDL_CHARVAL_L2CAP_PSM    /**< End handle for the BLE Transparent Credit Based Service. */
 /** @} */
+
+/** @} */ //BLE_TRCBS_DEFINES
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Function Prototypes
 // *****************************************************************************
 // *****************************************************************************
+/**
+ * @addtogroup BLE_TRCBS_FUNS Functions
+ * @{
+ */
 
 /**
- *@brief This API is used to register the BLE Transparent Credit Based Service to GATT server.
+ * @brief Adds the BLE Transparent Credit Based Service to the GATT server.
  *
- *@note  Note that the start handle of the registering service should be greater than @ref GATTS_APP_SVC_START_HDL.
- *
- *
- *@retval MBA_RES_SUCCESS       Successfully registering the service
- *@retval MBA_RES_FAIL          Fail to register the service. The assigned attribute handles in the service conflict or \n
- *                              the start handle of the service is smaller than @ref GATTS_APP_SVC_START_HDL.
+ * This function adds the BLE Transparent Credit Based Service to the BLE stack's GATT server,
+ * enabling the service to be discovered and accessed by remote BLE devices.
+ * 
+ * @retval MBA_RES_SUCCESS                    The BLE Transparent Credit Based service was successfully added.
+ * @retval MBA_RES_NO_RESOURCE                Insufficient resource to add the BLE Transparent Credit Based service.
  */
 uint16_t BLE_TRCBS_Add(void);
+
+/** @} */ //BLE_TRCBS_FUNS
+
+/** @} */
+
+/** @} */
 
 //DOM-IGNORE-BEGIN
 #ifdef __cplusplus
@@ -127,8 +156,4 @@ uint16_t BLE_TRCBS_Add(void);
 #endif
 //DOM-IGNORE-END
 
-#endif
-
-/**
-  @}
- */
+#endif //BLE_TRCBS_H

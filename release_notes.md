@@ -4,6 +4,20 @@
 
 # Microchip MPLAB® Harmony 3 Release Notes
 
+## Wireless BLE Release v1.4.0
+
+This release includes support for the new PIC32CX-BZ6 device.
+
+### New Features
++ **PIC32CX-BZ6**
+	+ This release includes initial Bluetooth Low Energy software support for PIC32CX-BZ6/PIC32WM-BZ6x families of 32-bit microcontrollers.
+
+
+### Development Tools
++ [MPLAB X v6.20](https://www.microchip.com/mplab/mplab-x-ide)
++ [MPLAB® XC32 C/C++ Compiler v4.45](https://www.microchip.com/mplab/compilers)
++ MPLAB® X IDE plug-ins: MPLAB® Code Configurator (MCC) v5.7.1 and above
+
 ## Wireless BLE Release v1.3.0
 
 This release includes additions and improvements to PIC32CX-BZ2 and PIC32CX-BZ3 devices.

@@ -5,11 +5,20 @@ if devFamily == "pic32cx_bz2_family":
     srcPath = "ble_src_bz2"
 elif devFamily == "pic32cx_bz3_family":
     srcPath = "ble_src_bz3"
+elif devFamily == "pic32cx_bz6_family":
+    srcPath = "ble_src_bz6"
 else:
     print("Device not support")
 
 def bleAncsEnable(symbol, event):
     symbol.setEnabled(event["value"])
+
+def bleAncsHanlderEnable(symbol, event):
+
+    if (ancsMenuClient.getValue() == True) and (Database.getSymbolValue("BLE_STACK_LIB", "DISABLE_APP_CODE_GEN") == False):
+        symbol.setEnabled(True)
+    else:
+        symbol.setEnabled(False)
 
 def ancsClientConfig(symbol, event):
     if event["value"] == True:
@@ -70,7 +79,7 @@ def instantiateComponent(profileAncsComponent):
     bleAncsAppSourceFile.setProjectPath('app_ble')
     bleAncsAppSourceFile.setType('Source')
     bleAncsAppSourceFile.setEnabled(True)
-    bleAncsAppSourceFile.setDependencies(bleAncsEnable, ["ANCS_BOOL_CLIENT"])
+    bleAncsAppSourceFile.setDependencies(bleAncsHanlderEnable, ["ANCS_BOOL_CLIENT", "BLE_STACK_LIB.DISABLE_APP_CODE_GEN"])
 
     # Add app_ancs_handler.h file - static file
     bleAncsAppHeaderFile = profileAncsComponent.createFileSymbol(None, None)
@@ -81,7 +90,7 @@ def instantiateComponent(profileAncsComponent):
     bleAncsAppHeaderFile.setProjectPath('app_ble')
     bleAncsAppHeaderFile.setType('HEADER')
     bleAncsAppHeaderFile.setEnabled(True)
-    bleAncsAppHeaderFile.setDependencies(bleAncsEnable, ["ANCS_BOOL_CLIENT"])
+    bleAncsAppHeaderFile.setDependencies(bleAncsHanlderEnable, ["ANCS_BOOL_CLIENT", "BLE_STACK_LIB.DISABLE_APP_CODE_GEN"])
 
 
 def finalizeComponent(profileAncsComponent):
@@ -111,3 +120,18 @@ def onAttachmentConnected(source, target):
             Database.setSymbolValue("BLE_STACK_LIB", "APP_ANCS_CLIENT", True)
             if (Database.getSymbolValue("BLE_STACK_LIB", "BLE_BOOL_GATT_CLIENT") == False):
                 Database.setSymbolValue("BLE_STACK_LIB", "BLE_BOOL_GATT_CLIENT", True)
+
+def handleMessage(messageID, args):
+    '''
+    message formats
+        CONTROLLER_ONLY_MODE_ENABLED: Controller Only Mode is enabled
+            payload:    {
+                        'target':       <this module>
+                        'source':       <module name>
+                        }
+    '''
+    bleServiceProfileComponentIDs = []
+
+    if(messageID == "CONTROLLER_ONLY_MODE_ENABLED"):
+        bleServiceProfileComponentIDs.append(args["target"])
+        Database.deactivateComponents(bleServiceProfileComponentIDs)

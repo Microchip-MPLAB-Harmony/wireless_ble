@@ -5,11 +5,27 @@ if devFamily == "pic32cx_bz2_family":
     srcPath = "ble_src_bz2"
 elif devFamily == "pic32cx_bz3_family":
     srcPath = "ble_src_bz3"
+elif devFamily == "pic32cx_bz6_family":
+    srcPath = "ble_src_bz6"
 else:
     print("Device not support")
 
 def bleTrspEnable(symbol, event):
-    symbol.setEnabled(event["value"]) 
+    symbol.setEnabled(event["value"])
+
+def bleTrspsHanlderEnable(symbol, event):
+
+    if (trpMenuServer.getValue() == True) and (Database.getSymbolValue("BLE_STACK_LIB", "DISABLE_APP_CODE_GEN") == False):
+        symbol.setEnabled(True)
+    else:
+        symbol.setEnabled(False)
+
+def bleTrspcHanlderEnable(symbol, event):
+
+    if (trpMenuClient.getValue() == True) and (Database.getSymbolValue("BLE_STACK_LIB", "DISABLE_APP_CODE_GEN") == False):
+        symbol.setEnabled(True)
+    else:
+        symbol.setEnabled(False)
 
 def trspClientConfig(symbol, event):
     if event["value"] == True:
@@ -90,7 +106,7 @@ def instantiateComponent(profileTrspComponent):
     bleTrspsAppSourceFile.setProjectPath('app_ble')
     bleTrspsAppSourceFile.setType('Source')
     bleTrspsAppSourceFile.setEnabled(False)
-    bleTrspsAppSourceFile.setDependencies(bleTrspEnable, ["TRSP_BOOL_SERVER"])
+    bleTrspsAppSourceFile.setDependencies(bleTrspsHanlderEnable, ["TRSP_BOOL_SERVER", "BLE_STACK_LIB.DISABLE_APP_CODE_GEN"])
 
     # Add app_trsps_handler.h file - static file
     bleTrspsAppHeaderFile = profileTrspComponent.createFileSymbol(None, None)
@@ -101,7 +117,7 @@ def instantiateComponent(profileTrspComponent):
     bleTrspsAppHeaderFile.setProjectPath('app_ble')
     bleTrspsAppHeaderFile.setType('HEADER')
     bleTrspsAppHeaderFile.setEnabled(False)
-    bleTrspsAppHeaderFile.setDependencies(bleTrspEnable, ["TRSP_BOOL_SERVER"])
+    bleTrspsAppHeaderFile.setDependencies(bleTrspsHanlderEnable, ["TRSP_BOOL_SERVER", "BLE_STACK_LIB.DISABLE_APP_CODE_GEN"])
 
 
     # Add ble_trspc.c file - static file
@@ -137,7 +153,7 @@ def instantiateComponent(profileTrspComponent):
     bleTrpcAppSourceFile.setProjectPath('app_ble')
     bleTrpcAppSourceFile.setType('Source')
     bleTrpcAppSourceFile.setEnabled(False)
-    bleTrpcAppSourceFile.setDependencies(bleTrspEnable, ["TRSP_BOOL_CLIENT"])
+    bleTrpcAppSourceFile.setDependencies(bleTrspcHanlderEnable, ["TRSP_BOOL_CLIENT", "BLE_STACK_LIB.DISABLE_APP_CODE_GEN"])
 
     # Add app_trspc_handler.h file - static file
     bleTrpcAppHeaderFile = profileTrspComponent.createFileSymbol(None, None)
@@ -148,7 +164,7 @@ def instantiateComponent(profileTrspComponent):
     bleTrpcAppHeaderFile.setProjectPath('app_ble')
     bleTrpcAppHeaderFile.setType('HEADER')
     bleTrpcAppHeaderFile.setEnabled(False)
-    bleTrpcAppHeaderFile.setDependencies(bleTrspEnable, ["TRSP_BOOL_CLIENT"])
+    bleTrpcAppHeaderFile.setDependencies(bleTrspcHanlderEnable, ["TRSP_BOOL_CLIENT", "BLE_STACK_LIB.DISABLE_APP_CODE_GEN"])
 
 
 def finalizeComponent(profileTrspComponent):
@@ -176,3 +192,18 @@ def onAttachmentConnected(source, target):
         if trpMenuClient.getValue() == True:
             Database.setSymbolValue("BLE_STACK_LIB", "BLE_BOOL_GATT_CLIENT", True)
             Database.setSymbolValue("BLE_STACK_LIB", "APP_TRSP_CLIENT", True)
+
+def handleMessage(messageID, args):
+    '''
+    message formats
+        CONTROLLER_ONLY_MODE_ENABLED: Controller Only Mode is enabled
+            payload:    {
+                        'target':       <this module>
+                        'source':       <module name>
+                        }
+    '''
+    bleServiceProfileComponentIDs = []
+
+    if(messageID == "CONTROLLER_ONLY_MODE_ENABLED"):
+        bleServiceProfileComponentIDs.append(args["target"])
+        Database.deactivateComponents(bleServiceProfileComponentIDs)

@@ -11,7 +11,7 @@
         btSysCfg.antennaGain = ${BLE_ANTENNA_GAIN};
     }
 
-    <#if APP_BLE_DEVICE == "pic32cx_bz3_family">
+    <#if APP_BLE_DEVICE == "pic32cx_bz3_family"|| APP_BLE_DEVICE == "pic32cx_bz6_family">
     btSysCfg.adcTimingValid =IB_GetAdcTiming(&btSysCfg.adcTiming08, &btSysCfg.adcTiming51);
     </#if>
 

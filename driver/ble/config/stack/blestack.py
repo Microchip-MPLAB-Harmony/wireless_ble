@@ -38,6 +38,15 @@ elif devFamily == "pic32cx_bz3_family":
     else:
         devId = '351'
     conMinTxPwr = -24
+elif devFamily == "pic32cx_bz6_family":
+    srcPath = "ble_src_bz6"
+    devSupp = 'pic32cx_bz6_devsupport'
+    libObj = "ble_stack_bz6_lib.a"
+    if processor == 'PIC32CX2051BZ62132':
+        devId = '650'
+    else:
+        devId = '650'
+    conMinTxPwr = -24
 else:
     srcPath = ""
     devSupp = ''
@@ -71,6 +80,34 @@ def bleConfigDsadvEnable(symbol, event):
     else:
         symbol.setEnabled(False)
 
+def bleConfigHandlerEnable(symbol, event):
+
+    if (bleCtrlOnly.getValue()==False) and (bleDisAppCodeGen.getValue()==False):
+        symbol.setEnabled(True)
+    else:
+        symbol.setEnabled(False)
+
+def bleConfigAppBleBz6Enable(symbol, event):
+
+    symbol.setEnabled(event["value"])
+
+def bleConfigAppBleBz23Enable(symbol, event):
+
+    if (bleCtrlOnly.getValue()==False):
+        # The opposite behavior to bleConfigAppBleBz6Enable()
+        symbol.setEnabled(not event["value"])
+    else:
+        symbol.setEnabled(event["value"])
+
+def bleConfigLogHandlerEnable(symbol, event):
+
+    if (bleCtrlOnly.getValue()==False):
+        if (bleVirtualSniffer.getValue()==True) and (bleDisAppCodeGen.getValue()==False):
+            symbol.setEnabled(True)
+        else:
+            symbol.setEnabled(False)
+    else:
+        symbol.setEnabled(False)
 
 def ctrlOnlyFileChange(symbol, event):
     value = event["value"]
@@ -79,6 +116,46 @@ def ctrlOnlyFileChange(symbol, event):
     else:
         symbol.setEnabled(True)
 
+def dmFileChange(symbol, event):
+    if event["id"] == "BLE_SYS_CTRL_ONLY_EN" and event["value"] == True:
+        value = False
+    else:
+        centralValue = event['source'].getSymbolValue('GAP_CENTRAL')
+        peripheralValue = event['source'].getSymbolValue('GAP_PERIPHERAL')
+        if centralValue == True or peripheralValue == True:
+            value = True
+        else:
+            value = False
+    symbol.setEnabled(value)
+
+def aesFileChange(symbol, event):
+    if event["id"] == "BLE_SYS_CTRL_ONLY_EN" and event["value"] == True:
+        value = False
+    else:
+        centralValue = event['source'].getSymbolValue('GAP_CENTRAL')
+        peripheralValue = event['source'].getSymbolValue('GAP_PERIPHERAL')
+        if devFamily == "pic32cx_bz6_family":
+            encValue = event['source'].getSymbolValue('GAP_SVC_ENC_DATA_KEY_MATL')
+        else:
+            encValue = False
+        if centralValue == True or peripheralValue == True or encValue == True:
+            value = True
+        else:
+            value = False
+    symbol.setEnabled(value)
+
+def miscFileChange(symbol, event):
+    if devFamily == "pic32cx_bz6_family":
+        if event["id"] == "GAP_SVC_ENC_DATA_KEY_MATL":
+            value = event["value"]
+        else: #BLE_SYS_CTRL_ONLY_EN
+            if event["value"] == False:
+                value = event['source'].getSymbolValue('GAP_SVC_ENC_DATA_KEY_MATL')
+            else:
+                value = False
+    else:
+        value = False
+    symbol.setEnabled(value)
 
 def ddFileChange(symbol, event):
     if event["id"] == "BLE_BOOL_GATT_CLIENT":
@@ -134,6 +211,11 @@ global sendSleepEnableMessage
 def sendSleepEnableMessage(sleepEnable):
     Database.sendMessage(devSupp, "SLEEP_ENABLE", {"target": devSupp,
                                                     "source": "BLE_STACK_LIB","isEnabled":sleepEnable})
+    
+global sendTxPwrUpdateMessage
+def sendTxPwrUpdateMessage():
+    Database.sendMessage(devSupp, "TX_PWR_INFO_UPDATE", {"target": devSupp,
+                                                    "source": "BLE_STACK_LIB"})
 
 def handleMessage(messageID, args):
     # Log.writeInfoMessage('BLEStack:handleMessage ID={} argLen={}'.format(messageID, len(args)))
@@ -141,6 +223,8 @@ def handleMessage(messageID, args):
         sent from the driver/pic32cx-bz/config/device_support.py
         script.
     '''
+    global blePta
+
     if(messageID == 'ANTENNA_GAIN_CHANGE'):
         global antennaGain
         global txPwrMaxNonFHSS
@@ -165,6 +249,8 @@ def handleMessage(messageID, args):
 
         # update tx power symbols
         gapConfigTxPwr(component, txPwrMaxNonFHSS, txPwrMaxFHSS, txPwrMin)
+    elif (messageID == "PTA_SUPPORT_ENABLE"):
+        blePta.setValue(args["isEnabled"])
 
 
 def instantiateComponent(libBLEStackComponent):
@@ -214,6 +300,7 @@ def instantiateComponent(libBLEStackComponent):
         ('blesysTaskMiddlewareDef', 'system_tasks_def.c.ftl', 'core.LIST_SYSTEM_RTOS_TASKS_C_DEFINITIONS'),
         ('blesysTaskMiddleware', 'system_tasks.c.ftl', 'core.LIST_SYSTEM_TASKS_C_CALL_LIB_TASKS'),
         ('blesysDefZB', 'system_definitions.h.ftl', 'core.LIST_SYSTEM_DEFINITIONS_H_INCLUDES'),
+        ('blesysConfBLE', 'system_configuration_ble.h.ftl', 'core.LIST_SYSTEM_CONFIG_H_APPLICATION_CONFIGURATION'),
         ]
 
     n = 0
@@ -224,17 +311,21 @@ def instantiateComponent(libBLEStackComponent):
         bleInit[n].setOutputName(p)
         bleInit[n].setSourcePath('driver/ble/templates/system/' + f)
         bleInit[n].setMarkup(True)
+        if f == 'system_configuration_ble.h.ftl':
+            bleInit[n].setEnabled((devFamily == "pic32cx_bz6_family"))
+            bleInit[n].setDependencies(bleConfigEnable, ["BLE_ENABLE_OUTPUT_CONFIG"])
         print('{} file: {} pos: {}'.format(n, f, p))
         n = n + 1
 
 
     # Add BLE codes to app.c
-    dsBleInitTemplates = [('dsBleInclude', 'ds_ble_include.c.ftl', 'LIST_DS_BLE_INCLUDE_C'),
-        ('dsBleData', 'ds_ble_data.c.ftl', 'LIST_DS_BLE_DATA_C'),
-        ('dsBleInit', 'ds_ble_init.c.ftl', 'LIST_DS_BLE_INIT_C'),
-        ('dsBleTaskEntry', 'ds_ble_task_entry.c.ftl', 'LIST_DS_BLE_TASK_ENTRY_C'),
-        ('dsBleMsgId', 'ds_ble_msg_id.h.ftl', 'LIST_DS_BLE_MSG_ID_H'),
+    dsBleInitTemplates = [('dsBleInclude', 'ds_ble_include.c.ftl', 'LIST_DEV_SUPP_INCLUDE_C'),
+        ('dsBleData', 'ds_ble_data.c.ftl', 'LIST_DEV_SUPP_DATA_C'),
+        ('dsBleInit', 'ds_ble_init.c.ftl', 'LIST_DEV_SUPP_INIT_C'),
+        ('dsBleTaskEntry', 'ds_ble_task_entry.c.ftl', 'LIST_DEV_SUPP_TASK_ENTRY_C'),
+        ('dsBleMsgId', 'ds_ble_msg_id.h.ftl', 'LIST_DEV_SUPP_MSG_ID_H'),
         ]
+
 
 
     n = 0
@@ -290,6 +381,7 @@ def instantiateComponent(libBLEStackComponent):
                   ('app_ble_handler.c.ftl', 'app_ble_handler.c', 'SOURCE'),
                   ('app_ble_handler.h.ftl', 'app_ble_handler.h', 'HEADER'),
                   ('app_ble_dsadv.c.ftl', 'app_ble_dsadv.c', 'SOURCE'),
+                  ('app_ble_bz2_3.c.ftl', 'app_ble.c', 'SOURCE'),
                   ]
 
 
@@ -306,6 +398,14 @@ def instantiateComponent(libBLEStackComponent):
         if name == 'app_ble_dsadv.c.ftl':
             fsymbol.setDependencies(bleConfigDsadvEnable, ["GAP_DSADV_EN","BOOL_GAP_EXT_ADV","GAP_ADVERTISING","BLE_SYS_CTRL_ONLY_EN"])
             fsymbol.setEnabled(False)
+        elif name.find('app_ble_handler') != -1:
+            fsymbol.setDependencies(bleConfigHandlerEnable, ["DISABLE_APP_CODE_GEN", "BLE_SYS_CTRL_ONLY_EN"])
+        elif name == 'app_ble.c.ftl':
+            fsymbol.setEnabled((devFamily == "pic32cx_bz6_family"))
+            fsymbol.setDependencies(bleConfigAppBleBz6Enable, ["BLE_ENABLE_OUTPUT_CONFIG"])
+        elif name == 'app_ble_bz2_3.c.ftl':
+            fsymbol.setEnabled((devFamily != "pic32cx_bz6_family"))
+            fsymbol.setDependencies(bleConfigAppBleBz23Enable, ["BLE_ENABLE_OUTPUT_CONFIG"])
         else:
             fsymbol.setDependencies(ctrlOnlyFileChange, ["BLE_SYS_CTRL_ONLY_EN"])
 
@@ -363,7 +463,7 @@ def instantiateComponent(libBLEStackComponent):
         fsymbol.setType(type)
         if name.find('app_ble_log_handler') != -1:
             fsymbol.setEnabled(False)
-            fsymbol.setDependencies(logFileChange, ["BLE_SYS_CTRL_ONLY_EN", "BLE_VIRTUAL_SNIFFER_EN"])
+            fsymbol.setDependencies(bleConfigLogHandlerEnable, ["BLE_SYS_CTRL_ONLY_EN", "BLE_VIRTUAL_SNIFFER_EN", "DISABLE_APP_CODE_GEN"])
         else:
             fsymbol.setEnabled(True)
             fsymbol.setDependencies(ctrlOnlyFileChange, ["BLE_SYS_CTRL_ONLY_EN"])
@@ -373,6 +473,7 @@ def instantiateComponent(libBLEStackComponent):
     bleMiddlewareFile = [('mw_assert.h', 'ble_util', 'HEADER'), 
                          ('byte_stream.h', 'ble_util', 'HEADER'),
                          ('mw_aes.h', 'ble_util', 'HEADER'),
+                         ('mw_misc.h', 'ble_util', 'HEADER'),
                          ('ble_dm.h', 'ble_dm', 'HEADER'),
                          ('ble_dm_conn.h', 'ble_dm', 'HEADER'),
                          ('ble_dm_sm.h', 'ble_dm', 'HEADER'),
@@ -384,6 +485,7 @@ def instantiateComponent(libBLEStackComponent):
                          ('ble_log.h', 'ble_log', 'HEADER'),
                          ('mw_dfu.c', 'ble_util', 'SOURCE'),
                          ('mw_aes.c', 'ble_util', 'SOURCE'),
+                         ('mw_misc.c', 'ble_util', 'SOURCE'),
                          ('ble_dm.c', 'ble_dm', 'SOURCE'),
                          ('ble_dm_conn.c', 'ble_dm', 'SOURCE'),
                          ('ble_dm_sm.c', 'ble_dm', 'SOURCE'),
@@ -414,6 +516,18 @@ def instantiateComponent(libBLEStackComponent):
         elif name.find('ble_log') != -1:
             fsymbol.setEnabled(False)
             fsymbol.setDependencies(logFileChange, ["BLE_SYS_CTRL_ONLY_EN", "BLE_VIRTUAL_SNIFFER_EN"])
+        elif name.find('ble_dm') != -1:
+            fsymbol.setEnabled(True)
+            fsymbol.setDependencies(dmFileChange, ["BLE_SYS_CTRL_ONLY_EN", "GAP_CENTRAL", "GAP_PERIPHERAL"])
+        elif name.find('mw_aes') != -1:
+            fsymbol.setEnabled(True)
+            fsymbol.setDependencies(aesFileChange, ["BLE_SYS_CTRL_ONLY_EN", "GAP_CENTRAL", "GAP_PERIPHERAL", "GAP_SVC_ENC_DATA_KEY_MATL"])
+        elif name.find('mw_misc') != -1:
+            if devFamily == "pic32cx_bz6_family":
+                fsymbol.setEnabled(True)
+            else:
+                fsymbol.setEnabled(False)
+            fsymbol.setDependencies(miscFileChange, ["BLE_SYS_CTRL_ONLY_EN", "GAP_SVC_ENC_DATA_KEY_MATL"])
         else:
             fsymbol.setEnabled(True)
             fsymbol.setDependencies(ctrlOnlyFileChange, ["BLE_SYS_CTRL_ONLY_EN"])
@@ -482,25 +596,27 @@ def finalizeComponent(libBLEStackComponent):
     elif devFamily == "pic32cx_bz3_family":
         print('finalizeComponent bz3')
         requiredComponents = ['pic32cx_bz3_devsupport']
+    elif devFamily == "pic32cx_bz6_family":
+        print('finalizeComponent bz6')
+        requiredComponents = ['pic32cx_bz6_devsupport']
     else:
         print("Device not support")
 
+    actiLibCrypto = False
     for r in requiredComponents:
         if r not in activeComponents:
             res = Database.activateComponents([r])
+            if r == 'lib_crypto':
+                actiLibCrypto = True
 
     if devFamily == "pic32cx_bz2_family":
         res = Database.connectDependencies([['BLE_STACK_LIB', 'BLE_WolfCrypt_Dependency', 'lib_wolfcrypt', 'lib_wolfcrypt']])
-        res = Database.connectDependencies([['lib_crypto', 'LIB_CRYPTO_WOLFCRYPT_Dependency', 'lib_wolfcrypt', 'lib_wolfcrypt']])
+        if actiLibCrypto == True:
+            res = Database.connectDependencies([['lib_crypto', 'LIB_CRYPTO_WOLFCRYPT_Dependency', 'lib_wolfcrypt', 'lib_wolfcrypt']])
 
+    # ask an update of Tx Power Info
+    sendTxPwrUpdateMessage()
 
-    devSuppComponent = Database.getComponentByID(devSupp)
-    # update Antenna Gain
-    if devSuppComponent.getSymbolValue('CUSTOM_ANT_ENABLE') == True:
-        antennaGain = devSuppComponent.getSymbolValue('CUSTOM_ANT_GAIN')
-    else:
-        antennaGain = devSuppComponent.getSymbolByID('CUSTOM_ANT_GAIN').getDefaultValue()
-    libBLEStackComponent.setSymbolValue('BLE_ANTENNA_GAIN', antennaGain)
 
 
 def onAttachmentConnected(source, target):
@@ -514,7 +630,7 @@ def onAttachmentConnected(source, target):
             format(localComponent.getID(), targetID))
 
 
-    if (connectID == "PIC32CX_BZ2_DevSupport_Dependency" or connectID == "PIC32CX_BZ3_DevSupport_Dependency"):
+    if (connectID == "PIC32CX_BZ2_DevSupport_Dependency" or connectID == "PIC32CX_BZ3_DevSupport_Dependency" or connectID == "PIC32CX_BZ6_DevSupport_Dependency"):
         print("BLE LIB:onAttachmentConnected configuring pic32xcx_wbz")
         bleSleepEnabled = localComponent.getSymbolByID("BLE_SYS_SLEEP_MODE_EN").getValue()
 

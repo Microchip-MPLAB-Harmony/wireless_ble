@@ -45,12 +45,34 @@
 // *****************************************************************************
 #include <string.h>
 #include <stdint.h>
+<#if APP_BLE_DEVICE == "pic32cx_bz6_family">
+#include "configuration.h"
+</#if>
 #include "osal/osal_freertos_extend.h"
 #include "app_ble_handler.h"
 <#if GAP_ADVERTISING == true && BOOL_GAP_EXT_ADV == false && GAP_DSADV_EN == true>
 #include "app_ble_dsadv.h"
 </#if>
 
+<#if APP_TRSP_CLIENT == true>
+#include "app_trspc_handler.h"
+</#if>
+
+<#if APP_PXP_CLIENT == true>
+#include "app_pxpm_handler.h"
+</#if>
+
+<#if APP_OTAP_CLIENT == true>
+#include "app_otapc_handler.h"
+</#if>
+
+<#if APP_ANP_CLIENT == true>
+#include "app_anpc_handler.h"
+</#if>
+
+<#if APP_ANCS_CLIENT == true>
+#include "app_ancs_handler.h"
+</#if>
 // *****************************************************************************
 // *****************************************************************************
 // Section: Global Variables
@@ -215,11 +237,26 @@ void APP_BleGapEvtHandler(BLE_GAP_Event_T *p_event)
         }
         break;
 
+        case BLE_GAP_EVT_FEATURE_EXCHANGE_COMPL:
+        {
+            /* TODO: implement your application code.*/
+        }
+        break;
+
+        <#if APP_BLE_DEVICE == "pic32cx_bz6_family">
+        case BLE_GAP_EVT_SUBRATE_CHANGE:
+        {
+            /* TODO: implement your application code.*/
+        }
+        break;
+        </#if>
+
         default:
         break;
     }
 }
 
+<#if GAP_CENTRAL == true || GAP_PERIPHERAL == true>
 void APP_BleL2capEvtHandler(BLE_L2CAP_Event_T *p_event)
 {
     switch(p_event->eventId)
@@ -264,7 +301,7 @@ void APP_BleL2capEvtHandler(BLE_L2CAP_Event_T *p_event)
         {
             /* TODO: implement your application code.*/
         }
-        break;        
+        break;
 
         default:
         break;
@@ -272,7 +309,7 @@ void APP_BleL2capEvtHandler(BLE_L2CAP_Event_T *p_event)
 }
 
 void APP_GattEvtHandler(GATT_Event_T *p_event)
-{   
+{
     switch(p_event->eventId)
     {
         case GATTC_EVT_ERROR_RESP:
@@ -402,8 +439,23 @@ void APP_GattEvtHandler(GATT_Event_T *p_event)
         }
         break;
 
+        <#if APP_BLE_DEVICE == "pic32cx_bz6_family">
+            <#if GAP_SVC_ENC_DATA_KEY_MATL == true>
+        case GATTS_EVT_ENC_DATA_KEY_MATL_REQ:
+        {
+            /* TODO: implement your application code.*/
+            
+            uint8_t initVector[] = CONFIG_BLE_GAP_SVC_EDKM_IV_C;
+            uint8_t key[] = CONFIG_BLE_GAP_SVC_EDKM_KEY_C;
+
+            GATTS_EncDataKeyMatlRsp(p_event->eventField.onEncDataKeyMatlReq.connHandle, key, initVector);
+        }
+        break;
+            </#if>
+        </#if>
+
         default:
-        break;        
+        break;
     }
 }
 
@@ -478,7 +530,7 @@ void APP_BleSmpEvtHandler(BLE_SMP_Event_T *p_event)
         break;
 
         default:
-        break;        
+        break;
     }
 }
 
@@ -491,7 +543,7 @@ void APP_DmEvtHandler(BLE_DM_Event_T *p_event)
             /* TODO: implement your application code.*/
         }
         break;
-        
+
         case BLE_DM_EVT_CONNECTED:
         {
             /* TODO: implement your application code.*/
@@ -544,3 +596,45 @@ void APP_DmEvtHandler(BLE_DM_Event_T *p_event)
         break;
     }
 }
+
+    <#if BLE_BOOL_GATT_CLIENT == true>
+void APP_DdEvtHandler(BLE_DD_Event_T *p_event)
+{
+        <#if BOOL_GCM_SCM == true>
+    BLE_SCM_BleDdEventHandler(p_event);
+        </#if>
+
+        <#if APP_TRSP_CLIENT == true>
+    BLE_TRSPC_BleDdEventHandler(p_event);
+        </#if>
+
+        <#if APP_OTAP_CLIENT == true>
+    BLE_OTAPC_BleDdEventHandler(p_event);
+        </#if>
+
+        <#if APP_PXP_CLIENT == true>
+    BLE_PXPM_BleDdEventHandler(p_event);
+        </#if>
+
+        <#if APP_ANP_CLIENT == true>
+    BLE_ANPC_BleDdEventHandler(p_event);
+        </#if>
+
+        <#if APP_ANCS_CLIENT == true>
+    BLE_ANCS_BleDdEventHandler(p_event);
+        </#if>
+}
+
+        <#if BOOL_GCM_SCM == true>
+void APP_ScmEvtHandler(BLE_SCM_Event_T *p_event)
+{
+    if (p_event->eventId == BLE_SCM_EVT_SVC_CHANGE)
+    {
+        BLE_DD_RestartServicesDiscovery(p_event->eventField.evtServiceChange.connHandle);
+    }
+
+    /* TODO: implement your application state machine.*/
+}
+        </#if>
+    </#if>
+</#if>

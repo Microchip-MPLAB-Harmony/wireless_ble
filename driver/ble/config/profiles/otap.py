@@ -5,6 +5,10 @@ if devFamily == "pic32cx_bz2_family":
     srcPath = "ble_src_bz2"
 elif devFamily == "pic32cx_bz3_family":
     srcPath = "ble_src_bz3"
+elif devFamily == "pic32cx_bz6_family":
+    srcPath = "ble_src_bz6"
+else:
+    print("Device not support")
                       
 def bleOtapDfuEnable(symbol, event):
     global otapMenuServer
@@ -20,6 +24,20 @@ def bleOtapDfuEnable(symbol, event):
 
 def bleOtapEnable(symbol, event):
     symbol.setEnabled(event["value"])
+
+def bleOtapsHanlderEnable(symbol, event):
+
+    if (otapMenuServer.getValue() == True) and (Database.getSymbolValue("BLE_STACK_LIB", "DISABLE_APP_CODE_GEN") == False):
+        symbol.setEnabled(True)
+    else:
+        symbol.setEnabled(False)
+
+def bleOtapcHanlderEnable(symbol, event):
+
+    if (otapMenuClient.getValue() == True) and (Database.getSymbolValue("BLE_STACK_LIB", "DISABLE_APP_CODE_GEN") == False):
+        symbol.setEnabled(True)
+    else:
+        symbol.setEnabled(False)
 
 def otapClientConfig(symbol, event):
     if event["value"] == True:
@@ -108,7 +126,7 @@ def instantiateComponent(profileOtapComponent):
     bleOtapsAppSourceFile.setProjectPath('app_ble')
     bleOtapsAppSourceFile.setType('Source')
     bleOtapsAppSourceFile.setEnabled(True)
-    bleOtapsAppSourceFile.setDependencies(bleOtapEnable, ["OTAP_BOOL_SERVER"])
+    bleOtapsAppSourceFile.setDependencies(bleOtapsHanlderEnable, ["OTAP_BOOL_SERVER", "BLE_STACK_LIB.DISABLE_APP_CODE_GEN", "BLE_STACK_LIB.APP_OTAP_SERVER"])
 
     # Add app_otaps_handler.h file - static file
     bleOtapsAppHeaderFile = profileOtapComponent.createFileSymbol(None, None)
@@ -119,7 +137,7 @@ def instantiateComponent(profileOtapComponent):
     bleOtapsAppHeaderFile.setProjectPath('app_ble')
     bleOtapsAppHeaderFile.setType('HEADER')
     bleOtapsAppHeaderFile.setEnabled(True)
-    bleOtapsAppHeaderFile.setDependencies(bleOtapEnable, ["OTAP_BOOL_SERVER"])
+    bleOtapsAppHeaderFile.setDependencies(bleOtapsHanlderEnable, ["OTAP_BOOL_SERVER", "BLE_STACK_LIB.DISABLE_APP_CODE_GEN", "BLE_STACK_LIB.APP_OTAP_SERVER"])
 
     # Add app_ble_utility.c - static file
     bleUtilAppSourceFile = profileOtapComponent.createFileSymbol(None, None)
@@ -178,7 +196,7 @@ def instantiateComponent(profileOtapComponent):
     bleOtapcAppSourceFile.setProjectPath('app_ble')
     bleOtapcAppSourceFile.setType('Source')
     bleOtapcAppSourceFile.setEnabled(False)
-    bleOtapcAppSourceFile.setDependencies(bleOtapEnable, ["OTAP_BOOL_CLIENT"])
+    bleOtapcAppSourceFile.setDependencies(bleOtapcHanlderEnable, ["OTAP_BOOL_CLIENT", "BLE_STACK_LIB.DISABLE_APP_CODE_GEN"])
 
     # Add app_otapc_handler.h file - static file
     bleOtapcAppHeaderFile = profileOtapComponent.createFileSymbol(None, None)
@@ -189,7 +207,7 @@ def instantiateComponent(profileOtapComponent):
     bleOtapcAppHeaderFile.setProjectPath('app_ble')
     bleOtapcAppHeaderFile.setType('HEADER')
     bleOtapcAppHeaderFile.setEnabled(False)
-    bleOtapcAppHeaderFile.setDependencies(bleOtapEnable, ["OTAP_BOOL_CLIENT"])
+    bleOtapcAppHeaderFile.setDependencies(bleOtapcHanlderEnable, ["OTAP_BOOL_CLIENT", "BLE_STACK_LIB.DISABLE_APP_CODE_GEN"])
 
 
 def finalizeComponent(profileOtapComponent):
@@ -226,3 +244,18 @@ def onAttachmentConnected(source, target):
         if otapMenuClient.getValue() == True:
             Database.setSymbolValue("BLE_STACK_LIB", "BLE_BOOL_GATT_CLIENT", True)
             Database.setSymbolValue("BLE_STACK_LIB", "APP_OTAP_CLIENT", True)
+
+def handleMessage(messageID, args):
+    '''
+    message formats
+        CONTROLLER_ONLY_MODE_ENABLED: Controller Only Mode is enabled
+            payload:    {
+                        'target':       <this module>
+                        'source':       <module name>
+                        }
+    '''
+    bleServiceProfileComponentIDs = []
+
+    if(messageID == "CONTROLLER_ONLY_MODE_ENABLED"):
+        bleServiceProfileComponentIDs.append(args["target"])
+        Database.deactivateComponents(bleServiceProfileComponentIDs)

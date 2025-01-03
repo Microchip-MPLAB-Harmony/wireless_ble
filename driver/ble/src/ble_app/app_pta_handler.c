@@ -44,65 +44,64 @@
 // *****************************************************************************
 // *****************************************************************************
 #include <stdbool.h>
-#include "peripheral/gpio/plib_gpio.h"
 #include "bt_sys_pta.h"
+#include "pta.h"
 
-
+// *****************************************************************************
+// *****************************************************************************
+// Section: Local Variables
+// *****************************************************************************
+// *****************************************************************************
+static volatile bool s_blePtaReqSet;
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Functions
 // *****************************************************************************
 // *****************************************************************************
-static void APP_PtaNotifyBtActiveCb(bool active)
+static void APP_PtaWlanActiveIrqHandler(void)
 {
-    if(active == true)
-    {
-        BT_ACTIVE_Set();
-    }
-    else
-    {
-        BT_ACTIVE_Clear();
-    }
-}
-static void APP_PtaNotifyBtPriorityCb(bool priority)
-{
-    if(priority == true)//high priority
-    {
-        BT_PRIORITY_Set();
-    }
-    else
-    {
-        BT_PRIORITY_Clear();
-    }
-}
-
-static bool APP_PtaGetWlanActiveStatus(void)
-{
-    if(0x1U == WLAN_ACTIVE_Get())
-    {
-        return true;
-    }
-
-    return false;
-}
-static bool APP_PtaGetWlanActiveStatusCb(void)
-{
-    return APP_PtaGetWlanActiveStatus();
-}
-
-static void APP_PtaWlanActiveIrqHandler(GPIO_PIN pin, uintptr_t context)
-{
-    if(true == APP_PtaGetWlanActiveStatus())
+    if((PTA_WlanStatus() == true) && (s_blePtaReqSet == true))
     {
         BT_SYS_PtaWlanActiveIrqHandler();
     }
 }
 
-void APP_PtaInit()
+static void APP_PtaNotifyBtActiveCb(bool active)
 {
+    if((active == true) && (PTA_GetReq() == false))
+    {
+        PTA_ReqSet(APP_PtaWlanActiveIrqHandler);
+        s_blePtaReqSet = true;
+    }
+    if(active == false)
+    {
+        PTA_ClearIrqHandler();
+        PTA_ReqClear();
+        s_blePtaReqSet = false;
+    }
+}
+
+static void APP_PtaNotifyBtPriorityCb(bool priority)
+{
+    if((priority == true) && (PTA_GetReq() == false))
+    {
+        PTA_PrioSet();
+    }
+
+    if(priority == false)
+    {
+        PTA_PrioClear();
+    }
+}
+
+static bool APP_PtaGetWlanActiveStatusCb(void)
+{
+    return PTA_WlanStatus();
+}
+
+void APP_PtaInit(void)
+{
+    s_blePtaReqSet = false;
     BT_SYS_PtaInit(APP_PtaNotifyBtActiveCb, APP_PtaNotifyBtPriorityCb, APP_PtaGetWlanActiveStatusCb);
-    /* GPIO Initialization */
-    GPIO_PinInterruptCallbackRegister(WLAN_ACTIVE_PIN, APP_PtaWlanActiveIrqHandler, 0);
-    WLAN_ACTIVE_InterruptEnable();
 }

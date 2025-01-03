@@ -5,9 +5,20 @@ if devFamily == "pic32cx_bz2_family":
     srcPath = "ble_src_bz2"
 elif devFamily == "pic32cx_bz3_family":
     srcPath = "ble_src_bz3"
+elif devFamily == "pic32cx_bz6_family":
+    srcPath = "ble_src_bz6"
+else:
+    print("Device not support")
 
 def blehogpEnable(symbol, event):
     symbol.setEnabled(event["value"])
+
+def blehogpHanlderEnable(symbol, event):
+
+    if (hogpMenuServer.getValue() == True) and (Database.getSymbolValue("BLE_STACK_LIB", "DISABLE_APP_CODE_GEN") == False):
+        symbol.setEnabled(True)
+    else:
+        symbol.setEnabled(False)
 
 def hogpServerConfig(symbol, event):
     if event["value"] == True:
@@ -84,7 +95,7 @@ def instantiateComponent(profileHogpComponent):
     bleHogpsAppSourceFile.setProjectPath('app_ble')
     bleHogpsAppSourceFile.setType('Source')
     bleHogpsAppSourceFile.setEnabled(True)
-    bleHogpsAppSourceFile.setDependencies(blehogpEnable, ["HOGP_BOOL_SERVER"])
+    bleHogpsAppSourceFile.setDependencies(blehogpHanlderEnable, ["HOGP_BOOL_SERVER", "BLE_STACK_LIB.DISABLE_APP_CODE_GEN", "BLE_STACK_LIB.APP_HOGP_SERVER"])
 
     # Add app_hogps_handler.h file - static file
     bleHogpsAppHeaderFile = profileHogpComponent.createFileSymbol(None, None)
@@ -95,7 +106,7 @@ def instantiateComponent(profileHogpComponent):
     bleHogpsAppHeaderFile.setProjectPath('app_ble')
     bleHogpsAppHeaderFile.setType('HEADER')
     bleHogpsAppHeaderFile.setEnabled(True)
-    bleHogpsAppHeaderFile.setDependencies(blehogpEnable, ["HOGP_BOOL_SERVER"])
+    bleHogpsAppHeaderFile.setDependencies(blehogpHanlderEnable, ["HOGP_BOOL_SERVER", "BLE_STACK_LIB.DISABLE_APP_CODE_GEN", "BLE_STACK_LIB.APP_HOGP_SERVER"])
 
 def finalizeComponent(profileHogpComponent):
     print('Finalize Component: {}'.format(profileHogpComponent.getID()))
@@ -127,3 +138,18 @@ def onAttachmentConnected(source, target):
         global hogpMenuServer
         if hogpMenuServer.getValue() == True:
             Database.setSymbolValue("BLE_STACK_LIB", "APP_HOGP_SERVER", True)
+
+def handleMessage(messageID, args):
+    '''
+    message formats
+        CONTROLLER_ONLY_MODE_ENABLED: Controller Only Mode is enabled
+            payload:    {
+                        'target':       <this module>
+                        'source':       <module name>
+                        }
+    '''
+    bleServiceProfileComponentIDs = []
+
+    if(messageID == "CONTROLLER_ONLY_MODE_ENABLED"):
+        bleServiceProfileComponentIDs.append(args["target"])
+        Database.deactivateComponents(bleServiceProfileComponentIDs)

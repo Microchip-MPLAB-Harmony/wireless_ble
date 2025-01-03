@@ -22,7 +22,7 @@
 *******************************************************************************/
 
 /*******************************************************************************
-  BLE Transparent Service Header File
+  BLE Transparent Service (TRS) Header File
 
   Company:
     Microchip Technology Inc.
@@ -31,118 +31,137 @@
     ble_trs.h
 
   Summary:
-    This file contains the BLE Transparent Service functions for application user.
+    Interface for the BLE Transparent Service,facilitating the use of TRS in 
+    BLE applications.
 
   Description:
-    This file contains the BLE Transparent Service functions for application user.
+    Provides function prototypes and constants necessary for the integration and
+    use of TRS in BLE applications, enabling efficient data communication.
  *******************************************************************************/
-
-
-/**
- * @addtogroup BLE_TRS BLE TRS
- * @{
- * @brief Header file for the BLE Transparent Service.
- * @note Definitions and prototypes for the BLE Transparent Service stack layer application programming interface.
- */
 #ifndef BLE_TRS_H
 #define BLE_TRS_H
 
+<#if TRS_ENABLE_CONFIG == true>
+#include "configuration.h"
+</#if>
+
 // DOM-IGNORE-BEGIN
 #ifdef __cplusplus  // Provide C++ Compatibility
-
 extern "C" {
-
 #endif
 // DOM-IGNORE-END
 
+/**
+ * @addtogroup BLE_SERVICE BLE Service
+ * @{
+ */
 
+/**
+ * @addtogroup BLE_TRS BLE Transparent Service
+ * @{
+ * @brief Provides an interface for the BLE Transparent Service.
+ * @note This module defines the API for the BLE Transparent Service, facilitating
+ * transparent data communication over BLE. It includes function prototypes and
+ * structures needed by an application to utilize the service.
+ */
 // *****************************************************************************
 // *****************************************************************************
 // Section: Macros
 // *****************************************************************************
 // *****************************************************************************
-/**@defgroup UUID UUID
- * @brief The definition of UUID
- * @{ */
+/**
+ * @addtogroup BLE_TRS_DEFINES Defines
+ * @{
+ */
+
+/**
+ * @defgroup BLE_TRS_UUID_DEF BLE Transparent Service UUID definitions
+ * @brief UUIDs for the BLE Transparent Service characteristics.
+ * @{
+ */
+
+<#if TRS_ENABLE_CONFIG == true>
+#define UUID_MCHP_PROPRIETARY_SERVICE_16             CONFIG_BLE_SVC_TRS_UUID_MCHP_PROPRIETARY_SERVICE_16
+#define UUID_MCHP_TRANS_TX_16                        CONFIG_BLE_SVC_TRS_UUID_MCHP_TRANS_TX_16
+#define UUID_MCHP_TRANS_RX_16                        CONFIG_BLE_SVC_TRS_UUID_MCHP_TRANS_RX_16
+#define UUID_MCHP_TRANS_CTRL_16                      CONFIG_BLE_SVC_TRS_UUID_MCHP_TRANS_CTRL_16
+<#else>
 #define UUID_MCHP_PROPRIETARY_SERVICE_16             ${CHECKED_TRS_SERVICE_UUID}    /* Service UUID */
 #define UUID_MCHP_TRANS_TX_16                        ${CHECKED_TRS_TX_UUID}    /* TX Characteristic UUID */
 #define UUID_MCHP_TRANS_RX_16                        ${CHECKED_TRS_RX_UUID}    /* RX Characteristic UUID */
 #define UUID_MCHP_TRANS_CTRL_16                      ${CHECKED_TRS_CP_UUID}    /* CP Characteristic UUID */
+</#if>
 /** @} */
 
+/**
+ * @defgroup BLE_TRS_ASSIGN_HANDLE TRS assigned handles
+ * @brief Handles associated with the BLE Transparent Service attributes.
+ * @{
+ */
+#define TRS_START_HDL                               (0x00A0U)             /**< Start handle for the BLE Transparent service. */
 
-/**@defgroup BLE_TRS_ASSIGN_HANDLE BLE_TRS_ASSIGN_HANDLE
- * @brief Assigned attribute handles of BLE Transparent Service.
- * @{ */
-#define TRS_START_HDL                               (0x00A0U)                                      /**< The start attribute handle of transparent service. */
-/** @} */
-
-/**@brief Definition of BLE transparent attribute handle */
+/* Enumeration of attribute handles for the BLE Transparent Service. */
 typedef enum BLE_TRS_AttributeHandle_T
 {
-    TRS_HDL_SVC = TRS_START_HDL,           /**< Handle of Primary Service of BLE Transparent Service. */
-    TRS_HDL_CHAR_TX,                       /**< Handle of Transparent TX characteristic. */
-    TRS_HDL_CHARVAL_TX,                    /**< Handle of Transparent TX characteristic value. */
-    TRS_HDL_CCCD_TX,                       /**< Handle of Transparent TX characteristic CCCD */
-    TRS_HDL_CHAR_RX,                       /**< Handle of Transparent RX characteristic. */
-    TRS_HDL_CHARVAL_RX,                    /**< Handle of Transparent RX characteristic value. */
-    TRS_HDL_CHAR_CTRL,                     /**< Handle of Transparent Control characteristic. */
-    TRS_HDL_CHARVAL_CTRL,                  /**< Handle of Transparent Control characteristic value. */
-    TRS_HDL_CCCD_CTRL                      /**< Handle of Transparent Control characteristic CCCD. */
+    TRS_HDL_SVC = TRS_START_HDL,                                          /**< Handle for the BLE Transparent Service primary service. */
+    TRS_HDL_CHAR_TX,                                                      /**< Handle for the Transparent TX characteristic. */
+    TRS_HDL_CHARVAL_TX,                                                   /**< Handle for the Transparent TX characteristic value. */
+    TRS_HDL_CCCD_TX,                                                      /**< Handle for the Transparent TX characteristic CCCD value.*/
+    TRS_HDL_CHAR_RX,                                                      /**< Handle for the Transparent RX characteristic. */
+    TRS_HDL_CHARVAL_RX,                                                   /**< Handle for the Transparent RX characteristic value. */
+    TRS_HDL_CHAR_CTRL,                                                    /**< Handle for the Transparent Control characteristic. */
+    TRS_HDL_CHARVAL_CTRL,                                                 /**< Handle for the Transparent Control characteristic value. */
+    TRS_HDL_CCCD_CTRL                                                     /**< Handle for the Transparent Control characteristic CCCD value. */
 }BLE_TRS_AttributeHandle_T;
 
-/**@defgroup BLE_TRS_ASSIGN_HANDLE BLE_TRS_ASSIGN_HANDLE
- * @brief Assigned attribute handles of BLE Transparent Service.
- * @{ */
-
-#define TRS_END_HDL                                 TRS_HDL_CCCD_CTRL         /**< The end attribute handle of transparent service. */
+#define TRS_END_HDL                                 TRS_HDL_CCCD_CTRL     /**< End handle for the BLE Transparent Service.  */
 /** @} */
 
-
-// *****************************************************************************
-// *****************************************************************************
-// Section: Data Types
-// *****************************************************************************
-// *****************************************************************************
-
-/**@brief The structure contains information about change UUID function parameters. */
-typedef struct  BLE_TRS_Uuids_T
-{
-    uint8_t *p_primaryService;                                    /**< The 128-bit primary service UUID.*/
-    uint8_t *p_transTx;                                           /**< The 128-bit trans tx characteristic UUID. */
-    uint8_t *p_transRx;                                           /**< The 128-bit trans rx characteristic UUID. */
-    uint8_t *p_transCtrl;                                         /**< The 128-bit trans ctrl characteristic UUID. */
-} BLE_TRS_Uuids_T;
+/** @} */ //BLE_TRS_DEFINES
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Function Prototypes
 // *****************************************************************************
 // *****************************************************************************
+/**
+ * @addtogroup BLE_TRS_FUNS Functions
+ * @{
+ */
 
 /**
- *@brief Initialize BLE Transparent Service callback function.
+ * @brief Adds the BLE Transparent Service to the GATT server.
  *
- *
- *@return MBA_RES_SUCCESS                    Successfully register BLE transparent service.
- *@return MBA_RES_NO_RESOURCE                Fail to register service.
- *
+ * This function adds the BLE Transparent Service to the BLE stack's GATT server,
+ * enabling the service to be discovered and accessed by remote BLE devices.
+ * 
+ * @retval MBA_RES_SUCCESS                    The BLE Transparent service was successfully added.
+ * @retval MBA_RES_NO_RESOURCE                Insufficient resource to add the BLE Transparent service.
  */
 uint16_t BLE_TRS_Add(void);
 
 
-/**@brief Add the permission of the characteristic in transparent service.\n
-          Must be called after BLE_TRS_Add().
+/**
+ * @brief Configures the permissions for a characteristic within the transparent service.
  *
- *@param[in] attrHdl                         Transparent service attribute handle. See @ref BLE_TRS_AttributeHandle_T.
- *@param[in] permissions                     Attribute permissions. See @ref GATT_ATTRIBUTE_PERMISSIONS.
+ * This function sets the access permissions for a given characteristic's attribute handle within the transparent service.
+ * It should be called after initializing the transparent service with BLE_TRS_Add().
  *
+ * @param[in] attrHdl                         Transparent service attribute handle.
+ *                                            Refer to @ref BLE_TRS_AttributeHandle_T for possible values.
+ * @param[in] permissions                     Attribute permissions to be set. Refer to @ref GATT_ATTRIBUTE_PERMISSIONS for possible values.
  *
- *@return MBA_RES_SUCCESS                    Successfully configurate the permission.
- *@return MBA_RES_INVALID_PARA               The assigned attribute handle is not included in transparent service.
+ * @retval MBA_RES_SUCCESS                    The permissions were successfully configured.
+ * @retval MBA_RES_INVALID_PARA               The provided attribute handle does not belong to the transparent service.
  *
  */
 uint16_t BLE_TRS_PermissionConfig(uint16_t attrHdl, uint8_t permissions);
+
+/** @} */ //BLE_TRS_FUNS
+
+/** @} */
+
+/** @} */
 
 //DOM-IGNORE-BEGIN
 #ifdef __cplusplus
@@ -150,8 +169,4 @@ uint16_t BLE_TRS_PermissionConfig(uint16_t attrHdl, uint8_t permissions);
 #endif
 //DOM-IGNORE-END
 
-#endif
-
-/**
-  @}
- */
+#endif //BLE_TRS_H
