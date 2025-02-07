@@ -1,1 +1,0 @@
-define({"topics":[{"title":"<ph>1.2.2.1.3.2.1<\/ph>\nBLE_L2CAP_EventId_T","href":"GUID-08754DED-539F-4A79-819A-92C50CC7F476.html","attributes":{"data-id":"ble-l2cap-eventid-t"},"menu":{"hasChildren":false},"tocID":"ble-l2cap-eventid-t-d13878e11022","topics":[]}]});

@@ -1,0 +1,307 @@
+<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-us" lang="en-us" data-whc_version="26.1">
+    <head><link rel="shortcut icon" href="oxygen-webhelp\template\resources/images/favicon.ico"/><link rel="icon" href="oxygen-webhelp\template\resources/images/favicon.ico"/><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><meta name="description" content="uint16_t MW_AES_AesCcmDecrypt (MW_AES_Ctx_T * p_ctx, uint16_t length, uint8_t *p_cipherText, uint8_t *p_tag, uint8_t *p_plainText); Decrypts data using AES CCM mode. Parameter Description [in] p_ctx ..."/><meta name="copyright" content="(C) Copyright 2025"/><meta name="generator" content="DITA-OT"/><title>1.1.2.2.5.1.2.8 MW_AES_AesCcmDecrypt</title><!--  Generated with Oxygen version 26.1, build number 2024091616.  --><meta name="wh-path2root" content=""/><meta name="wh-toc-id" content="mw-aes-aesccmdecrypt-d8174e5422"/><meta name="wh-source-relpath" content="GUID-73EBF25E-3B0E-4534-9E55-8CA94736BC5F.md"/><meta name="wh-out-relpath" content="GUID-73EBF25E-3B0E-4534-9E55-8CA94736BC5F.html"/>
+
+    <link rel="stylesheet" type="text/css" href="./oxygen-webhelp/app/commons.css?buildId=2024091616"/>
+    <link rel="stylesheet" type="text/css" href="./oxygen-webhelp/app/topic.css?buildId=2024091616"/>
+
+    <script src="./oxygen-webhelp/app/options/properties.js?buildId=20250116025241"></script>
+    <script src="./oxygen-webhelp/app/localization/strings.js?buildId=2024091616"></script>
+    <script src="./oxygen-webhelp/app/search/index/keywords.js?buildId=20250116025241"></script>
+    <script defer="defer" src="./oxygen-webhelp/app/commons.js?buildId=2024091616"></script>
+    <script defer="defer" src="./oxygen-webhelp/app/topic.js?buildId=2024091616"></script>
+<link rel="stylesheet" type="text/css" href="oxygen-webhelp/template/resources/css/microchip.css?buildId=2024091616"/><link rel="stylesheet" type="text/css" href="oxygen-webhelp/template/resources/css/notes.css?buildId=2024091616"/><link rel="stylesheet" type="text/css" href="oxygen-webhelp/template/resources/css/mchp-css-overrides.css?buildId=2024091616"/><link rel="stylesheet" type="text/css" href="oxygen-webhelp/template/resources/css/syntax-highlight.css?buildId=2024091616"/>
+<script src="mchp-context-help.js"></script>
+<link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600,300" rel="stylesheet" type="text/css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" async="" type="text/javascript"></script>
+    <script src="https://assets.adobedtm.com/6a72a357eb48/a636c708c7fe/launch-0b0023397020.min.js"></script><!-- Adobe Analytics -->
+</head>
+
+    <body id="mw-aes-aesccmdecrypt" class="wh_topic_page frmBody">
+        <a href="#wh_topic_body" class="sr-only sr-only-focusable">
+            Jump to main content
+        </a>
+        
+        
+        
+        
+        <header class="navbar navbar-default wh_header">
+    <div class="container-fluid">
+        <div class="wh_header_flex_container navbar-nav navbar-expand-md navbar-dark">
+            <div class="wh_logo_and_publication_title_container">
+                <div class="wh_logo_and_publication_title">
+                    
+                    <a href="index.html" class=" wh_logo d-none d-sm-block "><img src="oxygen-webhelp\template\resources/images/microchip.png" alt="MPLAB Harmony Wireless BLE &#xA;    "/></a>
+                    <div class=" wh_publication_title "><a href="index.html">MPLAB Harmony Wireless BLE 
+    </a></div>
+                    
+                </div>
+                
+                
+            </div>
+
+            <div class="wh_top_menu_and_indexterms_link collapse navbar-collapse" id="wh_top_menu_and_indexterms_link">
+                
+                
+                
+                
+            </div>
+        </div>
+    </div>
+</header>
+        
+        
+         
+        
+        <div class=" wh_search_input navbar-form wh_topic_page_search search " role="form">
+            
+            
+            
+            <form id="searchForm" method="get" role="search" action="search.html"><div class="d-flex justify-contents-around"><div class="flex-grow-1"></div><div class="position-relative flex-grow-1"><input type="search" placeholder="Search " class="wh_search_textfield" id="textToSearch" name="searchQuery" aria-label="Search query" required="required"/><button type="submit" class="wh_search_button" aria-label="Search"><span class="search_input_text">Search</span></button></div><div class="align-self-center flex-grow-1 ml-2"><div class="d-flex justify-content-end"><div class="dropdown"><a style="font-size: 1em; padding: 7px 12px !important;" class="btn py-3 px-3 btn-outline-light dropdown-toggle" href="#" role="button" id="devicesMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Product Pages</a><div style="font-size: 1em;" class="dropdown-menu" aria-labelledby="devicesMenu"><a class="dropdown-item" target="_blank" href="https://www.microchip.com/en-us/product/pic32cx-bz2">PIC32CX-BZ2</a><a class="dropdown-item" target="_blank" href="https://www.microchip.com/en-us/product/pic32cx-bz3"> PIC32CX-BZ3</a><a class="dropdown-item" target="_blank" href="https://www.microchip.com/en-us/product/pic32cx-bz6"> PIC32CX-BZ6</a><a class="dropdown-item" target="_blank" href="https://www.microchip.com/en-us/product/wbz350"> WBZ350</a><a class="dropdown-item" target="_blank" href="https://www.microchip.com/en-us/product/wbz351"> WBZ351</a><a class="dropdown-item" target="_blank" href="https://www.microchip.com/en-us/product/wbz450"> WBZ450</a><a class="dropdown-item" target="_blank" href="https://www.microchip.com/en-us/product/wbz451"> WBZ451</a></div></div></div></div></div></form>
+            
+            <div class="mchp-color-stripe-grid-container">
+  <div class="mchp-main-bar mchp-orange-bar"></div>
+  <div class="mchp-main-bar mchp-blue-bar"></div>
+  <div class="mchp-main-bar mchp-green-bar"></div>
+</div>
+            
+        </div>
+        
+        <div class="container-fluid" id="wh_topic_container">
+            <div class="row">
+
+                <nav class="wh_tools d-print-none navbar-expand-md" aria-label="Tools">
+                    
+                    <div data-tooltip-position="bottom" class=" wh_breadcrumb "><ol class="d-print-none"><li><span class="home"><a href="index.html"><span>Home</span></a></span></li><li><div class="topicref" data-id="GUID-1DE7F398-A485-4143-964B-2CB21E5F4B26"><div class="title"><a href="GUID-1DE7F398-A485-4143-964B-2CB21E5F4B26.html"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1</ph>
+BLE Software</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div></li><li><div class="topicref" data-id="GUID-1F6AF334-EDDF-4C37-8BAE-9B246FD37EE5"><div class="title"><a href="GUID-1F6AF334-EDDF-4C37-8BAE-9B246FD37EE5.html"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1</ph>
+Wireless BLE</a></div></div></li><li><div class="topicref" data-id="GUID-79157BDE-86A8-4660-98CA-D67BF921F154"><div class="title"><a href="GUID-79157BDE-86A8-4660-98CA-D67BF921F154.html"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2</ph>
+BLE Software API</a></div></div></li><li><div class="topicref" data-id="GUID-6A7C78FE-1473-4B99-B2C9-01CDC06FE578"><div class="title"><a href="GUID-6A7C78FE-1473-4B99-B2C9-01CDC06FE578.html"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.2</ph>
+BLE Middleware</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div></li><li><div class="topicref" data-id="GUID-64398A20-89D3-4565-BFB7-4B0DB9C72856"><div class="title"><a href="GUID-64398A20-89D3-4565-BFB7-4B0DB9C72856.html"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.2.5</ph>
+Utilities</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div></li><li><div class="topicref" data-id="GUID-6FF016F4-732C-47E1-A935-30C28F6FA718"><div class="title"><a href="GUID-6FF016F4-732C-47E1-A935-30C28F6FA718.html"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.2.5.1</ph>
+Advanced Encryption Standard (AES)</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div></li><li><div class="topicref" data-id="GUID-7B7D0D59-AB7F-4C52-9D59-C189767883E0"><div class="title"><a href="GUID-7B7D0D59-AB7F-4C52-9D59-C189767883E0.html"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.2.5.1.2</ph>
+Functions</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div></li><li class="active"><div class="topicref" data-id="mw-aes-aesccmdecrypt"><div class="title"><a href="GUID-73EBF25E-3B0E-4534-9E55-8CA94736BC5F.html"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.2.5.1.2.8</ph>
+MW_AES_AesCcmDecrypt</a></div></div></li></ol></div>
+                    
+                    
+                    
+                    <div class="wh_right_tools">
+                        <button class="wh_hide_highlight" aria-label="Toggle search highlights" title="Toggle search highlights"></button>
+                        <button class="webhelp_expand_collapse_sections" data-next-state="collapsed" aria-label="Collapse sections" title="Collapse sections"></button>
+                        
+                        
+                        
+                        
+                        <div class=" wh_print_link print d-none d-md-inline-block "><button onClick="window.print()" title="Print this page" aria-label="Print this page"></button></div>
+                        
+                        <button type="button" id="wh_toc_button" class="custom-toggler navbar-toggler collapsed wh_toggle_button navbar-light" aria-expanded="false" aria-label="Toggle publishing table of content" aria-controls="wh_publication_toc">
+                            <span class="navbar-toggler-icon"></span>
+                        </button>
+                    </div>
+                    
+                </nav>
+            </div>
+            
+            <div class="row" style="margin-top: -1em;"><div class="col-lg-7 col-md-7 col-sm-12 offset-lg-3 offset-md-3 text-right border-bottom mb-1"><h2 class="text-dark header_title">
+    </h2></div></div>
+            
+            
+            <div class="wh_content_area">
+                <div class="row">
+                    
+                        <nav id="wh_publication_toc" class="col-lg-3 col-md-3 col-sm-12 d-md-block d-none d-print-none" aria-label="Table of Contents Container">
+                            <div id="wh_publication_toc_content">
+		                        
+                            	<div class=" wh_publication_toc " data-tooltip-position="right"><span class="expand-button-action-labels"><span id="button-expand-action" role="button" aria-label="Expand"></span><span id="button-collapse-action" role="button" aria-label="Collapse"></span><span id="button-pending-action" role="button" aria-label="Pending"></span></span><ul role="tree" aria-label="Table of Contents"><li role="treeitem" aria-expanded="true"><div data-tocid="GUID-1DE7F398-A485-4143-964B-2CB21E5F4B26-d8174e11" class="topicref" data-id="GUID-1DE7F398-A485-4143-964B-2CB21E5F4B26" data-state="expanded"><span role="button" tabindex="0" aria-labelledby="button-collapse-action GUID-1DE7F398-A485-4143-964B-2CB21E5F4B26-d8174e11-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-1DE7F398-A485-4143-964B-2CB21E5F4B26.html" id="GUID-1DE7F398-A485-4143-964B-2CB21E5F4B26-d8174e11-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1</ph>
+BLE Software</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div><ul role="group" class="navbar-nav nav-list"><li role="treeitem" aria-expanded="true"><div data-tocid="GUID-1F6AF334-EDDF-4C37-8BAE-9B246FD37EE5-d8174e21" class="topicref" data-id="GUID-1F6AF334-EDDF-4C37-8BAE-9B246FD37EE5" data-state="expanded"><span role="button" tabindex="0" aria-labelledby="button-collapse-action GUID-1F6AF334-EDDF-4C37-8BAE-9B246FD37EE5-d8174e21-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-1F6AF334-EDDF-4C37-8BAE-9B246FD37EE5.html" id="GUID-1F6AF334-EDDF-4C37-8BAE-9B246FD37EE5-d8174e21-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1</ph>
+Wireless BLE</a></div></div><ul role="group" class="navbar-nav nav-list"><li role="treeitem" aria-expanded="false"><div data-tocid="GUID-DFE1CA7F-A3A4-45E7-8C93-8074C4AC5D05-d8174e29" class="topicref" data-id="GUID-DFE1CA7F-A3A4-45E7-8C93-8074C4AC5D05" data-state="not-ready"><span role="button" tabindex="0" aria-labelledby="button-expand-action GUID-DFE1CA7F-A3A4-45E7-8C93-8074C4AC5D05-d8174e29-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-DFE1CA7F-A3A4-45E7-8C93-8074C4AC5D05.html" id="GUID-DFE1CA7F-A3A4-45E7-8C93-8074C4AC5D05-d8174e29-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.1</ph>
+BLE Software Specification</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div></li><li role="treeitem" aria-expanded="true"><div data-tocid="GUID-79157BDE-86A8-4660-98CA-D67BF921F154-d8174e133" class="topicref" data-id="GUID-79157BDE-86A8-4660-98CA-D67BF921F154" data-state="expanded"><span role="button" tabindex="0" aria-labelledby="button-collapse-action GUID-79157BDE-86A8-4660-98CA-D67BF921F154-d8174e133-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-79157BDE-86A8-4660-98CA-D67BF921F154.html" id="GUID-79157BDE-86A8-4660-98CA-D67BF921F154-d8174e133-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2</ph>
+BLE Software API</a></div></div><ul role="group" class="navbar-nav nav-list"><li role="treeitem" aria-expanded="false"><div data-tocid="GUID-BCDDE166-F3AD-498B-9900-257827609467-d8174e141" class="topicref" data-id="GUID-BCDDE166-F3AD-498B-9900-257827609467" data-state="not-ready"><span role="button" tabindex="0" aria-labelledby="button-expand-action GUID-BCDDE166-F3AD-498B-9900-257827609467-d8174e141-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-BCDDE166-F3AD-498B-9900-257827609467.html" id="GUID-BCDDE166-F3AD-498B-9900-257827609467-d8174e141-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.1</ph>
+BLE Stack</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div></li><li role="treeitem" aria-expanded="true"><div data-tocid="GUID-6A7C78FE-1473-4B99-B2C9-01CDC06FE578-d8174e4409" class="topicref" data-id="GUID-6A7C78FE-1473-4B99-B2C9-01CDC06FE578" data-state="expanded"><span role="button" tabindex="0" aria-labelledby="button-collapse-action GUID-6A7C78FE-1473-4B99-B2C9-01CDC06FE578-d8174e4409-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-6A7C78FE-1473-4B99-B2C9-01CDC06FE578.html" id="GUID-6A7C78FE-1473-4B99-B2C9-01CDC06FE578-d8174e4409-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.2</ph>
+BLE Middleware</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div><ul role="group" class="navbar-nav nav-list"><li role="treeitem" aria-expanded="false"><div data-tocid="GUID-D35416CB-25AD-41BF-8713-1BD19835E552-d8174e4419" class="topicref" data-id="GUID-D35416CB-25AD-41BF-8713-1BD19835E552" data-state="not-ready"><span role="button" tabindex="0" aria-labelledby="button-expand-action GUID-D35416CB-25AD-41BF-8713-1BD19835E552-d8174e4419-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-D35416CB-25AD-41BF-8713-1BD19835E552.html" id="GUID-D35416CB-25AD-41BF-8713-1BD19835E552-d8174e4419-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.2.1</ph>
+Device Manager (DM)</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div></li><li role="treeitem" aria-expanded="false"><div data-tocid="GUID-9AF99D19-0628-4D56-9F56-A4B5C11372A6-d8174e4769" class="topicref" data-id="GUID-9AF99D19-0628-4D56-9F56-A4B5C11372A6" data-state="not-ready"><span role="button" tabindex="0" aria-labelledby="button-expand-action GUID-9AF99D19-0628-4D56-9F56-A4B5C11372A6-d8174e4769-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-9AF99D19-0628-4D56-9F56-A4B5C11372A6.html" id="GUID-9AF99D19-0628-4D56-9F56-A4B5C11372A6-d8174e4769-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.2.2</ph>
+LOG</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div></li><li role="treeitem" aria-expanded="false"><div data-tocid="GUID-7228414F-260A-4A2D-A1A2-3BE5372EED98-d8174e4837" class="topicref" data-id="GUID-7228414F-260A-4A2D-A1A2-3BE5372EED98" data-state="not-ready"><span role="button" tabindex="0" aria-labelledby="button-expand-action GUID-7228414F-260A-4A2D-A1A2-3BE5372EED98-d8174e4837-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-7228414F-260A-4A2D-A1A2-3BE5372EED98.html" id="GUID-7228414F-260A-4A2D-A1A2-3BE5372EED98-d8174e4837-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.2.3</ph>
+Database Discovery (DD)</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div></li><li role="treeitem" aria-expanded="false"><div data-tocid="GUID-7F62C769-0357-47B0-BD0D-3946CF46D4EA-d8174e5106" class="topicref" data-id="GUID-7F62C769-0357-47B0-BD0D-3946CF46D4EA" data-state="not-ready"><span role="button" tabindex="0" aria-labelledby="button-expand-action GUID-7F62C769-0357-47B0-BD0D-3946CF46D4EA-d8174e5106-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-7F62C769-0357-47B0-BD0D-3946CF46D4EA.html" id="GUID-7F62C769-0357-47B0-BD0D-3946CF46D4EA-d8174e5106-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.2.4</ph>
+Service Change Manager (SCM)</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div></li><li role="treeitem" aria-expanded="true"><div data-tocid="GUID-64398A20-89D3-4565-BFB7-4B0DB9C72856-d8174e5318" class="topicref" data-id="GUID-64398A20-89D3-4565-BFB7-4B0DB9C72856" data-state="expanded"><span role="button" tabindex="0" aria-labelledby="button-collapse-action GUID-64398A20-89D3-4565-BFB7-4B0DB9C72856-d8174e5318-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-64398A20-89D3-4565-BFB7-4B0DB9C72856.html" id="GUID-64398A20-89D3-4565-BFB7-4B0DB9C72856-d8174e5318-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.2.5</ph>
+Utilities</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div><ul role="group" class="navbar-nav nav-list"><li role="treeitem" aria-expanded="true"><div data-tocid="GUID-6FF016F4-732C-47E1-A935-30C28F6FA718-d8174e5328" class="topicref" data-id="GUID-6FF016F4-732C-47E1-A935-30C28F6FA718" data-state="expanded"><span role="button" tabindex="0" aria-labelledby="button-collapse-action GUID-6FF016F4-732C-47E1-A935-30C28F6FA718-d8174e5328-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-6FF016F4-732C-47E1-A935-30C28F6FA718.html" id="GUID-6FF016F4-732C-47E1-A935-30C28F6FA718-d8174e5328-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.2.5.1</ph>
+Advanced Encryption Standard (AES)</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div><ul role="group" class="navbar-nav nav-list"><li role="treeitem" aria-expanded="false"><div data-tocid="GUID-41911D6F-569E-43A8-A849-2918EA900D19-d8174e5338" class="topicref" data-id="GUID-41911D6F-569E-43A8-A849-2918EA900D19" data-state="not-ready"><span role="button" tabindex="0" aria-labelledby="button-expand-action GUID-41911D6F-569E-43A8-A849-2918EA900D19-d8174e5338-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-41911D6F-569E-43A8-A849-2918EA900D19.html" id="GUID-41911D6F-569E-43A8-A849-2918EA900D19-d8174e5338-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.2.5.1.1</ph>
+Structures</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div></li><li role="treeitem" aria-expanded="true"><div data-tocid="GUID-7B7D0D59-AB7F-4C52-9D59-C189767883E0-d8174e5356" class="topicref" data-id="GUID-7B7D0D59-AB7F-4C52-9D59-C189767883E0" data-state="expanded"><span role="button" tabindex="0" aria-labelledby="button-collapse-action GUID-7B7D0D59-AB7F-4C52-9D59-C189767883E0-d8174e5356-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-7B7D0D59-AB7F-4C52-9D59-C189767883E0.html" id="GUID-7B7D0D59-AB7F-4C52-9D59-C189767883E0-d8174e5356-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.2.5.1.2</ph>
+Functions</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div><ul role="group" class="navbar-nav nav-list"><li role="treeitem"><div data-tocid="mw-aes-aescbcdecrypt-d8174e5366" class="topicref" data-id="mw-aes-aescbcdecrypt" data-state="leaf"><span role="button" class="wh-expand-btn"></span><div class="title"><a href="GUID-36F561BF-6DFE-4459-986F-BAAF3186C6D1.html" id="mw-aes-aescbcdecrypt-d8174e5366-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.2.5.1.2.1</ph>
+MW_AES_AesCbcDecrypt</a></div></div></li><li role="treeitem"><div data-tocid="mw-aes-aesecbencrypt-d8174e5374" class="topicref" data-id="mw-aes-aesecbencrypt" data-state="leaf"><span role="button" class="wh-expand-btn"></span><div class="title"><a href="GUID-999CD055-702A-476C-AE62-D2A83F909F8A.html" id="mw-aes-aesecbencrypt-d8174e5374-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.2.5.1.2.2</ph>
+MW_AES_AesEcbEncrypt</a></div></div></li><li role="treeitem"><div data-tocid="mw-aes-cbcdecryptinit-d8174e5382" class="topicref" data-id="mw-aes-cbcdecryptinit" data-state="leaf"><span role="button" class="wh-expand-btn"></span><div class="title"><a href="GUID-52EE6A92-DC75-476D-8F69-5BA5154882EA.html" id="mw-aes-cbcdecryptinit-d8174e5382-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.2.5.1.2.3</ph>
+MW_AES_CbcDecryptInit</a></div></div></li><li role="treeitem"><div data-tocid="mw-aes-ecbencryptinit-d8174e5390" class="topicref" data-id="mw-aes-ecbencryptinit" data-state="leaf"><span role="button" class="wh-expand-btn"></span><div class="title"><a href="GUID-A5020944-366F-400D-94FD-81EFC440AC04.html" id="mw-aes-ecbencryptinit-d8174e5390-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.2.5.1.2.4</ph>
+MW_AES_EcbEncryptInit</a></div></div></li><li role="treeitem"><div data-tocid="mw-aes-ccmencryptinit-d8174e5398" class="topicref" data-id="mw-aes-ccmencryptinit" data-state="leaf"><span role="button" class="wh-expand-btn"></span><div class="title"><a href="GUID-FB39E13F-2D4C-4EBC-808D-A11E179590FF.html" id="mw-aes-ccmencryptinit-d8174e5398-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.2.5.1.2.5</ph>
+MW_AES_CcmEncryptInit</a></div></div></li><li role="treeitem"><div data-tocid="mw-aes-ccmdecryptinit-d8174e5406" class="topicref" data-id="mw-aes-ccmdecryptinit" data-state="leaf"><span role="button" class="wh-expand-btn"></span><div class="title"><a href="GUID-51A5E683-EC34-4BFF-86B8-9A0CDE7B536E.html" id="mw-aes-ccmdecryptinit-d8174e5406-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.2.5.1.2.6</ph>
+MW_AES_CcmDecryptInit</a></div></div></li><li role="treeitem"><div data-tocid="mw-aes-aesccmencrypt-d8174e5414" class="topicref" data-id="mw-aes-aesccmencrypt" data-state="leaf"><span role="button" class="wh-expand-btn"></span><div class="title"><a href="GUID-B23CDBA5-1B06-4D05-894E-28A590D2F4F2.html" id="mw-aes-aesccmencrypt-d8174e5414-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.2.5.1.2.7</ph>
+MW_AES_AesCcmEncrypt</a></div></div></li><li role="treeitem" class="active"><div data-tocid="mw-aes-aesccmdecrypt-d8174e5422" class="topicref" data-id="mw-aes-aesccmdecrypt" data-state="leaf"><span role="button" class="wh-expand-btn"></span><div class="title"><a href="GUID-73EBF25E-3B0E-4534-9E55-8CA94736BC5F.html" id="mw-aes-aesccmdecrypt-d8174e5422-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.2.5.1.2.8</ph>
+MW_AES_AesCcmDecrypt</a></div></div></li></ul></li></ul></li><li role="treeitem" aria-expanded="false"><div data-tocid="GUID-DC53B896-5FF5-48C2-B9B7-4CA16B37B193-d8174e5430" class="topicref" data-id="GUID-DC53B896-5FF5-48C2-B9B7-4CA16B37B193" data-state="not-ready"><span role="button" tabindex="0" aria-labelledby="button-expand-action GUID-DC53B896-5FF5-48C2-B9B7-4CA16B37B193-d8174e5430-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-DC53B896-5FF5-48C2-B9B7-4CA16B37B193.html" id="GUID-DC53B896-5FF5-48C2-B9B7-4CA16B37B193-d8174e5430-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.2.5.2</ph>
+Device Firmware Update (DFU)</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div></li></ul></li></ul></li><li role="treeitem" aria-expanded="false"><div data-tocid="GUID-0C50046A-98EA-4DA8-9171-8A060D2F890B-d8174e5548" class="topicref" data-id="GUID-0C50046A-98EA-4DA8-9171-8A060D2F890B" data-state="not-ready"><span role="button" tabindex="0" aria-labelledby="button-expand-action GUID-0C50046A-98EA-4DA8-9171-8A060D2F890B-d8174e5548-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-0C50046A-98EA-4DA8-9171-8A060D2F890B.html" id="GUID-0C50046A-98EA-4DA8-9171-8A060D2F890B-d8174e5548-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">1.1.2.3</ph>
+BLE Profile</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div></li></ul></li></ul></li></ul></li><li role="treeitem" aria-expanded="false"><div data-tocid="GUID-BDEB1D88-52CC-42E2-AA49-89B9BA4DBDAE-d8174e8331" class="topicref" data-id="GUID-BDEB1D88-52CC-42E2-AA49-89B9BA4DBDAE" data-state="not-ready"><span role="button" tabindex="0" aria-labelledby="button-expand-action GUID-BDEB1D88-52CC-42E2-AA49-89B9BA4DBDAE-d8174e8331-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-BDEB1D88-52CC-42E2-AA49-89B9BA4DBDAE.html" id="GUID-BDEB1D88-52CC-42E2-AA49-89B9BA4DBDAE-d8174e8331-link"><ph xmlns="http://www.oxygenxml.com/ns/webhelp/toc">2</ph>
+BLE Document</a><div class="wh-tooltip"><p class="shortdesc"></p></div></div></div></li><li role="treeitem" aria-expanded="false"><div data-tocid="GUID-0FB3F908-88EE-45CE-94F5-E97AF9049C9B-d8174e9754" class="topicref backmatter backmatter_parent" data-id="GUID-0FB3F908-88EE-45CE-94F5-E97AF9049C9B" data-state="not-ready"><span role="button" tabindex="0" aria-labelledby="button-expand-action GUID-0FB3F908-88EE-45CE-94F5-E97AF9049C9B-d8174e9754-link" class="wh-expand-btn"></span><div class="title"><a href="GUID-0FB3F908-88EE-45CE-94F5-E97AF9049C9B.html" id="GUID-0FB3F908-88EE-45CE-94F5-E97AF9049C9B-d8174e9754-link">Microchip Information</a></div></div></li></ul></div>
+		                        
+                            </div>
+                        </nav>
+                    
+                    
+                    <div class="col-lg-7 col-md-9 col-sm-12" id="wh_topic_body">
+                        <button id="wh_close_publication_toc_button" class="close-toc-button d-none" aria-label="Toggle publishing table of content" aria-controls="wh_publication_toc" aria-expanded="true">
+                            <span class="close-toc-icon-container">
+                                <span class="close-toc-icon"></span>     
+                            </span>
+                        </button>
+                        <button id="wh_close_topic_toc_button" class="close-toc-button d-none" aria-label="Toggle topic table of content" aria-controls="wh_topic_toc" aria-expanded="true">
+                            <span class="close-toc-icon-container">
+                                <span class="close-toc-icon"></span>     
+                            </span>
+                        </button>
+                        
+                        <div class=" wh_topic_content body "><main role="main"><article role="article" aria-labelledby="ariaid-title1"><h1 class="- topic/title title topictitle1" id="ariaid-title1" style="">MW_AES_AesCcmDecrypt</h1><div class="- topic/body body"></div><article class="- topic/topic topic nested1" aria-labelledby="ariaid-title2" id="c"><h2 class="- topic/title title topictitle2" id="ariaid-title2" style=""> C</h2><div class="- topic/body body"><pre class="+ topic/pre pr-d/codeblock pre codeblock c">uint16_t <span class="hl-functions">MW_AES_AesCcmDecrypt</span>(MW_AES_Ctx_T * p_ctx, uint16_t length, uint8_t *p_cipherText, uint8_t *p_tag, uint8_t *p_plainText);</pre></div></article><article class="- topic/topic topic nested1" aria-labelledby="ariaid-title3" id="description"><h2 class="- topic/title title topictitle2" id="ariaid-title3" style=""> Description</h2><div class="- topic/body body"><p class="- topic/p p">Decrypts data using AES CCM mode.</p></div></article><article class="- topic/topic topic nested1" aria-labelledby="ariaid-title4" id="parameters"><h2 class="- topic/title title topictitle2" id="ariaid-title4" style=""> Parameters</h2><div class="- topic/body body"><div class="table-container"><table class="- topic/table table" data-cols="2"><caption></caption><colgroup><col/><col/></colgroup><thead class="- topic/thead thead"><tr class="- topic/row"><th class="- topic/entry entry align-left colsep-0 rowsep-0" id="parameters__entry__1">Parameter</th><th class="- topic/entry entry align-left colsep-0 rowsep-0" id="parameters__entry__2">Description</th></tr></thead><tbody class="- topic/tbody tbody"><tr class="- topic/row"><td class="- topic/entry entry align-left colsep-0 rowsep-0" headers="parameters__entry__1">[in] p_ctx</td><td class="- topic/entry entry align-left colsep-0 rowsep-0" headers="parameters__entry__2">Pointer to the AES context structure.</td></tr><tr class="- topic/row"><td class="- topic/entry entry align-left colsep-0 rowsep-0" headers="parameters__entry__1">[in] length</td><td class="- topic/entry entry align-left colsep-0 rowsep-0" headers="parameters__entry__2">The length of the data to be decrypted. Must be a multiple of 16 bytes, except for the last data fragment.</td></tr><tr class="- topic/row"><td class="- topic/entry entry align-left colsep-0 rowsep-0" headers="parameters__entry__1">[in] p_chiperText</td><td class="- topic/entry entry align-left colsep-0 rowsep-0" headers="parameters__entry__2">Pointer to the buffer containing the data to be decrypted.</td></tr><tr class="- topic/row"><td class="- topic/entry entry align-left colsep-0 rowsep-0" headers="parameters__entry__1">[in] p_tag</td><td class="- topic/entry entry align-left colsep-0 rowsep-0" headers="parameters__entry__2">Pointer to the buffer containing the authentication tag.Only be used if p_chiperText is the last data fragment.</td></tr><tr class="- topic/row"><td class="- topic/entry entry align-left colsep-0 rowsep-0" headers="parameters__entry__1">[out] p_plainText</td><td class="- topic/entry entry align-left colsep-0 rowsep-0" headers="parameters__entry__2">Pointer to the buffer where the decrypted data will be stored.</td></tr></tbody></table></div></div></article><article class="- topic/topic topic nested1" aria-labelledby="ariaid-title5" id="return-values"><h2 class="- topic/title title topictitle2" id="ariaid-title5" style=""> Return values</h2><div class="- topic/body body"><div class="table-container"><table class="- topic/table table" data-cols="2"><caption></caption><colgroup><col/><col/></colgroup><thead class="- topic/thead thead"><tr class="- topic/row"><th class="- topic/entry entry align-left colsep-0 rowsep-0" id="return-values__entry__1">Return value</th><th class="- topic/entry entry align-left colsep-0 rowsep-0" id="return-values__entry__2">Description</th></tr></thead><tbody class="- topic/tbody tbody"><tr class="- topic/row"><td class="- topic/entry entry align-left colsep-0 rowsep-0" headers="return-values__entry__1">MBA_RES_SUCCESS</td><td class="- topic/entry entry align-left colsep-0 rowsep-0" headers="return-values__entry__2">Encryption successful.</td></tr><tr class="- topic/row"><td class="- topic/entry entry align-left colsep-0 rowsep-0" headers="return-values__entry__1">MBA_RES_FAIL</td><td class="- topic/entry entry align-left colsep-0 rowsep-0" headers="return-values__entry__2">Encryption failed.</td></tr></tbody></table></div></div></article></article></main></div>
+                        
+                        
+                        
+                        
+                        
+                        
+                    </div>
+                    
+                        <nav role="navigation" id="wh_topic_toc" aria-label="On this page" class="col-lg-2 d-none d-lg-block navbar d-print-none"> 
+                            <div id="wh_topic_toc_content">
+		                        
+	                            <div class=" wh_topic_toc "><div class="wh_topic_label">On this page</div><ul><li class="topic-item"><a href="#c" data-tocid="c"> C</a></li><li class="topic-item"><a href="#description" data-tocid="description"> Description</a></li><li class="topic-item"><a href="#parameters" data-tocid="parameters"> Parameters</a></li><li class="topic-item"><a href="#return-values" data-tocid="return-values"> Return values</a></li></ul></div>
+	                        	
+                        	</div>
+                        </nav>
+                    
+                </div>
+            </div>
+            
+            
+            
+        </div> 
+        <footer class="navbar navbar-default wh_footer">
+  <div class=" footer-container mx-auto ">
+    <div class="footer">
+  <div class="mchp-wh-footer">
+    <div class="mchp-footer">
+      <div class="mchp-footer-tier1">
+        <div class="spacer"></div>
+        <div class="mchp-footer-container">
+          <div class="mchp-footer-links mchp-social-media-links">
+            <div class="mchp-component-items">
+              <div class="mchp-component-item">
+                <a class="cmp-image__link" href="https://www.facebook.com/pages/Microchip-Technology-Inc/20320981741" target="_blank">
+                  <img class="cmp-image__image" alt="Microchip Facebook" src="oxygen-webhelp/template/resources/images/201016-corp-facebook.png"/>
+                </a>
+              </div>
+              <div class="mchp-component-item">
+                <a class="cmp-image__link" href="https://www.linkedin.com/company/microchip-technology" target="_blank">
+                  <img class="cmp-image__image" alt="Microchip LinkedIn" src="oxygen-webhelp/template/resources/images/201016-corp-linkedin.png"/>
+                </a>
+              </div>
+              <div class="mchp-component-item">
+                <a class="cmp-image__link" href="https://twitter.com/MicrochipTech" target="_blank">
+                  <img class="cmp-image__image" alt="Microchip Twitter" src="oxygen-webhelp/template/resources/images/201016-corp-twitter.png"/>
+                </a>
+              </div>
+              <div class="mchp-component-item">
+                <a class="cmp-image__link" href="https://www.youtube.com/user/MicrochipTechnology" target="_blank">
+                  <img class="cmp-image__image" alt="Microchip YouTube" src="oxygen-webhelp/template/resources/images/201016-corp-youtube.png"/>
+                </a>
+              </div>
+              <div class="mchp-component-item">
+                <a class="cmp-image__link" href="https://www.instagram.com/microchiptechnologyinc/" target="_blank">
+                  <img class="cmp-image__image" alt="Microchip Instagram" src="oxygen-webhelp/template/resources/images/201016-corp-instagram.png"/>
+                </a>
+              </div>
+              <div class="mchp-component-item">
+                <a class="cmp-image__link" href="https://www.weibo.com/microchiptech" target="_blank">
+                  <img class="cmp-image__image" alt="Microchip Weibo" src="oxygen-webhelp/template/resources/images/201016-corp-weibo.png"/>
+                </a>
+              </div>
+              <div class="mchp-component-item">
+                <a class="cmp-image__link" href="https://www.microchip.com/en-us/about/blog" target="_blank">
+                  <img class="cmp-image__image" alt="Microchip Blog" src="oxygen-webhelp/template/resources/images/201016-corp-blog.png"/>
+                </a>
+              </div>
+            </div>
+          </div>
+          <div class="mchp-footer-links">
+            <div class="mchp-component-items">
+              <div class="mchp-component-item">
+                <div class="link">
+                  <a href="https://www.microchip.com/about-us/contact-us" class="mchp-link__link">Contact</a>
+                  <span class="mchp-link__separator">|</span>
+                </div>
+              </div>
+              <div class="mchp-component-item ">
+                <div class="link">
+                  <a href="https://www.microchip.com/en-us/about/legal-information" class="mchp-link__link">Legal</a>
+                  <span class="mchp-link__separator">|</span>
+                </div>
+              </div>
+              <div class="mchp-component-item ">
+                <div class="link">
+                  <a href="https://www.microchip.com/en-us/about/legal-information/privacy-policy" class="mchp-link__link">Privacy Policy</a>
+                  <span class="mchp-link__separator">|</span>
+                </div>
+              </div>
+              <div class="mchp-component-item ">
+                <div class="link">
+                  <a href="https://www.microchip.com/en-us/about/legal-information/microchip-cookie-statement" class="mchp-link__link">Cookies</a>
+                  <span class="mchp-link__separator">|</span>
+                </div>
+              </div>
+              <div class="mchp-component-item">
+                <div class="link">
+                  <a href="https://careers.microchip.com/" class="mchp-link__link">Careers</a>
+                  <span class="mchp-link__separator"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mchp-footer-newsletter">
+            <div class="cmp-text">
+              <p>Stay on the leading edge with our blog</p>
+            </div>
+            <div class="mchp-button-wrapper">
+              <a role="button" href="https://www.microchip.com/en-us/about/blog" class="mchp-button mchp-button-regular solid">
+                <span class="mchp-button__span">MicroSolutions</span>
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="graphic">
+          <img src="oxygen-webhelp/template/resources/images/footer-graphic.png"/>
+        </div>
+      </div>
+      <div class="mchp-footer-tier2">
+        <p class="mchp-copyright">© Copyright 1998-<span class="current-year">2024</span> Microchip Technology Inc. All rights reserved.</p>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function() {
+      var currentYear = new Date().getFullYear();
+      document.querySelector('.current-year').textContent = currentYear;
+    })();
+  </script>
+  
+  <script type="text/javascript">_satellite.pageBottom();</script><!-- Adobe Analytics -->
+  <script type="text/javascript" src="mchp-js/prepend.js"></script><!-- Package for viewing PDFs on mobile devices -->
+  
+</div>
+  </div>
+</footer>
+        
+        <div id="go2top" class="d-print-none">
+            <span class="oxy-icon oxy-icon-up"></span>
+        </div>
+        
+        <div id="modal_img_large" class="modal">
+            <span class="close oxy-icon oxy-icon-remove"></span>
+            <div id="modal_img_container"></div>
+            <div id="caption"></div>
+        </div>
+        
+        
+        
+    </body>
+</html>

@@ -1,0 +1,1 @@
+oxy_webhelp_navlinks = {"GUID-C0BF88CD-CBF9-4EA1-AC28-B1CFC0D13BE4-d8174e2976":{"topics":[{"title":"<ph>1.1.2.1.3.2.1<\/ph>\nBLE_L2CAP_EventId_T","href":"GUID-91D55D80-4397-48D1-BB8D-C2A0F010F669.html","attributes":{"data-id":"ble-l2cap-eventid-t"},"menu":{"hasChildren":false},"tocID":"ble-l2cap-eventid-t-d8174e2986","topics":[]}]}};

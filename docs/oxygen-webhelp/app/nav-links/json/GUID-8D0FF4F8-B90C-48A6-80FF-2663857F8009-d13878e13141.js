@@ -1,1 +1,0 @@
-define({"topics":[{"title":"<ph>1.2.2.2.4.2.1<\/ph>\nBLE_SCM_EventId_T","href":"GUID-CFF6FA0B-8B74-4311-AA62-C04061423A98.html","attributes":{"data-id":"ble-scm-eventid-t"},"menu":{"hasChildren":false},"tocID":"ble-scm-eventid-t-d13878e13151","topics":[]}]});

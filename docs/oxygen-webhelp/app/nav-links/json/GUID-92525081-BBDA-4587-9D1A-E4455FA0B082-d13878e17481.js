@@ -1,1 +1,0 @@
-define({"topics":[{"title":"<ph>2.5.3.2.1<\/ph>\nTransparent Downlink Data Characteristic Behavior","shortdesc":"<p class=\"shortdesc\"\/>","href":"GUID-A7D140FB-84B5-4193-BC9D-7E7A8B06E8ED.html","attributes":{"data-id":"GUID-A7D140FB-84B5-4193-BC9D-7E7A8B06E8ED"},"menu":{"hasChildren":false},"tocID":"GUID-A7D140FB-84B5-4193-BC9D-7E7A8B06E8ED-d13878e17491","topics":[]}]});

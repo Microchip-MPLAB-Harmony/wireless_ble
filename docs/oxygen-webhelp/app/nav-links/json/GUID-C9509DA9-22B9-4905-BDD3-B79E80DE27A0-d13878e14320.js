@@ -1,1 +1,0 @@
-define({"topics":[{"title":"<ph>1.2.2.3.3.1.1.1<\/ph>\nBLE_HOGPS_EventId_T","href":"GUID-FD46DA44-7917-4D0D-B093-1B426A48DF54.html","attributes":{"data-id":"ble-hogps-eventid-t"},"menu":{"hasChildren":false},"tocID":"ble-hogps-eventid-t-d13878e14330","topics":[]}]});

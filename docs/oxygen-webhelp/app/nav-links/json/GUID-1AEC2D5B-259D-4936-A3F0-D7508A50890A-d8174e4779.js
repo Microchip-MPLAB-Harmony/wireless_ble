@@ -1,0 +1,1 @@
+oxy_webhelp_navlinks = {"GUID-1AEC2D5B-259D-4936-A3F0-D7508A50890A-d8174e4779":{"topics":[{"title":"<ph>1.1.2.2.2.1.1<\/ph>\nBLE log types","href":"GUID-CCF5442F-D2CB-4A44-8047-8D9CC65EA3F3.html","attributes":{"data-id":"ble-log-types"},"menu":{"hasChildren":false},"tocID":"ble-log-types-d8174e4787","topics":[]}]}};

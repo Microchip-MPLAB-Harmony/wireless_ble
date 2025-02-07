@@ -1,0 +1,1 @@
+oxy_webhelp_navlinks = {"GUID-22055442-E74D-4706-811F-48C7A7A8F530-d8174e3769":{"topics":[{"title":"<ph>1.1.2.1.5.4.1<\/ph>\nSTACK_EventRegister","href":"GUID-29193070-0984-4252-B1BF-D64683BCF0C8.html","attributes":{"data-id":"stack-eventregister"},"menu":{"hasChildren":false},"tocID":"stack-eventregister-d8174e3779","topics":[]}]}};

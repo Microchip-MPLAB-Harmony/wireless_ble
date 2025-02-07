@@ -1,0 +1,1 @@
+oxy_webhelp_navlinks = {"GUID-D5CD2A08-1105-4909-90D3-63ACEBD9F57F-d8174e3281":{"topics":[{"title":"<ph>1.1.2.1.4.2.1<\/ph>\nBLE_SMP_EventId_T","href":"GUID-184B99E4-8C26-4312-8593-3EE58F9E842B.html","attributes":{"data-id":"ble-smp-eventid-t"},"menu":{"hasChildren":false},"tocID":"ble-smp-eventid-t-d8174e3291","topics":[]}]}};

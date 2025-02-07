@@ -1,1 +1,0 @@
-define({"topics":[{"title":"<ph>1.2.2.2.3.2.1<\/ph>\nBLE_DD_EventId_T","href":"GUID-45B8E598-9414-432D-9F5F-52044CCDE39E.html","attributes":{"data-id":"ble-dd-eventid-t"},"menu":{"hasChildren":false},"tocID":"ble-dd-eventid-t-d13878e12890","topics":[]}]});

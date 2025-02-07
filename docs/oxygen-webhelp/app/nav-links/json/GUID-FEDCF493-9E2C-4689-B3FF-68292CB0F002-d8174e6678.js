@@ -1,0 +1,1 @@
+oxy_webhelp_navlinks = {"GUID-FEDCF493-9E2C-4689-B3FF-68292CB0F002-d8174e6678":{"topics":[{"title":"<ph>1.1.2.3.4.1.2.1<\/ph>\nBLE_OTAPC_EventId_T","href":"GUID-19484883-2CB0-4497-A6CF-3A4254BBF654.html","attributes":{"data-id":"ble-otapc-eventid-t"},"menu":{"hasChildren":false},"tocID":"ble-otapc-eventid-t-d8174e6688","topics":[]}]}};

@@ -1,0 +1,1 @@
+oxy_webhelp_navlinks = {"GUID-1B80B52B-F8E4-4C9D-8BD2-1E412C48F5EB-d8174e4873":{"topics":[{"title":"<ph>1.1.2.2.3.2.1<\/ph>\nBLE_DD_EventId_T","href":"GUID-CC7E06B9-494F-4110-8F00-9C17167BAB2F.html","attributes":{"data-id":"ble-dd-eventid-t"},"menu":{"hasChildren":false},"tocID":"ble-dd-eventid-t-d8174e4883","topics":[]}]}};

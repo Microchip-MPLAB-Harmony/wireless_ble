@@ -1,0 +1,1 @@
+oxy_webhelp_navlinks = {"GUID-F6D48068-EBA0-425F-8502-413E95E3ABC0-d8174e4257":{"topics":[{"title":"<ph>1.1.2.1.8.1.1<\/ph>\nStatus of HCI event","href":"GUID-458D8316-D608-4BA9-98D7-4186128A1385.html","attributes":{"data-id":"status-of-hci-event"},"menu":{"hasChildren":false},"tocID":"status-of-hci-event-d8174e4267","topics":[]}]}};

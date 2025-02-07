@@ -1,0 +1,1 @@
+oxy_webhelp_navlinks = {"GUID-C30C1FEB-9433-4747-9FD6-F438BF66BDD3-d8174e5931":{"topics":[{"title":"<ph>1.1.2.3.2.1.2.1<\/ph>\nBLE_ANPC_EventId_T","href":"GUID-19DD8E02-2F17-4294-AD2C-97BEB9E9F804.html","attributes":{"data-id":"ble-anpc-eventid-t"},"menu":{"hasChildren":false},"tocID":"ble-anpc-eventid-t-d8174e5941","topics":[]}]}};

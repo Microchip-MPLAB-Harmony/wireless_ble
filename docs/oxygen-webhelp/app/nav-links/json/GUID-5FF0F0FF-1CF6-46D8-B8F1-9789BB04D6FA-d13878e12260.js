@@ -1,1 +1,0 @@
-define({"topics":[{"title":"<ph>1.2.2.1.8.1.1<\/ph>\nStatus of HCI event","href":"GUID-CDE99C8E-E32D-468B-8AC6-30FE12853EC5.html","attributes":{"data-id":"status-of-hci-event"},"menu":{"hasChildren":false},"tocID":"status-of-hci-event-d13878e12270","topics":[]}]});

@@ -1,1 +1,0 @@
-define({"topics":[{"title":"<ph>1.1.2.2.2.1.1<\/ph>\nDefinitions of BLE log","href":"GUID-CCF5442F-D2CB-4A44-8047-8D9CC65EA3F3.html","attributes":{"data-id":"definitions-of-ble-log"},"menu":{"hasChildren":false},"tocID":"definitions-of-ble-log-d13878e4665","topics":[]}]});

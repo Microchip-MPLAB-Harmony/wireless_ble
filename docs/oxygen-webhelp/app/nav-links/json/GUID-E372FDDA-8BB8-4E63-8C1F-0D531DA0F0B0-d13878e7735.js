@@ -1,1 +1,0 @@
-define({"topics":[{"title":"<ph>1.1.2.3.7.1.2.1<\/ph>\nBLE_TRSPC_EventId_T","href":"GUID-629BEAFF-0BDD-4521-8E20-F81D3FA47153.html","attributes":{"data-id":"ble-trspc-eventid-t"},"menu":{"hasChildren":false},"tocID":"ble-trspc-eventid-t-d13878e7745","topics":[]}]});

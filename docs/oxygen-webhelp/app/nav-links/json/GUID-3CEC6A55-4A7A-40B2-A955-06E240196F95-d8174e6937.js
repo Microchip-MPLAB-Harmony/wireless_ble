@@ -1,0 +1,1 @@
+oxy_webhelp_navlinks = {"GUID-3CEC6A55-4A7A-40B2-A955-06E240196F95-d8174e6937":{"topics":[{"title":"<ph>1.1.2.3.4.2.2.1<\/ph>\nBLE_OTAPS_EventId_T","href":"GUID-F3177CD0-E008-4DCD-AA8E-40F6DC495A8A.html","attributes":{"data-id":"ble-otaps-eventid-t"},"menu":{"hasChildren":false},"tocID":"ble-otaps-eventid-t-d8174e6947","topics":[]}]}};

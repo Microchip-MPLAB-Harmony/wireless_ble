@@ -1,0 +1,1 @@
+oxy_webhelp_navlinks = {"GUID-72ED1EA1-A0EA-4368-8ACE-866D5AD589A4-d8174e6369":{"topics":[{"title":"<ph>1.1.2.3.3.1.1.1<\/ph>\nBLE_HOGPS_EventId_T","href":"GUID-4A772703-D197-40AE-A35F-77D7C1504E97.html","attributes":{"data-id":"ble-hogps-eventid-t"},"menu":{"hasChildren":false},"tocID":"ble-hogps-eventid-t-d8174e6379","topics":[]}]}};

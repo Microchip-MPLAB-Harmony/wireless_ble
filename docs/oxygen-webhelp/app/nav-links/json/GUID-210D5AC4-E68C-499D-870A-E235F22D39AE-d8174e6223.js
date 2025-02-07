@@ -1,0 +1,1 @@
+oxy_webhelp_navlinks = {"GUID-210D5AC4-E68C-499D-870A-E235F22D39AE-d8174e6223":{"topics":[{"title":"<ph>1.1.2.3.2.2.2.1<\/ph>\nBLE_ANPS_EventId_T","href":"GUID-3EE73EEC-B3E4-435C-87F6-1E5BDC06308D.html","attributes":{"data-id":"ble-anps-eventid-t"},"menu":{"hasChildren":false},"tocID":"ble-anps-eventid-t-d8174e6233","topics":[]}]}};

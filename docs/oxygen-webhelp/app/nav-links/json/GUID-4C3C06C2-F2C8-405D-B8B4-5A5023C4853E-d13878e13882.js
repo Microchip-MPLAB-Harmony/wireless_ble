@@ -1,1 +1,0 @@
-define({"topics":[{"title":"<ph>1.2.2.3.2.1.2.1<\/ph>\nBLE_ANPC_EventId_T","href":"GUID-6B001FFC-2FB3-4121-BBE3-7C382205F26C.html","attributes":{"data-id":"ble-anpc-eventid-t"},"menu":{"hasChildren":false},"tocID":"ble-anpc-eventid-t-d13878e13892","topics":[]}]});
