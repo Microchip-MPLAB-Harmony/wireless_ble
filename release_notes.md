@@ -12,6 +12,12 @@ This release includes support for the new PIC32CX-BZ6 device.
 + **PIC32CX-BZ6**
 	+ This release includes initial Bluetooth Low Energy software support for PIC32CX-BZ6/PIC32WM-BZ6x families of 32-bit microcontrollers.
 
+### Improvements
++ **PIC32CX-BZ2**
+	+ Support for the SW PTA multi-protocol combo application.
+
++ **PIC32CX-BZ3**
+	+ Support for the SW PTA multi-protocol combo application.
 
 ### Development Tools
 + [MPLAB X v6.20](https://www.microchip.com/mplab/mplab-x-ide)
