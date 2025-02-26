@@ -539,6 +539,8 @@ static void APP_BleConfigAdvance(void)
     advParams.secPhy = CONFIG_BLE_GAP_EXT_ADV_SEC_ADV_PHY;      /* Secondary Advertising PHY */
     advParams.sid = CONFIG_BLE_GAP_EXT_ADV_SID;     /* Advertising SID */
     advParams.scanReqNotifiEnable = CONFIG_BLE_GAP_EXT_ADV_SCAN_ENABLE;   /* Scan Request Notification Enable */
+    advParams.priPhyOptions = CONFIG_BLE_GAP_EXT_ADV_PRI_ADV_PHY_OPT;  /* Primary Advertising PHY Option */
+    advParams.secPhyOptions = CONFIG_BLE_GAP_EXT_ADV_SEC_ADV_PHY_OPT;  /* Secondary Advertising PHY Option */
     BLE_GAP_SetExtAdvParams(&advParams, &selectedTxPower);
 
         <#if GAP_EXT_ADV_DATA_LEN != 0>
@@ -604,6 +606,8 @@ static void APP_BleConfigAdvance(void)
     advParams.secPhy = CONFIG_BLE_GAP_EXT_ADV_SEC_ADV_PHY_2;        /* Secondary Advertising PHY */
     advParams.sid = CONFIG_BLE_GAP_EXT_ADV_SID_2;       /* Advertising SID */
     advParams.scanReqNotifiEnable = CONFIG_BLE_GAP_EXT_ADV_SCAN_ENABLE_2;     /* Scan Request Notification Enable */
+    advParams.priPhyOptions = CONFIG_BLE_GAP_EXT_ADV_PRI_ADV_PHY_OPT_2;  /* Primary Advertising PHY Option */
+    advParams.secPhyOptions = CONFIG_BLE_GAP_EXT_ADV_SEC_ADV_PHY_OPT_2;  /* Secondary Advertising PHY Option */
     BLE_GAP_SetExtAdvParams(&advParams, &selectedTxPower2);
 
             <#if GAP_EXT_ADV_DATA_LEN_2 != 0>
@@ -771,6 +775,10 @@ void APP_BleStackInitBasic(void)
     <#if GAP_PERIPHERAL == true>
     BLE_GAP_ConnPeripheralInit();   /* Peripheral */
     </#if>
+
+    <#if __PROCESSOR == "WBZ451H">
+    APP_HpaInit();
+    </#if>
 }
 
 void APP_BleStackInitAdvance(void)
@@ -927,10 +935,6 @@ void APP_BleStackInitAdvance(void)
 
     <#if BLE_SYS_PTA_EN == true>
     APP_PtaInit();
-    </#if>
-
-    <#if __PROCESSOR == "WBZ451H">
-    APP_HpaInit();
     </#if>
 
     APP_BleConfigAdvance();

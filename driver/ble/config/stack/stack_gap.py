@@ -104,6 +104,13 @@ def gapLegacyAdvEncDataVisibility(symbol, event):
 def gapExtAdvEvtPropVisibility(symbol, event):
     symbol.setVisible(not event["value"] < 3)
 
+def gapExtAdvPhyOptionVisibility(symbol, event):
+    symID = symbol.getID()
+    if (symID == "GAP_PRI_ADV_PHY_OPTION") or (symID == "GAP_PRI_ADV_PHY_OPTION_2"):
+        symbol.setVisible(event["value"] == 1)
+    else:
+        symbol.setVisible(event["value"] == 2)
+
 def gapExtAdvTxPwr(symbol, event):
     if event["id"] == "GAP_EXT_ADV_ADV_SET_2":
         symbol.setVisible(event["value"])
@@ -1187,13 +1194,31 @@ gapExtAdvTxPower.setDependencies(gapExtAdvTxPwr, ["GAP_EXT_ADV_EVT_PROPERTIES"])
 
 
 # Primary Advertising PHY
-gapExtAdvPhy = libBLEStackComponent.createKeyValueSetSymbol('GAP_PRI_ADV_PHY', gapExtAdvAdvSet)
-gapExtAdvPhy.setLabel('Primary Advertising PHY')
-gapExtAdvPhy.addKey('BLE_GAP_PHY_TYPE_LE_1M', '0', 'LE 1M')
-gapExtAdvPhy.addKey('BLE_GAP_PHY_TYPE_LE_CODED', '1', 'LE Coded')
-gapExtAdvPhy.setDefaultValue(0)
-gapExtAdvPhy.setOutputMode('Key')
-gapExtAdvPhy.setDisplayMode('Description')
+gapExtPriAdvPhy = libBLEStackComponent.createKeyValueSetSymbol('GAP_PRI_ADV_PHY', gapExtAdvAdvSet)
+gapExtPriAdvPhy.setLabel('Primary Advertising PHY')
+gapExtPriAdvPhy.addKey('BLE_GAP_PHY_TYPE_LE_1M', '0', 'LE 1M')
+gapExtPriAdvPhy.addKey('BLE_GAP_PHY_TYPE_LE_CODED', '1', 'LE Coded')
+gapExtPriAdvPhy.setDefaultValue(0)
+gapExtPriAdvPhy.setOutputMode('Key')
+gapExtPriAdvPhy.setDisplayMode('Description')
+
+
+# Primary Advertising PHY Options
+gapExtPriAdvPhyOpt = libBLEStackComponent.createKeyValueSetSymbol('GAP_PRI_ADV_PHY_OPTION', gapExtPriAdvPhy)
+gapExtPriAdvPhyOpt.setLabel('Primary Advertising PHY Option')
+gapExtPriAdvPhyOpt.addKey('BLE_GAP_CODED_PHY_HOST_NO_PREFERRED', '0', 'None')
+gapExtPriAdvPhyOpt.addKey('BLE_GAP_CODED_PHY_HOST_PREFER_S2', '1', 'Prefer S=2 Coding')
+gapExtPriAdvPhyOpt.addKey('BLE_GAP_CODED_PHY_HOST_PREFER_S8', '2', 'Prefer S=8 Coding')
+gapExtPriAdvPhyOpt.addKey('BLE_GAP_CODED_PHY_HOST_REQUIRE_S2', '3', 'Require S=2 Coding')
+gapExtPriAdvPhyOpt.addKey('BLE_GAP_CODED_PHY_HOST_REQUIRE_S8', '4', 'Require S=8 Coding')
+gapExtPriAdvPhyOpt.setDefaultValue(0)
+gapExtPriAdvPhyOpt.setOutputMode('Key')
+gapExtPriAdvPhyOpt.setDisplayMode('Description')
+if devFamily == "pic32cx_bz6_family":
+    gapExtPriAdvPhyOpt.setVisible(gapExtPriAdvPhy.getDefaultValue() == 1)
+    gapExtPriAdvPhyOpt.setDependencies(gapExtAdvPhyOptionVisibility, ["GAP_PRI_ADV_PHY"])
+else:
+    gapExtPriAdvPhyOpt.setVisible(False)
 
 
 # Secondary Advertising Max Skip
@@ -1205,14 +1230,32 @@ gapExtAdvSecMaxSkip.setMax(0xFF)
 
 
 # Secondary Advertising PHY
-gapExtAdvPhy = libBLEStackComponent.createKeyValueSetSymbol('GAP_SEC_ADV_PHY', gapExtAdvAdvSet)
-gapExtAdvPhy.setLabel('Secondary Advertising PHY')
-gapExtAdvPhy.addKey('BLE_GAP_PHY_TYPE_LE_1M', '0', 'LE 1M')
-gapExtAdvPhy.addKey('BLE_GAP_PHY_TYPE_LE_2M', '1', 'LE 2M')
-gapExtAdvPhy.addKey('BLE_GAP_PHY_TYPE_LE_CODED', '2', 'LE Coded')
-gapExtAdvPhy.setDefaultValue(0)
-gapExtAdvPhy.setOutputMode('Key')
-gapExtAdvPhy.setDisplayMode('Description')
+gapExtSecAdvPhy = libBLEStackComponent.createKeyValueSetSymbol('GAP_SEC_ADV_PHY', gapExtAdvAdvSet)
+gapExtSecAdvPhy.setLabel('Secondary Advertising PHY')
+gapExtSecAdvPhy.addKey('BLE_GAP_PHY_TYPE_LE_1M', '0', 'LE 1M')
+gapExtSecAdvPhy.addKey('BLE_GAP_PHY_TYPE_LE_2M', '1', 'LE 2M')
+gapExtSecAdvPhy.addKey('BLE_GAP_PHY_TYPE_LE_CODED', '2', 'LE Coded')
+gapExtSecAdvPhy.setDefaultValue(0)
+gapExtSecAdvPhy.setOutputMode('Key')
+gapExtSecAdvPhy.setDisplayMode('Description')
+
+
+# Secondary Advertising PHY Options
+gapExtSecAdvPhyOpt = libBLEStackComponent.createKeyValueSetSymbol('GAP_SEC_ADV_PHY_OPTION', gapExtSecAdvPhy)
+gapExtSecAdvPhyOpt.setLabel('Secondary Advertising PHY Option')
+gapExtSecAdvPhyOpt.addKey('BLE_GAP_CODED_PHY_HOST_NO_PREFERRED', '0', 'None')
+gapExtSecAdvPhyOpt.addKey('BLE_GAP_CODED_PHY_HOST_PREFER_S2', '1', 'Prefer S=2 Coding')
+gapExtSecAdvPhyOpt.addKey('BLE_GAP_CODED_PHY_HOST_PREFER_S8', '2', 'Prefer S=8 Coding')
+gapExtSecAdvPhyOpt.addKey('BLE_GAP_CODED_PHY_HOST_REQUIRE_S2', '3', 'Require S=2 Coding')
+gapExtSecAdvPhyOpt.addKey('BLE_GAP_CODED_PHY_HOST_REQUIRE_S8', '4', 'Require S=8 Coding')
+gapExtSecAdvPhyOpt.setDefaultValue(0)
+gapExtSecAdvPhyOpt.setOutputMode('Key')
+gapExtSecAdvPhyOpt.setDisplayMode('Description')
+if devFamily == "pic32cx_bz6_family":
+    gapExtSecAdvPhyOpt.setVisible(gapExtSecAdvPhy.getDefaultValue() == 2)
+    gapExtSecAdvPhyOpt.setDependencies(gapExtAdvPhyOptionVisibility, ["GAP_SEC_ADV_PHY"])
+else:
+    gapExtSecAdvPhyOpt.setVisible(False)
 
 
 # Advertising SID
@@ -1721,15 +1764,33 @@ gapExtAdvTxPower.setDependencies(gapExtAdvTxPwr, ["GAP_EXT_ADV_ADV_SET_2", "GAP_
 
 
 # Primary Advertising PHY
-gapExtAdvPhy = libBLEStackComponent.createKeyValueSetSymbol('GAP_PRI_ADV_PHY_2', gapExtAdvAdvSet2)
-gapExtAdvPhy.setLabel('Primary Advertising PHY')
-gapExtAdvPhy.addKey('BLE_GAP_PHY_TYPE_LE_1M', '0', 'LE 1M')
-gapExtAdvPhy.addKey('BLE_GAP_PHY_TYPE_LE_CODED', '1', 'LE Coded')
-gapExtAdvPhy.setDefaultValue(0)
-gapExtAdvPhy.setVisible(False)
-gapExtAdvPhy.setOutputMode('Key')
-gapExtAdvPhy.setDisplayMode('Description')
-gapExtAdvPhy.setDependencies(gapConfigVisibility, ["GAP_EXT_ADV_ADV_SET_2"])
+gapExtPriAdvPhy2 = libBLEStackComponent.createKeyValueSetSymbol('GAP_PRI_ADV_PHY_2', gapExtAdvAdvSet2)
+gapExtPriAdvPhy2.setLabel('Primary Advertising PHY')
+gapExtPriAdvPhy2.addKey('BLE_GAP_PHY_TYPE_LE_1M', '0', 'LE 1M')
+gapExtPriAdvPhy2.addKey('BLE_GAP_PHY_TYPE_LE_CODED', '1', 'LE Coded')
+gapExtPriAdvPhy2.setDefaultValue(0)
+gapExtPriAdvPhy2.setVisible(False)
+gapExtPriAdvPhy2.setOutputMode('Key')
+gapExtPriAdvPhy2.setDisplayMode('Description')
+gapExtPriAdvPhy2.setDependencies(gapConfigVisibility, ["GAP_EXT_ADV_ADV_SET_2"])
+
+
+# Primary Advertising PHY Options
+gapExtPriAdvPhyOpt2 = libBLEStackComponent.createKeyValueSetSymbol('GAP_PRI_ADV_PHY_OPTION_2', gapExtPriAdvPhy2)
+gapExtPriAdvPhyOpt2.setLabel('Primary Advertising PHY Option')
+gapExtPriAdvPhyOpt2.addKey('BLE_GAP_CODED_PHY_HOST_NO_PREFERRED', '0', 'None')
+gapExtPriAdvPhyOpt2.addKey('BLE_GAP_CODED_PHY_HOST_PREFER_S2', '1', 'Prefer S=2 Coding')
+gapExtPriAdvPhyOpt2.addKey('BLE_GAP_CODED_PHY_HOST_PREFER_S8', '2', 'Prefer S=8 Coding')
+gapExtPriAdvPhyOpt2.addKey('BLE_GAP_CODED_PHY_HOST_REQUIRE_S2', '3', 'Require S=2 Coding')
+gapExtPriAdvPhyOpt2.addKey('BLE_GAP_CODED_PHY_HOST_REQUIRE_S8', '4', 'Require S=8 Coding')
+gapExtPriAdvPhyOpt2.setDefaultValue(0)
+gapExtPriAdvPhyOpt2.setOutputMode('Key')
+gapExtPriAdvPhyOpt2.setDisplayMode('Description')
+if devFamily == "pic32cx_bz6_family":
+    gapExtPriAdvPhyOpt2.setVisible(gapExtPriAdvPhy2.getDefaultValue() == 1)
+    gapExtPriAdvPhyOpt2.setDependencies(gapExtAdvPhyOptionVisibility, ["GAP_PRI_ADV_PHY_2"])
+else:
+    gapExtPriAdvPhyOpt2.setVisible(False)
 
 
 # Secondary Advertising Max Skip
@@ -1743,16 +1804,34 @@ gapExtAdvSecMaxSkip.setDependencies(gapConfigVisibility, ["GAP_EXT_ADV_ADV_SET_2
 
 
 # Secondary Advertising PHY
-gapExtAdvPhy = libBLEStackComponent.createKeyValueSetSymbol('GAP_SEC_ADV_PHY_2', gapExtAdvAdvSet2)
-gapExtAdvPhy.setLabel('Secondary Advertising PHY')
-gapExtAdvPhy.addKey('BLE_GAP_PHY_TYPE_LE_1M', '0', 'LE 1M')
-gapExtAdvPhy.addKey('BLE_GAP_PHY_TYPE_LE_2M', '1', 'LE 2M')
-gapExtAdvPhy.addKey('BLE_GAP_PHY_TYPE_LE_CODED', '2', 'LE Coded')
-gapExtAdvPhy.setDefaultValue(0)
-gapExtAdvPhy.setVisible(False)
-gapExtAdvPhy.setOutputMode('Key')
-gapExtAdvPhy.setDisplayMode('Description')
-gapExtAdvPhy.setDependencies(gapConfigVisibility, ["GAP_EXT_ADV_ADV_SET_2"])
+gapExtSecAdvPhy2 = libBLEStackComponent.createKeyValueSetSymbol('GAP_SEC_ADV_PHY_2', gapExtAdvAdvSet2)
+gapExtSecAdvPhy2.setLabel('Secondary Advertising PHY')
+gapExtSecAdvPhy2.addKey('BLE_GAP_PHY_TYPE_LE_1M', '0', 'LE 1M')
+gapExtSecAdvPhy2.addKey('BLE_GAP_PHY_TYPE_LE_2M', '1', 'LE 2M')
+gapExtSecAdvPhy2.addKey('BLE_GAP_PHY_TYPE_LE_CODED', '2', 'LE Coded')
+gapExtSecAdvPhy2.setDefaultValue(0)
+gapExtSecAdvPhy2.setVisible(False)
+gapExtSecAdvPhy2.setOutputMode('Key')
+gapExtSecAdvPhy2.setDisplayMode('Description')
+gapExtSecAdvPhy2.setDependencies(gapConfigVisibility, ["GAP_EXT_ADV_ADV_SET_2"])
+
+
+# Secondary Advertising PHY Options
+gapExtSecAdvPhyOpt2 = libBLEStackComponent.createKeyValueSetSymbol('GAP_SEC_ADV_PHY_OPTION_2', gapExtSecAdvPhy2)
+gapExtSecAdvPhyOpt2.setLabel('Secondary Advertising PHY Option')
+gapExtSecAdvPhyOpt2.addKey('BLE_GAP_CODED_PHY_HOST_NO_PREFERRED', '0', 'None')
+gapExtSecAdvPhyOpt2.addKey('BLE_GAP_CODED_PHY_HOST_PREFER_S2', '1', 'Prefer S=2 Coding')
+gapExtSecAdvPhyOpt2.addKey('BLE_GAP_CODED_PHY_HOST_PREFER_S8', '2', 'Prefer S=8 Coding')
+gapExtSecAdvPhyOpt2.addKey('BLE_GAP_CODED_PHY_HOST_REQUIRE_S2', '3', 'Require S=2 Coding')
+gapExtSecAdvPhyOpt2.addKey('BLE_GAP_CODED_PHY_HOST_REQUIRE_S8', '4', 'Require S=8 Coding')
+gapExtSecAdvPhyOpt2.setDefaultValue(0)
+gapExtSecAdvPhyOpt2.setOutputMode('Key')
+gapExtSecAdvPhyOpt2.setDisplayMode('Description')
+if devFamily == "pic32cx_bz6_family":
+    gapExtSecAdvPhyOpt2.setVisible(gapExtSecAdvPhy2.getDefaultValue() == 2)
+    gapExtSecAdvPhyOpt2.setDependencies(gapExtAdvPhyOptionVisibility, ["GAP_SEC_ADV_PHY_2"])
+else:
+    gapExtSecAdvPhyOpt2.setVisible(False)
 
 
 # Advertising SID

@@ -100,6 +100,16 @@
 #define CONFIG_BLE_GAP_EXT_ADV_SEC_ADV_PHY           ${GAP_SEC_ADV_PHY}      /* Secondary Advertising PHY */
 #define CONFIG_BLE_GAP_EXT_ADV_SID                   ${GAP_EXT_ADV_SID}     /* Advertising SID */
 #define CONFIG_BLE_GAP_EXT_ADV_SCAN_ENABLE           ${GAP_EXT_ADV_SCAN_ENABLE?c}   /* Scan Request Notification Enable */
+        <#if GAP_PRI_ADV_PHY == 'BLE_GAP_PHY_TYPE_LE_CODED'>
+#define CONFIG_BLE_GAP_EXT_ADV_PRI_ADV_PHY_OPT       ${GAP_PRI_ADV_PHY_OPTION}  /* Primary Advertising PHY Option */
+        <#else>
+#define CONFIG_BLE_GAP_EXT_ADV_PRI_ADV_PHY_OPT       0  /* Primary Advertising PHY Option */
+        </#if>
+        <#if GAP_SEC_ADV_PHY == 'BLE_GAP_PHY_TYPE_LE_CODED'>
+#define CONFIG_BLE_GAP_EXT_ADV_SEC_ADV_PHY_OPT       ${GAP_SEC_ADV_PHY_OPTION}  /* Secondary Advertising PHY Option */
+        <#else>
+#define CONFIG_BLE_GAP_EXT_ADV_SEC_ADV_PHY_OPT       0  /* Secondary Advertising PHY Option */
+        </#if>
     <#-- Extended Advertising Set 1: End -->
     <#-- Extended Advertising Set 2: Start -->
         <#if GAP_EXT_ADV_ADV_SET_2 == true>
@@ -119,25 +129,25 @@
                 </#if>
             </#if>
 #define CONFIG_BLE_GAP_EXT_ADV_ADV_SET_HANDLE_2      ${GAP_EXT_ADV_ADV_SET_HANDLE_2}        /* Advertising Handle */
-        <#if GAP_EXT_ADV_EVT_PROPERTIES_2 == '0'>
+            <#if GAP_EXT_ADV_EVT_PROPERTIES_2 == '0'>
 #define CONFIG_BLE_GAP_EXT_ADV_EVT_PROPERTIES_2      (BLE_GAP_EXT_ADV_EVT_PROP_CONNECTABLE_ADV|BLE_GAP_EXT_ADV_EVT_PROP_SCANNABLE_ADV|BLE_GAP_EXT_ADV_EVT_PROP_LEGACY_ADV)   /* Advertising Event Properties */
-        <#elseif GAP_EXT_ADV_EVT_PROPERTIES_2 == '1'>
+            <#elseif GAP_EXT_ADV_EVT_PROPERTIES_2 == '1'>
 #define CONFIG_BLE_GAP_EXT_ADV_EVT_PROPERTIES_2      (BLE_GAP_EXT_ADV_EVT_PROP_SCANNABLE_ADV|BLE_GAP_EXT_ADV_EVT_PROP_LEGACY_ADV)    /* Advertising Event Properties */
-        <#elseif GAP_EXT_ADV_EVT_PROPERTIES_2 == '2'>
+            <#elseif GAP_EXT_ADV_EVT_PROPERTIES_2 == '2'>
 #define CONFIG_BLE_GAP_EXT_ADV_EVT_PROPERTIES_2      (BLE_GAP_EXT_ADV_EVT_PROP_LEGACY_ADV)   /* Advertising Event Properties */
-        <#elseif GAP_EXT_ADV_EVT_PROPERTIES_2 == '3'>
+            <#elseif GAP_EXT_ADV_EVT_PROPERTIES_2 == '3'>
 #define CONFIG_BLE_GAP_EXT_ADV_EVT_PROPERTIES_2      (BLE_GAP_EXT_ADV_EVT_PROP_CONNECTABLE_ADV <#t>
                                                      <#if GAP_EXT_ADV_EVT_PROP_ANON_2 == true>|BLE_GAP_EXT_ADV_EVT_PROP_OMIT_ADDRESS </#if><#t>
                                                      <#if GAP_EXT_ADV_EVT_PROP_TX_POWER_2 == true>|BLE_GAP_EXT_ADV_EVT_PROP_TX_POWER </#if>)  /* Advertising Event Properties */<#lt>
-        <#elseif GAP_EXT_ADV_EVT_PROPERTIES_2 == '4'>
+            <#elseif GAP_EXT_ADV_EVT_PROPERTIES_2 == '4'>
 #define CONFIG_BLE_GAP_EXT_ADV_EVT_PROPERTIES_2      (BLE_GAP_EXT_ADV_EVT_PROP_SCANNABLE_ADV <#t>
                                                      <#if GAP_EXT_ADV_EVT_PROP_ANON_2 == true>|BLE_GAP_EXT_ADV_EVT_PROP_OMIT_ADDRESS </#if><#t>
                                                      <#if GAP_EXT_ADV_EVT_PROP_TX_POWER_2 == true>|BLE_GAP_EXT_ADV_EVT_PROP_TX_POWER </#if>)  /* Advertising Event Properties */<#lt>
-        <#elseif GAP_EXT_ADV_EVT_PROPERTIES_2 == '5'>
+            <#elseif GAP_EXT_ADV_EVT_PROPERTIES_2 == '5'>
 #define CONFIG_BLE_GAP_EXT_ADV_EVT_PROPERTIES_2      (0 <#t>
                                                      <#if GAP_EXT_ADV_EVT_PROP_ANON_2 == true>|BLE_GAP_EXT_ADV_EVT_PROP_OMIT_ADDRESS </#if><#t>
                                                      <#if GAP_EXT_ADV_EVT_PROP_TX_POWER_2 == true>|BLE_GAP_EXT_ADV_EVT_PROP_TX_POWER </#if>)  /* Advertising Event Properties */<#lt>
-        </#if>
+            </#if>
 #define CONFIG_BLE_GAP_EXT_ADV_PRI_INTERVAL_MIN_2    ${GAP_EXT_ADV_PRI_INTERVAL_MIN_2}   /* Primary Advertising Interval Min */
 #define CONFIG_BLE_GAP_EXT_ADV_PRI_INTERVAL_MAX_2    ${GAP_EXT_ADV_PRI_INTERVAL_MAX_2}   /* Primary Advertising Interval Max */
 #define CONFIG_BLE_GAP_EXT_ADV_PRI_CHANNEL_MAP_2     ${GAP_PRI_CHANNEL_MAP_2}       /* Primary Advertising Channel Map */
@@ -148,6 +158,16 @@
 #define CONFIG_BLE_GAP_EXT_ADV_SEC_ADV_PHY_2         ${GAP_SEC_ADV_PHY_2}      /* Secondary Advertising PHY */
 #define CONFIG_BLE_GAP_EXT_ADV_SID_2                 ${GAP_EXT_ADV_SID_2}     /* Advertising SID */
 #define CONFIG_BLE_GAP_EXT_ADV_SCAN_ENABLE_2         ${GAP_EXT_ADV_SCAN_ENABLE_2?c}   /* Scan Request Notification Enable */
+            <#if GAP_PRI_ADV_PHY_2 == 'BLE_GAP_PHY_TYPE_LE_CODED'>
+#define CONFIG_BLE_GAP_EXT_ADV_PRI_ADV_PHY_OPT_2     ${GAP_PRI_ADV_PHY_OPTION_2}  /* Primary Advertising PHY Option */
+            <#else>
+#define CONFIG_BLE_GAP_EXT_ADV_PRI_ADV_PHY_OPT_2     0  /* Primary Advertising PHY Option */
+            </#if>
+            <#if GAP_SEC_ADV_PHY_2 == 'BLE_GAP_PHY_TYPE_LE_CODED'>
+#define CONFIG_BLE_GAP_EXT_ADV_SEC_ADV_PHY_OPT_2     ${GAP_SEC_ADV_PHY_OPTION_2}  /* Secondary Advertising PHY Option */
+            <#else>
+#define CONFIG_BLE_GAP_EXT_ADV_SEC_ADV_PHY_OPT_2     0  /* Secondary Advertising PHY Option */
+            </#if>
         </#if>
     <#-- Extended Advertising Set 2: End -->
     </#if>
