@@ -49,9 +49,9 @@
 // *****************************************************************************
 
 #include "device.h"
-#include "driver/security/sxsymcrypt/keyref_api.h"
-#include "driver/security/silexpk/statuscodes_api.h"
-#include "driver/security/sxsymcrypt/aead_api.h"
+#include "driver/security/cryptosym/keyref_api.h"
+#include "driver/security/cryptopk/statuscodes_api.h"
+#include "driver/security/cryptosym/aead_api.h"
 
 #include "mba_error_defs.h"
 #include "mw_aes.h"
@@ -75,10 +75,10 @@ uint16_t MW_AES_CbcDecryptInit(MW_AES_Ctx_T * p_ctx, uint8_t *p_aesKey, uint8_t 
 {
     uint16_t result;
 
-    SX_CLK_ENABLE();
+    CRYPTO_CLK_ENABLE();
     
-    p_ctx->aesKeyRef=SX_KEYREF_LOAD_MATERIAL(16, (char *)p_aesKey);
-    if (SX_OK!=SX_BLKCIPHER_CREATE_AESCBC_DEC(&p_ctx->aesBlkCipher, &p_ctx->aesKeyRef, (char *)p_iv))
+    p_ctx->aesKeyRef=CRM_KEYREF_LOAD_MATERIAL(16, (char *)p_aesKey);
+    if (CRM_OK!=CRM_BLKCIPHER_CREATE_AESCBC_DEC(&p_ctx->aesBlkCipher, &p_ctx->aesKeyRef, (char *)p_iv))
     {
         result = MBA_RES_FAIL;
     }
@@ -87,7 +87,7 @@ uint16_t MW_AES_CbcDecryptInit(MW_AES_Ctx_T * p_ctx, uint8_t *p_aesKey, uint8_t 
         result = MBA_RES_SUCCESS;
     }
     
-    SX_CLK_DISABLE();
+    CRYPTO_CLK_DISABLE();
 
     return result;
 
@@ -109,26 +109,26 @@ uint16_t MW_AES_AesCbcDecrypt(MW_AES_Ctx_T * p_ctx, uint16_t length, uint8_t *p_
 {
     int32_t s;
 
-    SX_CLK_ENABLE();
+    CRYPTO_CLK_ENABLE();
 
-    s = SX_BLKCIPHER_CRYPT(&p_ctx->aesBlkCipher, (char *)p_cipherText, length, (char *)p_plainText);
-    if (s == SX_OK)
+    s = CRM_BLKCIPHER_CRYPT(&p_ctx->aesBlkCipher, (char *)p_cipherText, length, (char *)p_plainText);
+    if (s == CRM_OK)
     {
-        s = SX_BLKCIPHER_SAVE_STATE(&p_ctx->aesBlkCipher);
+        s = CRM_BLKCIPHER_SAVE_STATE(&p_ctx->aesBlkCipher);
     }
-    if (s == SX_OK)
+    if (s == CRM_OK)
     {
-    s = SX_BLKCIPHER_WAIT(&p_ctx->aesBlkCipher);
+    s = CRM_BLKCIPHER_WAIT(&p_ctx->aesBlkCipher);
     }
-    if (s == SX_OK)
+    if (s == CRM_OK)
     {
-    s = SX_BLKCIPHER_RESUME_STATE(&p_ctx->aesBlkCipher);
+    s = CRM_BLKCIPHER_RESUME_STATE(&p_ctx->aesBlkCipher);
     }
 
-    SX_CLK_DISABLE();
+    CRYPTO_CLK_DISABLE();
 
 
-    if (s != SX_OK)
+    if (s != CRM_OK)
     {
         return MBA_RES_FAIL;
     }
@@ -150,10 +150,10 @@ uint16_t MW_AES_EcbEncryptInit(MW_AES_Ctx_T * p_ctx, uint8_t *p_aesKey)
 {
     uint16_t result;
 
-    SX_CLK_ENABLE();
+    CRYPTO_CLK_ENABLE();
     
-    p_ctx->aesKeyRef=SX_KEYREF_LOAD_MATERIAL(16, (char *)p_aesKey);
-    if (SX_OK!=SX_BLKCIPHER_CREATE_AESECB_ENC(&p_ctx->aesBlkCipher, &p_ctx->aesKeyRef))
+    p_ctx->aesKeyRef=CRM_KEYREF_LOAD_MATERIAL(16, (char *)p_aesKey);
+    if (CRM_OK!=CRM_BLKCIPHER_CREATE_AESECB_ENC(&p_ctx->aesBlkCipher, &p_ctx->aesKeyRef))
     {
         result = MBA_RES_FAIL;
     }
@@ -162,7 +162,7 @@ uint16_t MW_AES_EcbEncryptInit(MW_AES_Ctx_T * p_ctx, uint8_t *p_aesKey)
         result = MBA_RES_SUCCESS;
     }
     
-    SX_CLK_DISABLE();
+    CRYPTO_CLK_DISABLE();
 
     return result;
 
@@ -184,22 +184,22 @@ uint16_t MW_AES_AesEcbEncrypt(MW_AES_Ctx_T * p_ctx, uint16_t length, uint8_t *p_
 {
     int32_t s;
 
-    SX_CLK_ENABLE();
+    CRYPTO_CLK_ENABLE();
 
-    s = SX_BLKCIPHER_CRYPT(&p_ctx->aesBlkCipher, (char *)p_plainText, length, (char *)p_cipherText);
-    if (s == SX_OK)
+    s = CRM_BLKCIPHER_CRYPT(&p_ctx->aesBlkCipher, (char *)p_plainText, length, (char *)p_cipherText);
+    if (s == CRM_OK)
     {
-        s = SX_BLKCIPHER_RUN(&p_ctx->aesBlkCipher);
+        s = CRM_BLKCIPHER_RUN(&p_ctx->aesBlkCipher);
     }
-    if (s == SX_OK)
+    if (s == CRM_OK)
     {
-        s = SX_BLKCIPHER_WAIT(&p_ctx->aesBlkCipher);
+        s = CRM_BLKCIPHER_WAIT(&p_ctx->aesBlkCipher);
     }
 
-    SX_CLK_DISABLE();
+    CRYPTO_CLK_DISABLE();
 
 
-    if (s != SX_OK)
+    if (s != CRM_OK)
     {
         return MBA_RES_FAIL;
     }
@@ -226,20 +226,20 @@ uint16_t MW_AES_CcmEncryptInit(MW_AES_Ctx_T * p_ctx, uint8_t *p_aesKey, uint8_t 
 {
     int32_t s;
 
-    SX_CLK_ENABLE();
+    CRYPTO_CLK_ENABLE();
     
-    p_ctx->aesKeyRef=SX_KEYREF_LOAD_MATERIAL(16, (char *)p_aesKey);
-    s = SX_AEAD_CREATE_AESCCM_ENC(&p_ctx->aeadCtx, &p_ctx->aesKeyRef, (char *)p_nonce, nonceSz, tagSz, aadSz, dataSz);
+    p_ctx->aesKeyRef=CRM_KEYREF_LOAD_MATERIAL(16, (char *)p_aesKey);
+    s = CRM_AEAD_CREATE_AESCCM_ENC(&p_ctx->aeadCtx, &p_ctx->aesKeyRef, (char *)p_nonce, nonceSz, tagSz, aadSz, dataSz);
 
-    if (s == SX_OK)
+    if (s == CRM_OK)
     {
-        s = SX_AEAD_FEED_AAD(&p_ctx->aeadCtx, (const char *)p_aad, aadSz);
+        s = CRM_AEAD_FEED_AAD(&p_ctx->aeadCtx, (const char *)p_aad, aadSz);
     }
     
     
-    SX_CLK_DISABLE();
+    CRYPTO_CLK_DISABLE();
 
-    if (s != SX_OK)
+    if (s != CRM_OK)
     {
         return MBA_RES_FAIL;
     }
@@ -268,45 +268,45 @@ uint16_t MW_AES_AesCcmEncrypt(MW_AES_Ctx_T * p_ctx, uint16_t length, uint8_t *p_
 {
     int32_t s;
 
-    SX_CLK_ENABLE();
+    CRYPTO_CLK_ENABLE();
 
 
     
-    s = SX_AEAD_CRYPT(&p_ctx->aeadCtx, (char *)p_plainText, length, (char *)p_cipherText);
+    s = CRM_AEAD_CRYPT(&p_ctx->aeadCtx, (char *)p_plainText, length, (char *)p_cipherText);
 
-    if (s == SX_OK)
+    if (s == CRM_OK)
     {
         if (p_ctx->aeadCtx.dataintotalsz < p_ctx->aeadSize)
         {
-            s = SX_AEAD_SAVE_STATE(&p_ctx->aeadCtx);
+            s = CRM_AEAD_SAVE_STATE(&p_ctx->aeadCtx);
 
-            if (s == SX_OK)
+            if (s == CRM_OK)
             {
-                s = SX_AEAD_WAIT(&p_ctx->aeadCtx);
+                s = CRM_AEAD_WAIT(&p_ctx->aeadCtx);
             }
 
-            if (s == SX_OK)
+            if (s == CRM_OK)
             {
-                s = SX_AEAD_RESUME_STATE(&p_ctx->aeadCtx);
+                s = CRM_AEAD_RESUME_STATE(&p_ctx->aeadCtx);
             }
         }
         else
         {
-            s = SX_AEAD_PRODUCE_TAG(&p_ctx->aeadCtx, (char *)p_tag);
+            s = CRM_AEAD_PRODUCE_TAG(&p_ctx->aeadCtx, (char *)p_tag);
             
-            if (s == SX_OK)
+            if (s == CRM_OK)
             {
-                s = SX_AEAD_WAIT(&p_ctx->aeadCtx);
+                s = CRM_AEAD_WAIT(&p_ctx->aeadCtx);
             }
 
         }
     }
 
 
-    SX_CLK_DISABLE();
+    CRYPTO_CLK_DISABLE();
 
 
-    if (s != SX_OK)
+    if (s != CRM_OK)
     {
         return MBA_RES_FAIL;
     }
@@ -333,20 +333,20 @@ uint16_t MW_AES_CcmDecryptInit(MW_AES_Ctx_T * p_ctx, uint8_t *p_aesKey, uint8_t 
 {
     int32_t s;
 
-    SX_CLK_ENABLE();
+    CRYPTO_CLK_ENABLE();
     
-    p_ctx->aesKeyRef=SX_KEYREF_LOAD_MATERIAL(16, (char *)p_aesKey);
-    s = SX_AEAD_CREATE_AESCCM_DEC(&p_ctx->aeadCtx, &p_ctx->aesKeyRef, (char *)p_nonce, nonceSz, tagSz, aadSz, dataSz);
+    p_ctx->aesKeyRef=CRM_KEYREF_LOAD_MATERIAL(16, (char *)p_aesKey);
+    s = CRM_AEAD_CREATE_AESCCM_DEC(&p_ctx->aeadCtx, &p_ctx->aesKeyRef, (char *)p_nonce, nonceSz, tagSz, aadSz, dataSz);
 
-    if (s == SX_OK)
+    if (s == CRM_OK)
     {
-        s = SX_AEAD_FEED_AAD(&p_ctx->aeadCtx, (const char *)p_aad, aadSz);
+        s = CRM_AEAD_FEED_AAD(&p_ctx->aeadCtx, (const char *)p_aad, aadSz);
     }
     
     
-    SX_CLK_DISABLE();
+    CRYPTO_CLK_DISABLE();
 
-    if (s != SX_OK)
+    if (s != CRM_OK)
     {
         return MBA_RES_FAIL;
     }
@@ -374,43 +374,43 @@ uint16_t MW_AES_AesCcmDecrypt(MW_AES_Ctx_T * p_ctx, uint16_t length, uint8_t *p_
 {
     int32_t s;
 
-    SX_CLK_ENABLE();
+    CRYPTO_CLK_ENABLE();
 
-    s = SX_AEAD_CRYPT(&p_ctx->aeadCtx, (char *)p_cipherText, length, (char *)p_plainText);
+    s = CRM_AEAD_CRYPT(&p_ctx->aeadCtx, (char *)p_cipherText, length, (char *)p_plainText);
 
-    if (s == SX_OK)
+    if (s == CRM_OK)
     {
         if (p_ctx->aeadCtx.dataintotalsz < p_ctx->aeadSize)
         {
-            s = SX_AEAD_SAVE_STATE(&p_ctx->aeadCtx);
+            s = CRM_AEAD_SAVE_STATE(&p_ctx->aeadCtx);
 
-            if (s == SX_OK)
+            if (s == CRM_OK)
             {
-                s = SX_AEAD_WAIT(&p_ctx->aeadCtx);
+                s = CRM_AEAD_WAIT(&p_ctx->aeadCtx);
             }
 
-            if (s == SX_OK)
+            if (s == CRM_OK)
             {
-                s = SX_AEAD_RESUME_STATE(&p_ctx->aeadCtx);
+                s = CRM_AEAD_RESUME_STATE(&p_ctx->aeadCtx);
             }
         }
         else
         {
-            s = SX_AEAD_VERIFY_TAG(&p_ctx->aeadCtx, (char *)p_tag);
+            s = CRM_AEAD_VERIFY_TAG(&p_ctx->aeadCtx, (char *)p_tag);
             
-            if (s == SX_OK)
+            if (s == CRM_OK)
             {
-                s = SX_AEAD_WAIT(&p_ctx->aeadCtx);
+                s = CRM_AEAD_WAIT(&p_ctx->aeadCtx);
             }
 
         }
     }
 
 
-    SX_CLK_DISABLE();
+    CRYPTO_CLK_DISABLE();
 
 
-    if (s != SX_OK)
+    if (s != CRM_OK)
     {
         return MBA_RES_FAIL;
     }

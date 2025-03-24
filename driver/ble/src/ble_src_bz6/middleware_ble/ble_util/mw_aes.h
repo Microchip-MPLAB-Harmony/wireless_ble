@@ -48,7 +48,7 @@
 // *****************************************************************************
 // *****************************************************************************
 
-#include "driver/security/sxsymcrypt/blkcipher_api.h"
+#include "driver/security/cryptosym/blkcipher_api.h"
 
 // DOM-IGNORE-BEGIN
 #ifdef __cplusplus  // Provide C++ Compatibility
@@ -82,10 +82,10 @@ extern "C" {
 /** @brief Structure for maintaining AES encryption context. */
 typedef struct MW_AES_Ctx_T
 {
-    struct sxblkcipher aesBlkCipher;                                /**< Block cipher context for AES operations. */
-    struct sxkeyref    aesKeyRef;                                   /**< Reference to the AES key for encryption or decryption. */
-    struct sxaead      aeadCtx;                                     /**< Cipher context for AEAD operations. */
-    uint16_t           aeadSize;                                    /**< Data size for AEAD operations. */
+    struct crmblkcipher aesBlkCipher;                                /**< Block cipher context for AES operations. */
+    struct crmkeyref    aesKeyRef;                                   /**< Reference to the AES key for encryption or decryption. */
+    struct crmaead      aeadCtx;                                     /**< Cipher context for AEAD operations. */
+    uint16_t            aeadSize;                                    /**< Data size for AEAD operations. */
 } MW_AES_Ctx_T;
 
 
