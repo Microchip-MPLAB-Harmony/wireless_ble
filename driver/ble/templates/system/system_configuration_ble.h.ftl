@@ -100,15 +100,17 @@
 #define CONFIG_BLE_GAP_EXT_ADV_SEC_ADV_PHY           ${GAP_SEC_ADV_PHY}      /* Secondary Advertising PHY */
 #define CONFIG_BLE_GAP_EXT_ADV_SID                   ${GAP_EXT_ADV_SID}     /* Advertising SID */
 #define CONFIG_BLE_GAP_EXT_ADV_SCAN_ENABLE           ${GAP_EXT_ADV_SCAN_ENABLE?c}   /* Scan Request Notification Enable */
-        <#if GAP_PRI_ADV_PHY == 'BLE_GAP_PHY_TYPE_LE_CODED'>
+        <#if APP_BLE_DEVICE == "pic32cx_bz6_family">
+            <#if GAP_PRI_ADV_PHY == 'BLE_GAP_PHY_TYPE_LE_CODED'>
 #define CONFIG_BLE_GAP_EXT_ADV_PRI_ADV_PHY_OPT       ${GAP_PRI_ADV_PHY_OPTION}  /* Primary Advertising PHY Option */
-        <#else>
+            <#else>
 #define CONFIG_BLE_GAP_EXT_ADV_PRI_ADV_PHY_OPT       0  /* Primary Advertising PHY Option */
-        </#if>
-        <#if GAP_SEC_ADV_PHY == 'BLE_GAP_PHY_TYPE_LE_CODED'>
+            </#if>
+            <#if GAP_SEC_ADV_PHY == 'BLE_GAP_PHY_TYPE_LE_CODED'>
 #define CONFIG_BLE_GAP_EXT_ADV_SEC_ADV_PHY_OPT       ${GAP_SEC_ADV_PHY_OPTION}  /* Secondary Advertising PHY Option */
-        <#else>
+            <#else>
 #define CONFIG_BLE_GAP_EXT_ADV_SEC_ADV_PHY_OPT       0  /* Secondary Advertising PHY Option */
+            </#if>
         </#if>
     <#-- Extended Advertising Set 1: End -->
     <#-- Extended Advertising Set 2: Start -->
@@ -158,15 +160,17 @@
 #define CONFIG_BLE_GAP_EXT_ADV_SEC_ADV_PHY_2         ${GAP_SEC_ADV_PHY_2}      /* Secondary Advertising PHY */
 #define CONFIG_BLE_GAP_EXT_ADV_SID_2                 ${GAP_EXT_ADV_SID_2}     /* Advertising SID */
 #define CONFIG_BLE_GAP_EXT_ADV_SCAN_ENABLE_2         ${GAP_EXT_ADV_SCAN_ENABLE_2?c}   /* Scan Request Notification Enable */
-            <#if GAP_PRI_ADV_PHY_2 == 'BLE_GAP_PHY_TYPE_LE_CODED'>
+            <#if APP_BLE_DEVICE == "pic32cx_bz6_family">
+                <#if GAP_PRI_ADV_PHY_2 == 'BLE_GAP_PHY_TYPE_LE_CODED'>
 #define CONFIG_BLE_GAP_EXT_ADV_PRI_ADV_PHY_OPT_2     ${GAP_PRI_ADV_PHY_OPTION_2}  /* Primary Advertising PHY Option */
-            <#else>
+                <#else>
 #define CONFIG_BLE_GAP_EXT_ADV_PRI_ADV_PHY_OPT_2     0  /* Primary Advertising PHY Option */
-            </#if>
-            <#if GAP_SEC_ADV_PHY_2 == 'BLE_GAP_PHY_TYPE_LE_CODED'>
+                </#if>
+                <#if GAP_SEC_ADV_PHY_2 == 'BLE_GAP_PHY_TYPE_LE_CODED'>
 #define CONFIG_BLE_GAP_EXT_ADV_SEC_ADV_PHY_OPT_2     ${GAP_SEC_ADV_PHY_OPTION_2}  /* Secondary Advertising PHY Option */
-            <#else>
+                <#else>
 #define CONFIG_BLE_GAP_EXT_ADV_SEC_ADV_PHY_OPT_2     0  /* Secondary Advertising PHY Option */
+                </#if>
             </#if>
         </#if>
     <#-- Extended Advertising Set 2: End -->
