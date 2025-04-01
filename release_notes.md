@@ -19,6 +19,17 @@ This release includes support for the new PIC32CX-BZ6 device.
 + **PIC32CX-BZ3**
 	+ Support for the SW PTA multi-protocol combo application.
 
+### Known Issues/Limitations
++ **PIC32CX-BZ2**
+	+ Channel classification may fail and result in the use of all channels in particularly noisy environments. (#4953)
+
++ **PIC32CX-BZ3**
+	+ Channel classification may fail and result in the use of all channels in particularly noisy environments. (#1441)
+
++ **PIC32CX-BZ6**
+	+ Memory leakage might occur in the central role with six links during continuous connection and disconnection cycles, preventing the connection event from being sent to the application upon connection establishment. (#543)
+	+ Channel classification may fail and result in the use of all channels in particularly noisy environments. (#526)
+
 ### Development Tools
 + [MPLAB X v6.20](https://www.microchip.com/mplab/mplab-x-ide)
 + [MPLAB® XC32 C/C++ Compiler v4.45](https://www.microchip.com/mplab/compilers)
