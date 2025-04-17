@@ -189,13 +189,15 @@ static void ble_dm_SecurityManager(BLE_SMP_Event_T *p_event)
                 {
                     bool accept = true;
                     BLE_DM_PairedDevInfo_T bonding;
+
+                    (void)memset(&bonding, 0, sizeof(BLE_DM_PairedDevInfo_T));
                     if (BLE_DM_DdsGetPairedDevice(p_conn->devId, &bonding) == MBA_RES_SUCCESS)
                     {
-                        if (bonding.auth)
+                        if (bonding.auth == 1U)
                         {
-                            if (p_event->eventField.evtPairingReq.authReq & BLE_SMP_OPTION_MITM)
+                            if ((p_event->eventField.evtPairingReq.authReq & BLE_SMP_OPTION_MITM) != 0U)
                             {
-                                if (bonding.lesc && ((p_event->eventField.evtPairingReq.authReq & BLE_SMP_OPTION_SECURE_CONNECTION) == 0))
+                                if ((bonding.lesc == 1U) && ((p_event->eventField.evtPairingReq.authReq & BLE_SMP_OPTION_SECURE_CONNECTION) == 0U))
                                 {
                                     accept = false;
                                 }
@@ -302,7 +304,7 @@ static void ble_dm_SecurityManager(BLE_SMP_Event_T *p_event)
 
             if (p_conn->role == BLE_GAP_ROLE_CENTRAL)
             {
-                if (p_key->local.encInfo.lesc == 1)
+                if (p_key->local.encInfo.lesc == 1U)
                 {
                     (void)memcpy(p_devInfo->ltk, (uint8_t *)(&p_key->local.encInfo.ltk[0]), 16);
                 }
