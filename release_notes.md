@@ -33,7 +33,7 @@ This release includes support for the new PIC32CX-BZ6 device.
 ### Development Tools
 + [MPLAB X v6.20](https://www.microchip.com/mplab/mplab-x-ide)
 + [MPLAB® XC32 C/C++ Compiler v4.45](https://www.microchip.com/mplab/compilers)
-+ MPLAB® X IDE plug-ins: MPLAB® Code Configurator (MCC) v5.7.1 and above
++ MPLAB® X IDE plug-ins: MPLAB® Code Configurator (MCC) v5.5.1 and above
 
 ## Wireless BLE Release v1.3.0
 
