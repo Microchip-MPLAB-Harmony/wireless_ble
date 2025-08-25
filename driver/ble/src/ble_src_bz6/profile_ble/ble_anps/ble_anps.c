@@ -101,7 +101,7 @@ typedef struct BLE_ANPS_ConnList_T
 // *****************************************************************************
 // *****************************************************************************
 static BLE_ANPS_EventCb_T     sp_anpsCbRoutine;             // Callback function for ANPS (Alert Notification Profile Server) events.
-static BLE_ANPS_ConnList_T    s_anpsConnList[BLE_ANPS_MAX_CONN_NBR]; // Array to keep track of connection-specific information for each active connection.
+static BLE_ANPS_ConnList_T    *sp_anpsConnList[BLE_ANPS_MAX_CONN_NBR]; // Array to keep track of connection-specific information for each active connection.
 static BLE_ANPS_Params_T      s_anpsParams;                 // Structure to hold the parameters for the ANPS (Alert Notification Profile Server).
 
 // *****************************************************************************
@@ -126,17 +126,6 @@ static void ble_anps_FreeRetryData(BLE_ANPS_ConnList_T *p_conn) {
 
 
 /**
- * @brief Initializes a BLE connection list entry to default values.
- *
- * @param p_conn Pointer to the BLE_ANPS_ConnList_T structure to be initialized.
- */
-static void ble_anps_InitConnList(BLE_ANPS_ConnList_T *p_conn)
-{
-    (void)memset(p_conn, 0, sizeof(BLE_ANPS_ConnList_T));
-}
-
-
-/**
  * @brief Retrieves a connection list entry by its connection handle.
  *
  * @param connHandle The connection handle used to find the corresponding connection list entry.
@@ -147,14 +136,13 @@ static BLE_ANPS_ConnList_T * ble_anps_GetConnListByHandle(uint16_t connHandle)
 {
     uint8_t i;
 
-    for(i=0; i<BLE_ANPS_MAX_CONN_NBR;i++)
+    for(i=0; i<BLE_ANPS_MAX_CONN_NBR; i++)
     {
-        if ((s_anpsConnList[i].state == BLE_ANPS_STATE_CONNECTED) && (s_anpsConnList[i].connHandle == connHandle))
+        if ((sp_anpsConnList[i] != NULL) && (sp_anpsConnList[i]->state == BLE_ANPS_STATE_CONNECTED) && (sp_anpsConnList[i]->connHandle == connHandle))
         {
-            return &s_anpsConnList[i];
+            return sp_anpsConnList[i];
         }
     }
-
     return NULL;
 }
 
@@ -167,17 +155,23 @@ static BLE_ANPS_ConnList_T * ble_anps_GetConnListByHandle(uint16_t connHandle)
 static BLE_ANPS_ConnList_T *ble_anps_GetFreeConnList(void)
 {
     uint8_t i;
+    BLE_ANPS_ConnList_T *p_conn = NULL;
 
-    for(i=0; i<BLE_ANPS_MAX_CONN_NBR;i++)
+    for(i = 0; i < BLE_ANPS_MAX_CONN_NBR; i++)
     {
-        if (s_anpsConnList[i].state == BLE_ANPS_STATE_IDLE)
+        if (sp_anpsConnList[i] == NULL)
         {
-            s_anpsConnList[i].state = BLE_ANPS_STATE_CONNECTED;
-            return &s_anpsConnList[i];
+            sp_anpsConnList[i] = OSAL_Malloc(sizeof(BLE_ANPS_ConnList_T));
+            p_conn = sp_anpsConnList[i];
+            if (p_conn != NULL)
+            {
+                (void)memset(p_conn, 0, sizeof(BLE_ANPS_ConnList_T));
+                p_conn->state     = BLE_ANPS_STATE_CONNECTED;
+            }
+            break;
         }
     }
-
-    return NULL;
+    return p_conn;
 }
 
 
@@ -466,14 +460,8 @@ static void ble_anps_GattEventProcess(GATT_Event_T *p_event)
  */
 uint16_t BLE_ANPS_Init(void)
 {
-    uint8_t i;
-
     sp_anpsCbRoutine = NULL;
     (void)memset(&s_anpsParams, 0, sizeof(BLE_ANPS_Params_T));
-    for (i = 0; i < BLE_ANPS_MAX_CONN_NBR; i++)
-    {
-        ble_anps_InitConnList(&s_anpsConnList[i]);
-    }
     return BLE_ANS_Add();
 }
 
@@ -505,7 +493,7 @@ uint16_t BLE_ANPS_SetSuppNewCat(uint16_t catMask)
 
     for(i=0; i<BLE_ANPS_MAX_CONN_NBR;i++)
     {
-        if (s_anpsConnList[i].state == BLE_ANPS_STATE_CONNECTED)
+        if (sp_anpsConnList[i] != NULL)
         {
             return MBA_RES_FAIL;
         }
@@ -534,7 +522,7 @@ uint16_t BLE_ANPS_SetSuppUnreadCat(uint16_t catMask)
 
     for(i=0; i<BLE_ANPS_MAX_CONN_NBR;i++)
     {
-        if (s_anpsConnList[i].state == BLE_ANPS_STATE_CONNECTED)
+        if (sp_anpsConnList[i] != NULL)
         {
             return MBA_RES_FAIL;
         }
@@ -621,6 +609,24 @@ uint16_t BLE_ANPS_SendUnreadAlertStat(uint16_t connHandle, uint8_t catId, uint8_
     return result;
 }
 
+/**
+ * @brief Free the connection list for the ANPS.
+ *
+ * @param p_conn        Pointer to the ANPS connection list structure to initialize.
+ */
+static void ble_anps_FreeConnList(BLE_ANPS_ConnList_T *p_conn)
+{
+    uint8_t i;
+    for (i = 0; i < BLE_ANPS_MAX_CONN_NBR; i++)
+    {
+        if (sp_anpsConnList[i] == p_conn)
+        {
+            OSAL_Free(sp_anpsConnList[i]);
+            sp_anpsConnList[i] = NULL;
+            break;
+        }
+    }
+}
 
 /**
  * @brief Handles BLE_Stack events.
@@ -643,11 +649,12 @@ static void ble_anps_GapEventProcess(BLE_GAP_Event_T *p_event)
                 p_conn = ble_anps_GetFreeConnList();
                 if(p_conn == NULL)
                 {
-                    ble_anps_ConveyEvent(BLE_ANPS_EVT_ERR_UNSPECIFIED_IND, NULL, 0);
-                    return;
+                    ble_anps_ConveyEvent(BLE_ANPS_EVT_ERR_NO_MEM_IND, NULL, 0);
                 }
-
-                p_conn->connHandle=p_event->eventField.evtConnect.connHandle;
+                else
+                {
+                    p_conn->connHandle=p_event->eventField.evtConnect.connHandle;
+                }
             }
         }
         break;
@@ -657,14 +664,11 @@ static void ble_anps_GapEventProcess(BLE_GAP_Event_T *p_event)
 
             p_conn = ble_anps_GetConnListByHandle(p_event->eventField.evtDisconnect.connHandle);
 
-            if (p_conn == NULL)
+            if (p_conn != NULL)
             {
-                ble_anps_ConveyEvent(BLE_ANPS_EVT_ERR_UNSPECIFIED_IND, NULL, 0);
-                return;
+                ble_anps_FreeRetryData(p_conn);
+                ble_anps_FreeConnList(p_conn);
             }
-
-            ble_anps_FreeRetryData(p_conn);
-            ble_anps_InitConnList(p_conn);
         }
         break;
         case BLE_GAP_EVT_TX_BUF_AVAILABLE:

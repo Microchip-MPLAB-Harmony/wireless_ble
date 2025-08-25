@@ -31,10 +31,12 @@
     ble_trsps.c
 
   Summary:
-    This file contains the BLE Transparent Server functions for application user.
+    Implements the server-side functionality of the BLE Transparent Profile.
 
   Description:
-    This file contains the BLE Transparent Server functions for application user.
+    This source file provides the necessary functions to initialize, configure,
+    and manage the BLE Transparent Server Profile, enabling the application to
+    handle data communication with a BLE Transparent Client.
  *******************************************************************************/
 
 
@@ -55,122 +57,79 @@
 #include "ble_trs/ble_trs.h"
 #include "ble_trsps.h"
 
-
 // *****************************************************************************
 // *****************************************************************************
 // Section: Macros
 // *****************************************************************************
 // *****************************************************************************
+#define BLE_TRSPS_INIT_CREDIT                   (0x10U)         // Initial credit value for BLE transparent profile.
 
-/**@defgroup BLE_TRSPS_INIT_CREDIT BLE_TRSPS_INIT_CREDIT
- * @brief The definition of initial credit value.
- * @{ */
-#define BLE_TRSPS_INIT_CREDIT                   (0x10U)    /**< Definition of initial credit */
-/** @} */
+// Maximum number of buffers in the incoming queue, derived from initial credits and max connections.
+#define BLE_TRSPS_MAX_BUF_IN                    (BLE_TRSPS_INIT_CREDIT*BLE_TRSPS_MAX_CONN_NBR)
 
-/**@defgroup BLE_TRSPS_MAX_BUF BLE_TRSPS_MAX_BUF
- * @brief The definition of maximum buffer list.
- * @{ */
-#define BLE_TRSPS_MAX_BUF_IN                    (BLE_TRSPS_INIT_CREDIT*BLE_TRSPS_MAX_CONN_NBR)     /**< Maximum incoming queue number */
-/** @} */
+#define BLE_TRSPS_MAX_RETURN_CREDIT             (13U)           // Maximum number of credits that can be returned to the peer device.
 
-/**@defgroup BLE_TRSPS_MAX_RETURN_CREDIT BLE_TRSPS_MAX_RETURN_CREDIT
- * @brief The definition of maximum return credit number.
- * @{ */
-#define BLE_TRSPS_MAX_RETURN_CREDIT             (13U)   		/**< Maximum return credit number */
-/** @} */
+#define BLE_TRSPS_CBFC_TX_ENABLED               (1U)            // Enable flag for CBFC (Credit Based Flow Control) transmission.
+#define BLE_TRSPS_CBFC_RX_ENABLED               (1U << 1U)      // Enable flag for CBFC reception.
 
-/**@defgroup BLE_TRSPS_CBFC BLE_TRSPS_CBFC
- * @brief The definition of credit base flow control.
- * @{ */
-#define BLE_TRSPS_CBFC_TX_ENABLED               (1U)             /**< Definition of ble transparent service credit based transmit enable. */
-#define BLE_TRSPS_CBFC_RX_ENABLED               (1U << 1U)       /**< Definition of ble transparent service credit based receive enable. */
-/** @} */
+#define BLE_TRSPS_CCCD_DISABLE                  (0x0000U)       // CCCD (Client Characteristic Configuration Descriptor) value for disabling notifications.
+#define BLE_TRSPS_CCCD_NOTIFY                   NOTIFICATION    // CCCD value for enabling notifications.
 
-/**@defgroup BLE_TRSPS_CCCD BLE_TRSPS_CCCD
- * @brief The definition of Client Characteristic Configuration Descriptor
- * @{ */
-#define BLE_TRSPS_CCCD_DISABLE                  (0x0000U)        /**< Definition of Client Characteristic Configuration Descriptor disable. */
-#define BLE_TRSPS_CCCD_NOTIFY                   NOTIFICATION   	 /**< Definition of Client Characteristic Configuration Descriptor enable NOTIFY property. */
-/** @} */
+#define BLE_TRSPS_CBFC_OPCODE_SERVER_ENABLED    (0x14U)         // Opcode indicating the server has enabled CBFC.
+#define BLE_TRSPS_CBFC_OPCODE_GIVE_CREDIT       (0x15U)         // Opcode for giving credit in CBFC.
+#define BLE_TRSPS_CBFC_OPCODE_SUCCESS           (0U)            // Opcode indicating a successful operation in CBFC.
 
+#define BLE_TRSPS_VENDOR_OPCODE_MIN             (0x20U)         // Minimum value for vendor-specific opcodes.
+#define BLE_TRSPS_VENDOR_OPCODE_MAX             (0xFFU)         // Maximum value for vendor-specific opcodes.
 
-/**@defgroup BLE_TRSPS_CBFC_OPCODE BLE_TRSPS_CBFC_OPCODE
- * @brief The definition of BLE transparent credit based flow control
- * @{ */
-#define BLE_TRSPS_CBFC_OPCODE_SERVER_ENABLED    (0x14U)         /**< Definition of Op Code for Credit Based Flow Control Protocol, sending by Server. */
-#define BLE_TRSPS_CBFC_OPCODE_GIVE_CREDIT       (0x15U)         /**< Definition of Op Code for Credit Based Flow Control Protocol, giving credit. */
-#define BLE_TRSPS_CBFC_OPCODE_SUCCESS           (0U)            /**< Definition of response for successful operation. */
-/** @} */
+#define BLE_TRSPS_RETRY_TYPE_RESP               (0x01U)         // Retry type for response messages.
+#define BLE_TRSPS_RETRY_TYPE_ERR                (0x02U)         // Retry type for error messages.
 
-/**@defgroup BLE_TRSPS_VENDOR_OPCODE BLE_TRSPS_VENDOR_OPCODE
- * @brief The definition of BLE transparent vendor opcodes
- * @{ */
-#define BLE_TRSPS_VENDOR_OPCODE_MIN             (0x20U)         /**< Definition of Op Code range in TRS vendor commands. */
-#define BLE_TRSPS_VENDOR_OPCODE_MAX             (0xFFU)         /**< Definition of Op Code range in TRS vendor commands. */
-/** @} */
-
-/**@defgroup BLE_TRSPS_RETRY_TYPE BLE_TRSPS_RETRY_TYPE
- * @brief The definition of BLE transparent retry type
- * @{ */
-#define BLE_TRSPS_RETRY_TYPE_RESP               (0x01U)         /**< Definition of response retry type. */
-#define BLE_TRSPS_RETRY_TYPE_ERR                (0x02U)         /**< Definition of error retry type. */
-/** @} */
-
-/**@defgroup BLE_TRSPS_STATE TRSPS state
- * @brief The definition of BLE TRSPS connection state
- * @{ */
 typedef enum BLE_TRSPS_State_T
 {
-    BLE_TRSPS_STATE_IDLE = 0x00U,        /**< Default state (Disconnected). */
-    BLE_TRSPS_STATE_CONNECTED            /**< Connected. */
+    BLE_TRSPS_STATE_IDLE = 0x00U,               // State indicating the service is idle and not connected.
+    BLE_TRSPS_STATE_CONNECTED                   // State indicating the service is connected. 
 } BLE_TRSPS_State_T;
-/** @} */
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Data Types
 // *****************************************************************************
 // *****************************************************************************
-
-/**@brief The structure contains information about BLE transparent profile packetIn. */
+/* Structure for BLE transparent profile packet information. */
 typedef struct BLE_TRSPS_PacketList_T
 {
-    uint8_t                    writeType;               /**< Write Type. @ref BLE_GATT_WRITE_TYPES*/
-    uint16_t                   length;                  /**< Data length. */
-    uint8_t                    *p_packet;               /**< Pointer to the TX/RX data buffer */
+    uint8_t                    writeType;                       // Type of GATT write operation. See @ref BLE_GATT_WRITE_TYPES for possible values.
+    uint16_t                   length;                          // Length of the data in bytes.
+    uint8_t                    *p_packet;                       // Pointer to the data buffer for transmission or reception.
 } BLE_TRSPS_PacketList_T;
 
-/**@brief The structure contains information about packet input queue format of BLE transparent profile. */
+
+/* Structure for managing the input queue of packets in the BLE transparent profile. */
 typedef struct BLE_TRSPS_QueueIn_T
 {
-    uint8_t                    usedNum;                    /**< The number of data list of packetIn buffer. */
-    uint8_t                    writeIndex;                 /**< The Index of data, written in packet buffer. */
-    uint8_t                    readIndex;                  /**< The Index of data, read in packet buffer. */
-    BLE_TRSPS_PacketList_T     packetList[BLE_TRSPS_INIT_CREDIT];  /**< Written in packet buffer. @ref BLE_TRSPS_PacketBufferIn_T.*/
+    uint8_t                    usedNum;                         // Number of packets currently in the input buffer.
+    uint8_t                    writeIndex;                      // Index at which a new packet will be written into the buffer.
+    uint8_t                    readIndex;                       // Index from which the next packet will be read from the buffer.
+    BLE_TRSPS_PacketList_T     packetList[BLE_TRSPS_INIT_CREDIT];  // Array of packet buffers for queued packets.
 } BLE_TRSPS_QueueIn_T;
 
-/**@brief The structure contains information about BLE transparent profile connection parameters for recording connection information. */
+
+/* Structure for storing connection-specific information in the BLE transparent profile. */
 typedef struct BLE_TRSPS_ConnList_T
 {
-    uint8_t                    trsState;                /**< BLE transparent service current state. @ref BLE_TRSPS_STATUS.*/
-    BLE_TRSPS_State_T          state;                   /**< Connection state. */
-    uint16_t                   connHandle;              /**< Connection handle associated with this connection. */
-    uint16_t                   attMtu;                  /**< Record the current connection MTU size. */
-    uint8_t                    cbfcEnable;              /**< Credit based flow enable. @ref BLE_TRSPS_CREDIT_BASED_FLOW_CONTROL. */
-    uint8_t                    peerCredit;              /**< Credit number from Central to Peripheral. */
-    uint8_t                    localCredit;             /**< Credit number from Peripheral to Central. */
-    uint8_t                    retryType;               /**< Retry type. @ref BLE_TRSPS_RETRY_TYPE. */
-    uint8_t                    *p_retryData;            /**< Retry data pointer. */
-    BLE_TRSPS_QueueIn_T        inputQueue;              /**< Input queue to store Rx packets. */
+    uint8_t                    trsState;                        // Current state of the BLE transparent. See @ref BLE_TRSPS_STATUS for state definitions.
+    BLE_TRSPS_State_T          state;                           // Connection state.
+    uint16_t                   connHandle;                      // Connection handle associated with this connection.
+    uint16_t                   attMtu;                          // The ATT Maximum Transmission Unit size for this connection.
+    uint8_t                    cbfcEnable;                      // Flag indicating if credit-based flow control is enabled. See @ref BLE_TRSPS_CREDIT_BASED_FLOW_CONTROL.
+    uint8_t                    peerCredit;                      // Number of credits granted by the central device to the peripheral.
+    uint8_t                    localCredit;                     // Number of credits granted by the peripheral to the central device.
+    uint8_t                    retryType;                       // Type of retry mechanism in use. See @ref BLE_TRSPS_RETRY_TYPE for retry types.
+    uint8_t                    *p_retryData;                    // Pointer to the data buffer for retry operations.
+    BLE_TRSPS_QueueIn_T        inputQueue;                      // Queue for incoming packets awaiting processing.
 } BLE_TRSPS_ConnList_T;
 
-/**@brief The structure contains information about the parameters of BLE transparent profile. */
-typedef struct BLE_TRSPS_Params_T
-{
-    uint8_t                    *p_sentDataOffset;
-    uint16_t                   sentDataLen;
-} BLE_TRSPS_Params_T;
 
 // *****************************************************************************
 // *****************************************************************************
@@ -178,10 +137,13 @@ typedef struct BLE_TRSPS_Params_T
 // *****************************************************************************
 // *****************************************************************************
 
-static BLE_TRSPS_EventCb_T      bleTrspsProcess;
-static BLE_TRSPS_ConnList_T     s_trsConnList[BLE_TRSPS_MAX_CONN_NBR];
-static BLE_TRSPS_Params_T       s_trsParams;
+static BLE_TRSPS_EventCb_T      bleTrspsProcess;                // Callback function type for BLE Transparent Service events processing.
+static BLE_TRSPS_ConnList_T     *sp_trsConnList[BLE_TRSPS_MAX_CONN_NBR];// An array to keep track of the connection list for BLE Transparent Service.
 
+
+// Assert to ensure that the total initial credits multiplied by the maximum number of connections
+// is equal to the maximum buffer input size. This is a sanity check to ensure that the system
+// resources are configured correctly and can handle the expected workload.
 MW_ASSERT((BLE_TRSPS_MAX_CONN_NBR*BLE_TRSPS_INIT_CREDIT)==BLE_TRSPS_MAX_BUF_IN);
 
 // *****************************************************************************
@@ -190,43 +152,80 @@ MW_ASSERT((BLE_TRSPS_MAX_CONN_NBR*BLE_TRSPS_INIT_CREDIT)==BLE_TRSPS_MAX_BUF_IN);
 // *****************************************************************************
 // *****************************************************************************
 
-static void ble_trsps_InitConnList(BLE_TRSPS_ConnList_T *p_conn)
-{
-    (void)memset((uint8_t *)p_conn, 0, sizeof(BLE_TRSPS_ConnList_T));
-    p_conn->attMtu= BLE_ATT_DEFAULT_MTU_LEN;
-}
-
+/**
+ * @brief Retrieve a connection list entry by connection handle.
+ *
+ * @param connHandle The connection handle to search for in the connection list.
+ * 
+ * @retval Pointer to the connection list entry if found, otherwise NULL.
+ */
 static BLE_TRSPS_ConnList_T * ble_trsps_GetConnListByHandle(uint16_t connHandle)
 {
     uint8_t i;
 
-    for(i=0; i<BLE_TRSPS_MAX_CONN_NBR;i++)
+    for(i=0; i<BLE_TRSPS_MAX_CONN_NBR; i++)
     {
-        if ((s_trsConnList[i].state == BLE_TRSPS_STATE_CONNECTED) && (s_trsConnList[i].connHandle == connHandle))
+        if ((sp_trsConnList[i] != NULL) && (sp_trsConnList[i]->state == BLE_TRSPS_STATE_CONNECTED) && (sp_trsConnList[i]->connHandle == connHandle))
         {
-            return &s_trsConnList[i];
+            return sp_trsConnList[i];
         }
     }
-
     return NULL;
 }
 
+
+/**
+ * @brief Get a free connection list entry.
+ *
+ * @retval Pointer to the free connection list entry if available, otherwise NULL.
+ */
 static BLE_TRSPS_ConnList_T *ble_trsps_GetFreeConnList(void)
 {
     uint8_t i;
+    BLE_TRSPS_ConnList_T *p_conn = NULL;
 
-    for(i=0; i<BLE_TRSPS_MAX_CONN_NBR;i++)
+    for(i = 0; i < BLE_TRSPS_MAX_CONN_NBR; i++)
     {
-        if (s_trsConnList[i].state == BLE_TRSPS_STATE_IDLE)
+        if (sp_trsConnList[i] == NULL)
         {
-            s_trsConnList[i].state = BLE_TRSPS_STATE_CONNECTED;
-            return &s_trsConnList[i];
+            sp_trsConnList[i] = OSAL_Malloc(sizeof(BLE_TRSPS_ConnList_T));
+            p_conn = sp_trsConnList[i];
+            if (p_conn != NULL)
+            {
+                (void)memset(p_conn, 0, sizeof(BLE_TRSPS_ConnList_T));
+                p_conn->attMtu    = BLE_ATT_DEFAULT_MTU_LEN;
+                p_conn->state     = BLE_TRSPS_STATE_CONNECTED;
+            }
+            break;
         }
     }
-
-    return NULL;
+    return p_conn;
 }
 
+/**
+ * @brief Free the connection list for the TRSPS.
+ *
+ * @param p_conn        Pointer to the TRSPS connection list structure to initialize.
+ */
+static void ble_trsps_FreeConnList(BLE_TRSPS_ConnList_T *p_conn)
+{
+    uint8_t i;
+    for (i = 0; i < BLE_TRSPS_MAX_CONN_NBR; i++)
+    {
+        if (sp_trsConnList[i] == p_conn)
+        {
+            OSAL_Free(sp_trsConnList[i]);
+            sp_trsConnList[i] = NULL;
+            break;
+        }
+    }
+}
+
+/**
+ * @brief Return credit to the peer device for a given connection.
+ *
+ * @param p_conn Pointer to the BLE Transparent Service connection list entry.
+ */
 static void ble_trsps_ServerReturnCredit(BLE_TRSPS_ConnList_T *p_conn)
 {
     GATTS_HandleValueParams_T hvParams;
@@ -253,6 +252,15 @@ static void ble_trsps_ServerReturnCredit(BLE_TRSPS_ConnList_T *p_conn)
     }
 }
 
+
+/**
+ * @brief Handle received data for a given connection.
+ *
+ * @param p_conn            Pointer to the BLE Transparent Service connection list entry.
+ * @param writeType         The type of write operation that was performed.
+ * @param receivedLen       The length of the received data.
+ * @param p_receivedValue   Pointer to the received data.
+ */
 static void ble_trsps_RcvData(BLE_TRSPS_ConnList_T *p_conn, uint8_t writeType, uint16_t receivedLen, uint8_t *p_receivedValue)
 {
     if (p_conn->inputQueue.usedNum < BLE_TRSPS_INIT_CREDIT)
@@ -296,6 +304,12 @@ static void ble_trsps_RcvData(BLE_TRSPS_ConnList_T *p_conn, uint8_t writeType, u
 
 }
 
+
+/**
+ * @brief Free the retry data buffer for a given connection.
+ *
+ * @param p_conn Pointer to the BLE Transparent Service connection list entry.
+ */
 static void ble_trsps_FreeRetryData(BLE_TRSPS_ConnList_T *p_conn)
 {
     if (p_conn->p_retryData != NULL)
@@ -306,25 +320,40 @@ static void ble_trsps_FreeRetryData(BLE_TRSPS_ConnList_T *p_conn)
     }
 }
 
+
+/**
+ * @brief Check if there is any queued task that needs to be processed.
+ *
+ * @retval True if there is a queued task, false otherwise.
+ */
 static bool ble_trsps_CheckQueuedTask(void)
 {
     uint8_t i;
     
     for(i=0; i < BLE_TRSPS_MAX_CONN_NBR; i++)
     {
-        if ((s_trsConnList[i].state == BLE_TRSPS_STATE_CONNECTED) && (s_trsConnList[i].peerCredit >= BLE_TRSPS_MAX_RETURN_CREDIT))
+        if (sp_trsConnList[i] != NULL)
         {
-            return true;
-        }
-        if (s_trsConnList[i].p_retryData != NULL)
-        {
-            return true;
+            if ((sp_trsConnList[i]->state == BLE_TRSPS_STATE_CONNECTED) && (sp_trsConnList[i]->peerCredit >= BLE_TRSPS_MAX_RETURN_CREDIT))
+            {
+                return true;
+            }
+            if (sp_trsConnList[i]->p_retryData != NULL)
+            {
+                return true;
+            }
         }
     }
 
     return false;
 }
 
+
+/**
+ * @brief Process queued tasks for the BLE Transparent Service Profile Server.
+ *
+ * @param[in] connHandle The connection handle for which the queued tasks are to be processed.
+ */
 static void ble_trsps_ProcessQueuedTask(uint16_t connHandle)
 {
     BLE_TRSPS_ConnList_T *p_connList;
@@ -376,21 +405,27 @@ static void ble_trsps_ProcessQueuedTask(uint16_t connHandle)
     }
 }
 
+
+/**
+ * @brief Registers a callback function for BLE Transparent Profile server events.
+ *
+ * @param[in] bleTranServHandler          	The client callback function to handle BLE Transparent Profile server events.
+ */
 void BLE_TRSPS_EventRegister(BLE_TRSPS_EventCb_T bleTranServHandler)
 {
     bleTrspsProcess = bleTranServHandler;
 }
 
+
+/**
+ * @brief Initializes the BLE Transparent Profile.
+ *
+ * @retval MBA_RES_SUCCESS                 	Service successfully added to the service table.
+ * @retval MBA_RES_FAIL                  		Failed to add the service to the service table.
+ * @retval MBA_RES_OOM                  		Internal memory allocation failure.
+ */
 uint16_t BLE_TRSPS_Init(void)
 {
-    uint8_t i;
-
-    (void)memset((uint8_t *)&s_trsParams, 0, sizeof(BLE_TRSPS_Params_T));
-    for (i = 0; i < BLE_TRSPS_MAX_CONN_NBR; i++)
-    {
-        ble_trsps_InitConnList(&s_trsConnList[i]);
-    }
-
     return BLE_TRS_Add();
 }
 
@@ -435,6 +470,18 @@ uint16_t BLE_TRSPS_SendVendorCommand(uint16_t connHandle, uint8_t commandID, uin
     }
 }
 
+
+/**
+ * @brief Sends transparent data over BLE.
+ *
+ * @param[in] connHandle                    Connection handle associated with this connection.
+ * @param[in] len                           The length of the data to be sent.
+ * @param[in] p_data                        Pointer to the data to be sent.
+ *
+ * @retval MBA_RES_SUCCESS                  Data successfully sent.
+ * @retval MBA_RES_OOM                      Internal memory allocation failure.
+ * @retval MBA_RES_INVALID_PARA             Invalid parameters; data length does not meet specifications.
+ */
 uint16_t BLE_TRSPS_SendData(uint16_t connHandle, uint16_t len, uint8_t *p_data)
 {
     GATTS_HandleValueParams_T  hvParams;
@@ -484,6 +531,13 @@ uint16_t BLE_TRSPS_SendData(uint16_t connHandle, uint16_t len, uint8_t *p_data)
     return result;
 }
 
+
+/**
+ * @brief Retrieves the length of data queued for transmission.
+ *
+ * @param[in]    connHandle                 Connection handle associated with the queued data.
+ * @param[out]   p_dataLength               Pointer to where the data length will be stored.
+ */
 void BLE_TRSPS_GetDataLength(uint16_t connHandle, uint16_t *p_dataLength)
 {
     BLE_TRSPS_ConnList_T *p_conn = NULL;
@@ -506,6 +560,17 @@ void BLE_TRSPS_GetDataLength(uint16_t connHandle, uint16_t *p_dataLength)
     }
 }
 
+
+/**
+ * @brief Retrieves queued data from the profile.
+ *
+ * @param[in] connHandle                    Connection handle associated with the queued data.
+ * @param[out] p_data                       Pointer to the buffer where the data will be stored.
+ *
+ * @retval MBA_RES_SUCCESS                  Data successfully retrieved.
+ * @retval MBA_RES_FAIL                     No data in the queue or the connection link could not be found.
+ *
+ */
 uint16_t BLE_TRSPS_GetData(uint16_t connHandle, uint8_t *p_data)
 {
     BLE_TRSPS_ConnList_T *p_conn = NULL;
@@ -558,6 +623,15 @@ uint16_t BLE_TRSPS_GetData(uint16_t connHandle, uint8_t *p_data)
 
 }
 
+
+/**
+ * @brief Handle the write request to the TX CCCD (Client Characteristic Configuration Descriptor).
+ *
+ * @param p_conn Pointer to the connection list.
+ * @param p_value Pointer to the value to be written to the CCCD.
+ * 
+ * @retval uint8_t Returns 0 on success, ATT_ERR_APPLICATION_ERROR on failure.
+ */
 static uint8_t ble_trsps_TxCccd(BLE_TRSPS_ConnList_T *p_conn, uint8_t *p_value)
 {
     uint16_t cccd;
@@ -590,11 +664,28 @@ static uint8_t ble_trsps_TxCccd(BLE_TRSPS_ConnList_T *p_conn, uint8_t *p_value)
     return 0;
 }
 
+
+/**
+ * @brief Process the received value for the RX characteristic.
+ *
+ * @param p_conn    Pointer to the connection list.
+ * @param writeType The type of write operation.
+ * @param length    The length of the data written.
+ * @param p_value   Pointer to the value written.
+ */
 static void ble_trsps_RxValue(BLE_TRSPS_ConnList_T *p_conn, uint8_t writeType, uint16_t length, uint8_t *p_value)
 {
     ble_trsps_RcvData(p_conn, writeType, length, p_value);
 }
 
+
+/**
+ * @brief Process the control value written to the control point.
+ *
+ * @param p_conn    Pointer to the connection list.
+ * @param length    The length of the data written.
+ * @param p_value   Pointer to the control value written.
+ */
 static void ble_trsps_CtrlValue(BLE_TRSPS_ConnList_T *p_conn, uint16_t length, uint8_t *p_value)
 {
     BLE_TRSPS_Event_T evtPara;
@@ -648,6 +739,14 @@ static void ble_trsps_CtrlValue(BLE_TRSPS_ConnList_T *p_conn, uint16_t length, u
     }
 }
 
+
+/**
+ * @brief Handle the write request to the Control CCCD.
+ *
+ * @param p_conn    Pointer to the connection list.
+ * @param p_value   Pointer to the value to be written to the CCCD.
+ * @retval uint8_t  Returns 0 on success, ATT_ERR_APPLICATION_ERROR on failure.
+ */
 static uint8_t ble_trsps_CtrlCccd(BLE_TRSPS_ConnList_T *p_conn, uint8_t *p_value)
 {
     uint16_t cccd;
@@ -681,6 +780,12 @@ static uint8_t ble_trsps_CtrlCccd(BLE_TRSPS_ConnList_T *p_conn, uint8_t *p_value
     return 0;
 }
 
+
+/**
+ * @brief Process the GATT server write requests for the BLE Transparent Service.
+ *
+ * @param p_event Pointer to the GATT event structure.
+ */
 static void ble_trsps_GattsWriteProcess(GATT_Event_T *p_event)
 {
     uint8_t error = 0;
@@ -809,6 +914,12 @@ static void ble_trsps_GattsWriteProcess(GATT_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Process GATT events for the BLE Transparent Service.
+ * 
+ * @param p_event Pointer to the GATT event structure containing details about the event.
+ */
 static void ble_trsps_GattEventProcess(GATT_Event_T *p_event)
 {
     BLE_TRSPS_ConnList_T *p_conn = NULL;
@@ -846,6 +957,12 @@ static void ble_trsps_GattEventProcess(GATT_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Process GAP events for the BLE Transparent Service.
+ * 
+ * @param p_event Pointer to the BLE GAP event structure containing details about the event.
+ */
 static void ble_trsps_GapEventProcess(BLE_GAP_Event_T *p_event)
 {
     switch(p_event->eventId)
@@ -903,7 +1020,7 @@ static void ble_trsps_GapEventProcess(BLE_GAP_Event_T *p_event)
                 {
                     ble_trsps_FreeRetryData(p_conn);
                 }
-                ble_trsps_InitConnList(p_conn);
+                ble_trsps_FreeConnList(p_conn);
             }
         }
         break;
@@ -922,6 +1039,14 @@ static void ble_trsps_GapEventProcess(BLE_GAP_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Handles BLE_Stack events.
+ * This function should be called by the application when BLE stack events occur.
+ *
+ * @param[in] p_stackEvent        					Pointer to the BLE stack event data.
+ *
+*/
 void BLE_TRSPS_BleEventHandler(STACK_Event_T *p_stackEvent)
 {
     switch (p_stackEvent->groupId)

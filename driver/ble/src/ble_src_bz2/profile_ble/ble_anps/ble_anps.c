@@ -31,10 +31,12 @@
     ble_anps.c
 
   Summary:
-    This file contains the BLE Alert Notification Profile Server functions for application user.
+    Implements the server-side functionality of the BLE Alert Notification Profile.
 
   Description:
-    This file contains the BLE Alert Notificaiton Profile Server functions for application user.
+    This source file provides the implementation for the server-side functions
+    of the Bluetooth Low Energy (BLE) Alert Notification Profile (ANP), enabling
+    the device to serve alert notifications to a connected BLE client.
  *******************************************************************************/
 
 
@@ -58,52 +60,39 @@
 // Section: Macros
 // *****************************************************************************
 // *****************************************************************************
+#define BLE_ANPS_ERRCODE_COMMAND_NOT_SUPPORTTED     0xA0U           // Error code indicating the command is not supported.
 
-/**@defgroup BLE_ANPS_ERRCODE  Error code definition
- * @brief The definition of BLE alert notification error code.
- * @{ */
-#define BLE_ANPS_ERRCODE_COMMAND_NOT_SUPPORTTED   0xA0U
-/** @} */
+#define BLE_ANPS_RETRY_TYPE_WRITE_RESP              (0x01U)         // Retry type for write response.
+#define BLE_ANPS_RETRY_TYPE_READ_RESP               (0x02U)         // Retry type for read response.
+#define BLE_ANPS_RETRY_TYPE_ERR                     (0x03U)         // Retry type for error response.
 
+#define BLE_ANPS_MAX_CONN_NBR                       BLE_GAP_MAX_LINK_NBR    //< Maximum number of allowed connections.
 
-/**@defgroup BLE_ANPS_RETRY_TYPE Retrying type
- * @brief The definition of BLE alert notification retry type
- * @{ */
-#define BLE_ANPS_RETRY_TYPE_WRITE_RESP         (0x01U)    /**< Definition of response retry type write response. */
-#define BLE_ANPS_RETRY_TYPE_READ_RESP          (0x02U)    /**< Definition of response retry type read response. */
-#define BLE_ANPS_RETRY_TYPE_ERR                (0x03U)    /**< Definition of error retry type. */
-/** @} */
-
-/**@defgroup BLE_ANPS_STATE ANPS state
- * @brief The definition of BLE ANPS connection state
- * @{ */
  typedef enum BLE_ANPS_State_T
 {
-    BLE_ANPS_STATE_IDLE = 0x00U,
-    BLE_ANPS_STATE_CONNECTED
+    BLE_ANPS_STATE_IDLE = 0x00U,                    // State indicating the service is idle.
+    BLE_ANPS_STATE_CONNECTED                        // State indicating the service is connected.
 } BLE_ANPS_State_T;
-/** @} */
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Data Types
 // *****************************************************************************
 // *****************************************************************************
-
-/**@brief The structure contains information about the parameters of BLE alert notification profile. */
+/* Structure for BLE Alert Notification Profile (ANP) supported categories. */
 typedef struct BLE_ANPS_Params_T
 {
-    uint16_t suppNewCat;
-    uint16_t suppUnreadCat;
+    uint16_t            suppNewCat;                         // Supported New Alert Categories.
+    uint16_t            suppUnreadCat;                      // Supported Unread Alert Categories.
 } BLE_ANPS_Params_T;
 
-/**@brief The structure contains information about BLE alert notification profile connection parameters for recording information. */
+/* Structure for BLE ANP connection-specific information. */
 typedef struct BLE_ANPS_ConnList_T
 {
-    uint16_t            connHandle;     /**< Connection handle associated with this connection. */
-    BLE_ANPS_State_T    state;          /**< Connection state. @ref BLE_ANPS_STATE. */
-    uint8_t             retryType;      /**< Retry type. @ref BLE_ANPS_RETRY_TYPE. */
-    uint8_t             *p_retryData;   /**< Retry data pointer. */
+    uint16_t            connHandle;                         // Connection handle associated with this connection.
+    BLE_ANPS_State_T    state;                              // Current state of the ANP connection.
+    uint8_t             retryType;                          // Type of retry mechanism in use.
+    uint8_t             *p_retryData;                       // Pointer to the data required for retry operations.
 } BLE_ANPS_ConnList_T;
 
 // *****************************************************************************
@@ -111,10 +100,9 @@ typedef struct BLE_ANPS_ConnList_T
 // Section: Local Variables
 // *****************************************************************************
 // *****************************************************************************
-
-static BLE_ANPS_EventCb_T     sp_anpsCbRoutine;
-static BLE_ANPS_ConnList_T    s_anpsConnList[BLE_ANPS_MAX_CONN_NBR];
-static BLE_ANPS_Params_T      s_anpsParams;
+static BLE_ANPS_EventCb_T     sp_anpsCbRoutine;             // Callback function for ANPS (Alert Notification Profile Server) events.
+static BLE_ANPS_ConnList_T    *sp_anpsConnList[BLE_ANPS_MAX_CONN_NBR]; // Array to keep track of connection-specific information for each active connection.
+static BLE_ANPS_Params_T      s_anpsParams;                 // Structure to hold the parameters for the ANPS (Alert Notification Profile Server).
 
 // *****************************************************************************
 // *****************************************************************************
@@ -122,6 +110,11 @@ static BLE_ANPS_Params_T      s_anpsParams;
 // *****************************************************************************
 // *****************************************************************************
 
+/**
+ * @brief Frees the retry data associated with a BLE connection.
+ *
+ * @param p_conn Pointer to the BLE_ANPS_ConnList_T structure that contains the retry data to be freed.
+ */
 static void ble_anps_FreeRetryData(BLE_ANPS_ConnList_T *p_conn) {
     if (p_conn->p_retryData != NULL)
     {
@@ -131,42 +124,64 @@ static void ble_anps_FreeRetryData(BLE_ANPS_ConnList_T *p_conn) {
     }
 }
 
-static void ble_anps_InitConnList(BLE_ANPS_ConnList_T *p_conn)
-{
-    (void)memset(p_conn, 0, sizeof(BLE_ANPS_ConnList_T));
-}
 
+/**
+ * @brief Retrieves a connection list entry by its connection handle.
+ *
+ * @param connHandle The connection handle used to find the corresponding connection list entry.
+ * 
+ * @retval Pointer to the BLE_ANPS_ConnList_T structure if found, otherwise NULL.
+ */
 static BLE_ANPS_ConnList_T * ble_anps_GetConnListByHandle(uint16_t connHandle)
 {
     uint8_t i;
 
-    for(i=0; i<BLE_ANPS_MAX_CONN_NBR;i++)
+    for(i=0; i<BLE_ANPS_MAX_CONN_NBR; i++)
     {
-        if ((s_anpsConnList[i].state == BLE_ANPS_STATE_CONNECTED) && (s_anpsConnList[i].connHandle == connHandle))
+        if ((sp_anpsConnList[i] != NULL) && (sp_anpsConnList[i]->state == BLE_ANPS_STATE_CONNECTED) && (sp_anpsConnList[i]->connHandle == connHandle))
         {
-            return &s_anpsConnList[i];
+            return sp_anpsConnList[i];
         }
     }
-
     return NULL;
 }
 
+
+/**
+ * @brief Gets a free connection list entry.
+ *
+ * @retval Pointer to the BLE_ANPS_ConnList_T structure if a free entry is available, otherwise NULL.
+ */
 static BLE_ANPS_ConnList_T *ble_anps_GetFreeConnList(void)
 {
     uint8_t i;
+    BLE_ANPS_ConnList_T *p_conn = NULL;
 
-    for(i=0; i<BLE_ANPS_MAX_CONN_NBR;i++)
+    for(i = 0; i < BLE_ANPS_MAX_CONN_NBR; i++)
     {
-        if (s_anpsConnList[i].state == BLE_ANPS_STATE_IDLE)
+        if (sp_anpsConnList[i] == NULL)
         {
-            s_anpsConnList[i].state = BLE_ANPS_STATE_CONNECTED;
-            return &s_anpsConnList[i];
+            sp_anpsConnList[i] = OSAL_Malloc(sizeof(BLE_ANPS_ConnList_T));
+            p_conn = sp_anpsConnList[i];
+            if (p_conn != NULL)
+            {
+                (void)memset(p_conn, 0, sizeof(BLE_ANPS_ConnList_T));
+                p_conn->state     = BLE_ANPS_STATE_CONNECTED;
+            }
+            break;
         }
     }
-
-    return NULL;
+    return p_conn;
 }
 
+
+/**
+ * @brief Conveys a BLE ANPS event to the registered callback.
+ *
+ * @param eventId       The event ID to be conveyed.
+ * @param p_eventField  Pointer to the event field data.
+ * @param eventFieldLen Length of the event field data.
+ */
 static void ble_anps_ConveyEvent(BLE_ANPS_EventId_T eventId, uint8_t *p_eventField, uint8_t eventFieldLen)
 { 
     if (sp_anpsCbRoutine != NULL)
@@ -179,6 +194,12 @@ static void ble_anps_ConveyEvent(BLE_ANPS_EventId_T eventId, uint8_t *p_eventFie
     }
 }
 
+
+/**
+ * @brief Processes a write request or command received from the GATT client.
+ *
+ * @param p_event Pointer to the GATT event structure.
+ */
 static void ble_anps_ProcWrite(GATT_Event_T *p_event)
 {
     uint8_t errCode = 0;
@@ -254,6 +275,12 @@ static void ble_anps_ProcWrite(GATT_Event_T *p_event)
     }
 } 
 
+
+/**
+ * @brief Processes a read request received from the GATT client.
+ *
+ * @param p_event Pointer to the GATT event structure.
+ */
 static void ble_anps_ProcRead(GATT_Event_T *p_event)
 {
     uint8_t value[BLE_ATT_MAX_MTU_LEN - ATT_READ_RESP_HEADER_SIZE];
@@ -338,6 +365,15 @@ static void ble_anps_ProcRead(GATT_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Process a queued task for a BLE Alert Notification Profile Server.
+ *
+ * This function processes a queued task based on the connection handle provided.
+ * It will handle write, read, and error responses accordingly.
+ *
+ * @param connHandle The connection handle associated with the BLE device.
+ */
 static void ble_anps_ProcessQueuedTask(uint16_t connHandle)
 {
     uint16_t status;
@@ -383,6 +419,15 @@ static void ble_anps_ProcessQueuedTask(uint16_t connHandle)
     }
 }
 
+
+/**
+ * @brief Process GATT events for the BLE Alert Notification Profile Server.
+ *
+ * This function handles incoming GATT events such as write and read requests
+ * and processes them using the appropriate handlers.
+ *
+ * @param p_event Pointer to the GATT event structure.
+ */
 static void ble_anps_GattEventProcess(GATT_Event_T *p_event)
 {
     switch (p_event->eventId)
@@ -406,31 +451,49 @@ static void ble_anps_GattEventProcess(GATT_Event_T *p_event)
     } 
 }
 
+
+/**
+ * @brief Initializes the BLE Alert Notification Profile.
+ *
+ * @retval MBA_RES_SUCCESS        Successfully initialized the BLE Alert Notification Profile.
+ *
+ */
 uint16_t BLE_ANPS_Init(void)
 {
-    uint8_t i;
-
     sp_anpsCbRoutine = NULL;
     (void)memset(&s_anpsParams, 0, sizeof(BLE_ANPS_Params_T));
-    for (i = 0; i < BLE_ANPS_MAX_CONN_NBR; i++)
-    {
-        ble_anps_InitConnList(&s_anpsConnList[i]);
-    }
     return BLE_ANS_Add();
 }
 
+
+/**
+ * @brief Registers a callback function for the BLE Alert Notification profile events.
+ *
+ * @param[in] bleAnpRoutine        The callback function to handle BLE Alert Notification profile events.
+ *
+ */
 void BLE_ANPS_EventRegister(BLE_ANPS_EventCb_T bleAnpRoutine)
 {
     sp_anpsCbRoutine = bleAnpRoutine;
 }
 
+
+/**
+ * @brief Sets the supported categories for new alerts.
+ *
+ * @param[in] catMask            Category mask for new alerts. Refer to @ref BLE_ANPS_SUPP_CAT_ID_BIT_MASK for possible values.
+ *
+ * @retval MBA_RES_SUCCESS        Successfully set the supported categories for new alerts.
+ * @retval MBA_RES_FAIL           Cannot change supported categories while in a connection.
+ * @retval MBA_RES_INVALID_PARA   The parameter is invalid or does not meet the specification.
+ */
 uint16_t BLE_ANPS_SetSuppNewCat(uint16_t catMask)
 {
     uint8_t i;
 
     for(i=0; i<BLE_ANPS_MAX_CONN_NBR;i++)
     {
-        if (s_anpsConnList[i].state == BLE_ANPS_STATE_CONNECTED)
+        if (sp_anpsConnList[i] != NULL)
         {
             return MBA_RES_FAIL;
         }
@@ -443,13 +506,23 @@ uint16_t BLE_ANPS_SetSuppNewCat(uint16_t catMask)
     return MBA_RES_SUCCESS;
 }
 
+
+/**
+ * @brief Sets the supported categories for unread alerts.
+ *
+ * @param[in] catMask             Category mask for unread alerts. Refer to @ref BLE_ANPS_SUPP_CAT_ID_BIT_MASK for possible values.
+ *
+ * @retval MBA_RES_SUCCESS        Category mask for unread alerts. Refer to @ref BLE_ANPS_SUPP_CAT_ID_BIT_MASK for possible values.
+ * @retval MBA_RES_FAIL           Cannot change supported categories while in a connection.
+ * @retval MBA_RES_INVALID_PARA   The parameter is invalid or does not meet the specification.
+ */
 uint16_t BLE_ANPS_SetSuppUnreadCat(uint16_t catMask)
 {
     uint8_t i;
 
     for(i=0; i<BLE_ANPS_MAX_CONN_NBR;i++)
     {
-        if (s_anpsConnList[i].state == BLE_ANPS_STATE_CONNECTED)
+        if (sp_anpsConnList[i] != NULL)
         {
             return MBA_RES_FAIL;
         }
@@ -462,6 +535,21 @@ uint16_t BLE_ANPS_SetSuppUnreadCat(uint16_t catMask)
     return MBA_RES_SUCCESS;
 }
 
+
+/**
+ * @brief Sends a new alert notification to a connected peer device.
+ *
+ * @param[in] connHandle           The connection handle.
+ * @param[in] catId                The category ID of the alert. Refer to @ref BLE_ANPS_CAT_ID for possible values.
+ * @param[in] numAlert             The number of new alerts.
+ * @param[in] txtStrLen            The length of the text string information. Must be less than or equal to (MTU - 5).
+ * @param[in] p_txtStr             Pointer to the text string information.
+ *
+ * @retval MBA_RES_SUCCESS         Successfully sent the new alert notification.
+ * @retval MBA_RES_OOM             Internal memory allocation failure.
+ * @retval MBA_RES_NO_RESOURCE     No available buffer to transmit the new alert notification.
+ * @retval MBA_RES_INVALID_PARA    Invalid parameters.
+ */
 uint16_t BLE_ANPS_SendNewAlert(uint16_t connHandle, uint8_t catId, uint8_t numAlert, uint16_t txtStrLen, const uint8_t *p_txtStr)
 {
     uint16_t result = MBA_RES_OOM;
@@ -488,6 +576,19 @@ uint16_t BLE_ANPS_SendNewAlert(uint16_t connHandle, uint8_t catId, uint8_t numAl
     return result;
 }
 
+
+/**
+ * @brief Sends an unread alert status notification to a connected peer device.
+ *
+ *@param[in] connHandle           The connection handle.
+ *@param[in] catId                The category ID of the alert. Refer to @ref BLE_ANPS_CAT_ID for possible values.
+ *@param[in] unreadCnt            The count of unread alerts.
+ *
+ *@retval MBA_RES_SUCCESS         Successfully sent the unread alert status notification.
+ *@retval MBA_RES_OOM             Internal memory allocation failure.
+ *@retval MBA_RES_NO_RESOURCE     No available buffer to transmit the unread alert status notification.
+ *@retval MBA_RES_INVALID_PARA    Invalid parameters.
+ */
 uint16_t BLE_ANPS_SendUnreadAlertStat(uint16_t connHandle, uint8_t catId, uint8_t unreadCnt)
 {
     uint16_t result = MBA_RES_OOM;
@@ -508,6 +609,33 @@ uint16_t BLE_ANPS_SendUnreadAlertStat(uint16_t connHandle, uint8_t catId, uint8_
     return result;
 }
 
+/**
+ * @brief Free the connection list for the ANPS.
+ *
+ * @param p_conn        Pointer to the ANPS connection list structure to initialize.
+ */
+static void ble_anps_FreeConnList(BLE_ANPS_ConnList_T *p_conn)
+{
+    uint8_t i;
+    for (i = 0; i < BLE_ANPS_MAX_CONN_NBR; i++)
+    {
+        if (sp_anpsConnList[i] == p_conn)
+        {
+            OSAL_Free(sp_anpsConnList[i]);
+            sp_anpsConnList[i] = NULL;
+            break;
+        }
+    }
+}
+
+/**
+ * @brief Handles BLE_Stack events.
+ * 
+ * This function should be called when BLE stack events occur.
+ * 
+ * @param[in] p_stackEvent          Pointer to the stack event structure.
+ *
+*/
 static void ble_anps_GapEventProcess(BLE_GAP_Event_T *p_event)
 {
     switch (p_event->eventId)
@@ -521,11 +649,12 @@ static void ble_anps_GapEventProcess(BLE_GAP_Event_T *p_event)
                 p_conn = ble_anps_GetFreeConnList();
                 if(p_conn == NULL)
                 {
-                    ble_anps_ConveyEvent(BLE_ANPS_EVT_ERR_UNSPECIFIED_IND, NULL, 0);
-                    return;
+                    ble_anps_ConveyEvent(BLE_ANPS_EVT_ERR_NO_MEM_IND, NULL, 0);
                 }
-
-                p_conn->connHandle=p_event->eventField.evtConnect.connHandle;
+                else
+                {
+                    p_conn->connHandle=p_event->eventField.evtConnect.connHandle;
+                }
             }
         }
         break;
@@ -535,14 +664,11 @@ static void ble_anps_GapEventProcess(BLE_GAP_Event_T *p_event)
 
             p_conn = ble_anps_GetConnListByHandle(p_event->eventField.evtDisconnect.connHandle);
 
-            if (p_conn == NULL)
+            if (p_conn != NULL)
             {
-                ble_anps_ConveyEvent(BLE_ANPS_EVT_ERR_UNSPECIFIED_IND, NULL, 0);
-                return;
+                ble_anps_FreeRetryData(p_conn);
+                ble_anps_FreeConnList(p_conn);
             }
-
-            ble_anps_FreeRetryData(p_conn);
-            ble_anps_InitConnList(p_conn);
         }
         break;
         case BLE_GAP_EVT_TX_BUF_AVAILABLE:
@@ -557,6 +683,15 @@ static void ble_anps_GapEventProcess(BLE_GAP_Event_T *p_event)
         break;
     }
 }
+
+
+/**
+ * @brief Handle BLE_Stack events.
+ *       This function should be called when BLE stack events occur in the application.
+ *
+ * @param[in] p_stackEvent        Pointer to the BLE stack events data.
+ *
+ */
 void BLE_ANPS_BleEventHandler(STACK_Event_T *p_stackEvent)
 {
     switch (p_stackEvent->groupId)

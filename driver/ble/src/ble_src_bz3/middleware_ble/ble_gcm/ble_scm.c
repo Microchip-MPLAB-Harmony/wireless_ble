@@ -31,12 +31,14 @@
     ble_scm.c
 
   Summary:
-    This file contains the BLE Service Change Manager functions and event for application user.
+    Implements the BLE Service Change Manager, providing functions and events
+    for application-level integration.
 
   Description:
-    This file contains the BLE Service Change Manager functions and event for application user.
-    The "BLE_SCM_Init" function shall be called in the "APP_Initialize" function to 
-    initialize the this modules in the system.
+    This source file includes the implementation of the BLE Service Change Manager,
+    which facilitates the management of service changes in BLE applications. It is
+    essential to invoke the "BLE_SCM_Init" function within the "APP_Initialize"
+    function to ensure proper initialization of this module.
  *******************************************************************************/
 
 
@@ -60,40 +62,41 @@
 // Section: Macros
 // *****************************************************************************
 // *****************************************************************************
+#define UUID_SVC_GATT                               0x1801      // UUID for the Generic Attribute (GATT) Service from the Bluetooth SIG specification.
+#define UUID_CHAR_SERVICE_CHANGE                    0x2A05      // UUID for the Service Change Characteristic from the Bluetooth SIG specification.
+#define UUID_CHAR_CLIENT_SUPPORTED_FEATURES         0x2B29      // UUID for the Client Supported Features Characteristic from the Bluetooth SIG specification.
 
-#define UUID_SVC_GATT                               0x1801  /**< UUID of GATT Service. */
-#define UUID_CHAR_SERVICE_CHANGE                    0x2A05  /**< UUID of Characterisitc Service Change. */
-#define UUID_CHAR_CLIENT_SUPPORTED_FEATURES         0x2B29  /**< UUID of Client Supported Features. */
-
-/**@brief The definition of discovered characteristics index of GATT service. */
+/* Enumeration for discovered characteristics indices of GATT service. */
 typedef enum DISC_INDEX_GattSvc_T
 {
-    DISC_INDEX_GATT_SC_CHAR,                                /**< Service Change Characteristic. */
-    DISC_INDEX_GATT_SC_CCCD,                                /**< Service Change Client Characteristic Configuration Descriptor. */
-    DISC_INDEX_GATT_CSF_CHAR                                /**< Client Supported Feature Characteristic. */
+    DISC_INDEX_GATT_SC_CHAR,                                    // Index for the Service Change Characteristic.
+    DISC_INDEX_GATT_SC_CCCD,                                    // Index for the Service Change CCCD (Client Characteristic Configuration Descriptor).
+    DISC_INDEX_GATT_CSF_CHAR                                    // Index for the Client Supported Features Characteristic.
 }DISC_INDEX_GattSvc_T;
 
-/**@brief The definition of configuration procedures in BLE_SCM. */
-typedef enum BLE_SCM_CofigProcedure_T
+/* Enumeration for the configuration procedures of BLE service change manager. */
+typedef enum BLE_SCM_ConfigProcedure_T
 {
-    BLE_SCM_CONFIG_NONE=0x00U,                                    /**< No configuration.*/
-    BLE_SCM_CONFIG_GATT_ENABLE_INDICATION,                  /**< Enable Service Change Indication of Remote GATT Service. */
-    BLE_SCM_CONFIG_GATT_WRITE_FEATURES,                     /**< Write Client Supported Features to Remote GATT Service. */
-    BLE_SCM_CONFIG_END
-}BLE_SCM_CofigProcedure_T;
+    BLE_SCM_CONFIG_NONE=0x00U,                                  // No ongoing configuration procedure.
+    BLE_SCM_CONFIG_GATT_ENABLE_INDICATION,                      // Procedure to enable indications for the Service Change characteristic.
+    BLE_SCM_CONFIG_GATT_WRITE_FEATURES,                         // Procedure to write to the Client Supported Features characteristic.
+    BLE_SCM_CONFIG_END                                          // Sentinel value indicating the end of the config procedures.
+}BLE_SCM_ConfigProcedure_T;
 
+/* Enumeration for the status of configuration procedures. */
 typedef enum BLE_SCM_ConfigStatus_T
 {
-    BLE_SCM_CONFIG_STATUS_SUCCESS=0x00U,                          /**< Successfully execute the configuration. */
-    BLE_SCM_CONFIG_STATUS_FAIL,                             /**< Fail to execute the configuration. Try another configuration. */
-    BLE_SCM_CONFIG_STATUS_ATT_BUSY,                         /**< ATT protocol is busy. */
-    BLE_SCM_CONFIG_STATUS_END
+    BLE_SCM_CONFIG_STATUS_SUCCESS=0x00U,                        // Configuration procedure completed successfully.
+    BLE_SCM_CONFIG_STATUS_FAIL,                                 // Configuration procedure failed. A retry may be attempted with a different configuration.
+    BLE_SCM_CONFIG_STATUS_ATT_BUSY,                             // ATT protocol layer is currently busy.
+    BLE_SCM_CONFIG_STATUS_END                                   // Sentinel value indicating the end of the config status values.
 }BLE_SCM_ConfigStatus_T;
 
+/* Enumeration for the state of the BLE_SCM module. */
 typedef enum BLE_SCM_State_T
 {
-    BLE_SCM_STATE_IDLE = 0x00U,                              /**< Default state (Disconnected). */
-    BLE_SCM_STATE_CONNECTED                                 /**< Connected. */
+    BLE_SCM_STATE_IDLE = 0x00U,                                 // Device is in the default state, not currently connected to a peer.
+    BLE_SCM_STATE_CONNECTED                                     // Device is currently connected to a peer.
 } BLE_SCM_State_T;
 
 // *****************************************************************************
@@ -102,22 +105,23 @@ typedef enum BLE_SCM_State_T
 // *****************************************************************************
 // *****************************************************************************
 
-/**@brief The structure of connection instance of service change manager module. */
+/* Structure for a connection instance in the service change manager module. */
 typedef struct BLE_SCM_Conn_T
 {
-    uint16_t                    connHandle;                     /**< Connection handle. */
-    uint8_t                     connIndex;                      /**< The index of this connection in connection database array */
-    BLE_SCM_CofigProcedure_T    configProcedure;                /**< Current configure procedure after discovery complete. */
-    bool                        isGattSvcFound;                 /**< Record GATT service is found or not of the connection. */
-    bool                        isPairingComplete;              /**< Record if paring complete received of the connection. Discovered handle information need to be sent to application when pairing complete. */
-    BLE_SCM_CofigProcedure_T    queueProcedure;                 /**< Record queued procedure by the ATT protocol. */
-    BLE_SCM_State_T             state;                          /**< Connection state. */
+    uint16_t                    connHandle;                     // Handle identifying the connection.
+    uint8_t                     connIndex;                      // Index of the connection in the connection database array.
+    BLE_SCM_ConfigProcedure_T   configProcedure;                // The current configuration procedure to be executed after service discovery is complete.
+    bool                        isGattSvcFound;                 // Flag indicating whether the GATT service has been found for this connection.
+    bool                        isPairingComplete;              // Flag indicating whether pairing has been completed for this connection.
+    BLE_SCM_ConfigProcedure_T   queueProcedure;                 // Procedure queued due to ATT protocol being busy.
+    BLE_SCM_State_T             state;                          // Current state of the connection.
 } BLE_SCM_Conn_T;
 
-/**@brief The database of service change manager module. */
+
+/* Structure for the service change manager module. */
 typedef struct BLE_SCM_Ctrl_T
 {
-    BLE_SCM_Conn_T          conn[BLE_GAP_MAX_LINK_NBR];     /**< Connection database for service change manager module. */
+    BLE_SCM_Conn_T              conn[BLE_GAP_MAX_LINK_NBR];     //Central connection database for the service change manager, supporting up to BLE_GAP_MAX_LINK_NBR connections.
 } BLE_SCM_Ctrl_T;
 
 // *****************************************************************************
@@ -126,52 +130,67 @@ typedef struct BLE_SCM_Ctrl_T
 // *****************************************************************************
 // *****************************************************************************
 
-static BLE_SCM_EventCb_T           s_scmEventCb;                   /* Events callback function. */
-static BLE_SCM_Ctrl_T *            sp_scmCtrl;                     /* SCM module database. */
+static BLE_SCM_EventCb_T        s_scmEventCb;                   // Callback function for service change manager.
+static BLE_SCM_Ctrl_T *         sp_scmCtrl;                     // Pointer to the service change manager module's structure.
+static const uint8_t            s_svcUuidGatt[ATT_UUID_LENGTH_2] = {UINT16_TO_BYTES(UUID_SVC_GATT)}; // UUID for GATT service.
+static const ATT_Uuid_T         s_discCharSc =          { {UINT16_TO_BYTES(UUID_CHAR_SERVICE_CHANGE)}, ATT_UUID_LENGTH_2 }; // UUID for Service Change characteristic.
 
-/* Discovery information of GATT Service. */
-static const uint8_t        s_svcUuidGatt[ATT_UUID_LENGTH_2] = {UINT16_TO_BYTES(UUID_SVC_GATT)};
-static const ATT_Uuid_T     s_discCharSc =          { {UINT16_TO_BYTES(UUID_CHAR_SERVICE_CHANGE)}, ATT_UUID_LENGTH_2 };
-static const ATT_Uuid_T     s_discCharScCccd =      { {UINT16_TO_BYTES(UUID_DESCRIPTOR_CLIENT_CHAR_CONFIG)}, ATT_UUID_LENGTH_2 };
-static const ATT_Uuid_T     s_discCharCsf    =      { {UINT16_TO_BYTES(UUID_CHAR_CLIENT_SUPPORTED_FEATURES)}, ATT_UUID_LENGTH_2 };
-static BLE_DD_DiscChar_T    s_gattSvcChange =       { &s_discCharSc, 0 };
-static BLE_DD_DiscChar_T    s_gattSvcChangeCccd =   { &s_discCharScCccd, CHAR_SET_DESCRIPTOR };
-static BLE_DD_DiscChar_T    s_gattCliSupFeature =   { &s_discCharCsf, 0 };
-static BLE_DD_DiscChar_T    *s_gattDiscCharList[] =
+// UUID for Client Characteristic Configuration Descriptor (CCCD) of Service Change characteristic.
+static const ATT_Uuid_T         s_discCharScCccd =      { {UINT16_TO_BYTES(UUID_DESCRIPTOR_CLIENT_CHAR_CONFIG)}, ATT_UUID_LENGTH_2 };
+
+// UUID for Client Supported Features characteristic.
+static const ATT_Uuid_T         s_discCharCsf    =      { {UINT16_TO_BYTES(UUID_CHAR_CLIENT_SUPPORTED_FEATURES)}, ATT_UUID_LENGTH_2 };
+
+// Descriptor for GATT Service Change characteristic.
+static BLE_DD_DiscChar_T        s_gattSvcChange =       { &s_discCharSc, 0 };
+
+// Descriptor for CCCD of GATT Service Change characteristic.
+static BLE_DD_DiscChar_T        s_gattSvcChangeCccd =   { &s_discCharScCccd, CHAR_SET_DESCRIPTOR };
+
+// Descriptor for GATT Client Supported Features characteristic.
+static BLE_DD_DiscChar_T        s_gattCliSupFeature =   { &s_discCharCsf, 0 };
+static BLE_DD_DiscChar_T        *s_gattDiscCharList[] =
 {
-    &s_gattSvcChange,           /* GATT Service Change Characteristic */
-    &s_gattSvcChangeCccd,       /* GATT Service Change Characteristic CCCD */
-    &s_gattCliSupFeature        /* GATT Client Supported Feature Characteristic */
+    &s_gattSvcChange,                                           // GATT Service Change Characteristic.
+    &s_gattSvcChangeCccd,                                       // Client Characteristic Configuration Descriptor (CCCD) for Service Change.
+    &s_gattCliSupFeature                                        // Client Supported Features Characteristic.
 };
-
-/* Database recording discovery response of GATT Service. */
-static BLE_DD_CharInfo_T ** sp_gattCharInfoList;
-static BLE_DD_CharList_T *  sp_gattCharList;
-
-/**@brief API returned code mapping between SCM and MBA. */
+static BLE_DD_CharInfo_T ** sp_gattCharInfoList;                // Characteristic information list. */
+static BLE_DD_CharList_T *  sp_gattCharList;                    // Characteristic list. */
 static const BLE_SCM_ConfigStatus_T       s_scmMbaRetCodeMap[]=
 {
-    BLE_SCM_CONFIG_STATUS_SUCCESS,          //MBA_RES_SUCCESS
-    BLE_SCM_CONFIG_STATUS_FAIL,             //MBA_RES_FAIL
-    BLE_SCM_CONFIG_STATUS_FAIL,             //MBA_RES_OOM
-    BLE_SCM_CONFIG_STATUS_FAIL,             //MBA_RES_INVALID_PARA
-    BLE_SCM_CONFIG_STATUS_FAIL,             //MBA_RES_NO_RESOURCE
-    BLE_SCM_CONFIG_STATUS_FAIL,             //MBA_RES_BAD_STATE
-    BLE_SCM_CONFIG_STATUS_FAIL,             //MBA_RES_PENDING_DUE_TO_SECURITY
-    BLE_SCM_CONFIG_STATUS_ATT_BUSY          //MBA_RES_BUSY
+    BLE_SCM_CONFIG_STATUS_SUCCESS,                              // Corresponds to MBA_RES_SUCCESS
+    BLE_SCM_CONFIG_STATUS_FAIL,                                 // Corresponds to MBA_RES_FAIL
+    BLE_SCM_CONFIG_STATUS_FAIL,                                 // Corresponds to MBA_RES_OOM (Out of Memory)
+    BLE_SCM_CONFIG_STATUS_FAIL,                                 // Corresponds to MBA_RES_INVALID_PARA (Invalid Parameter)
+    BLE_SCM_CONFIG_STATUS_FAIL,                                 // Corresponds to MBA_RES_NO_RESOURCE
+    BLE_SCM_CONFIG_STATUS_FAIL,                                 // Corresponds to MBA_RES_BAD_STATE
+    BLE_SCM_CONFIG_STATUS_FAIL,                                 // Corresponds to MBA_RES_PENDING_DUE_TO_SECURITY
+    BLE_SCM_CONFIG_STATUS_ATT_BUSY                              // Corresponds to MBA_RES_BUSY (ATT Protocol Busy)
 };
-
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Functions
 // *****************************************************************************
 // *****************************************************************************
+
+/**
+ * @brief Initialize a BLE connection object.
+ * 
+ * @param[in] p_conn Pointer to the BLE connection object to initialize.
+ */
 static void ble_scm_InitConn(BLE_SCM_Conn_T *p_conn)
 {
     (void)memset((uint8_t *)p_conn, 0, sizeof(BLE_SCM_Conn_T));
 }
 
+
+/**
+ * @brief Retrieve a free BLE connection object.
+ * 
+ * @retval Pointer to the free BLE connection object, or NULL if none are available.
+ */
 static BLE_SCM_Conn_T *ble_scm_GetFreeConn(void)
 {
     uint8_t i;
@@ -189,6 +208,13 @@ static BLE_SCM_Conn_T *ble_scm_GetFreeConn(void)
 }
 
 
+/**
+ * @brief Find a BLE connection object by its handle.
+ * 
+ * @param[in] connHandle The handle of the connection to find.
+ * 
+ * @retval Pointer to the BLE connection object, or NULL if not found.
+ */
 static BLE_SCM_Conn_T *ble_scm_FindConnByHandle(uint16_t connHandle)
 {
     uint8_t i;
@@ -204,8 +230,13 @@ static BLE_SCM_Conn_T *ble_scm_FindConnByHandle(uint16_t connHandle)
     return NULL;
 }
 
-/** @brief Create connection instance for specific connection. \n
- *         The instance would be created by @ref BLE_SCM_SetBondedCharInfo() or BLE_GAP_EVT_CONNECTED event.
+
+/**
+ * @brief Create a BLE connection object for a specific connection handle.
+ * 
+ * @param[in] connHandle The handle of the connection for which to create the object.
+ * 
+ * @retval Pointer to the newly created BLE connection object, or NULL if unable to get a free connection.
  */
 static BLE_SCM_Conn_T *ble_scm_CreateConn(uint16_t connHandle)
 {
@@ -222,6 +253,8 @@ static BLE_SCM_Conn_T *ble_scm_CreateConn(uint16_t connHandle)
     return p_conn;
 }
 
+
+/** @brief Initialize the list of BLE characteristics. */
 static void ble_scm_InitCharList(void)
 {
     uint8_t i, j;
@@ -239,6 +272,15 @@ static void ble_scm_InitCharList(void)
     }
 }
 
+
+/**
+ * @brief Get the attribute handle for the Service Changed characteristic.
+ * 
+ * @param[in] connHandle    The handle of the connection to search within.
+ * @param[in] index         The index of the characteristic in the list.
+ * 
+ * @retval The attribute handle, or 0 if not found.
+ */
 static uint16_t ble_scm_GetScAttrHandle(uint16_t connHandle, uint8_t index)
 {
     uint8_t i;
@@ -260,6 +302,12 @@ static uint16_t ble_scm_GetScAttrHandle(uint16_t connHandle, uint8_t index)
     return 0;
 }
 
+
+/**
+ * @brief Process GAP events.
+ * 
+ * @param[in] p_event         Pointer to the GAP event.
+ */
 static void ble_scm_GapEventProcess(BLE_GAP_Event_T *p_event)
 {
     switch (p_event->eventId)
@@ -300,6 +348,14 @@ static void ble_scm_GapEventProcess(BLE_GAP_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Process Service Change events.
+ * 
+ * @param[in] connHandle            The handle of the connection where the service change occurred.
+ * @param[in] affectedStartHandle   The starting handle of the affected service.
+ * @param[in] affectedEndHandle     The ending handle of the affected service.
+ */
 static void ble_scm_ProcServiceChange(uint16_t connHandle, uint16_t affectedStartHandle, uint16_t affectedEndHandle)
 {
     if (s_scmEventCb != NULL)
@@ -314,6 +370,17 @@ static void ble_scm_ProcServiceChange(uint16_t connHandle, uint16_t affectedStar
     }
 }
 
+
+/**
+ * @brief Send a GATT write request.
+ * 
+ * @param[in] p_conn        Pointer to the BLE connection object.
+ * @param[in] attrHandle    The attribute handle to write to.
+ * @param[in] attrLength    The length of the attribute data.
+ * @param[in] p_attrValue   Pointer to the attribute data.
+ * 
+ * @retval The result of the write operation.
+ */
 static uint16_t ble_scm_SendGattWriteRequest(BLE_SCM_Conn_T *p_conn, uint16_t attrHandle, uint16_t attrLength, uint8_t *p_attrValue)
 {
     GATTC_WriteParams_T *p_writeParams;
@@ -338,6 +405,14 @@ static uint16_t ble_scm_SendGattWriteRequest(BLE_SCM_Conn_T *p_conn, uint16_t at
     return result;
 }
 
+
+/**
+ * @brief Enable Service Change indication for a given connection.
+ * 
+ * @param[in] p_conn Pointer to the BLE connection object.
+ * 
+ * @retval The status of the configuration operation.
+ */
 static BLE_SCM_ConfigStatus_T ble_scm_EnableServiceChangeIndication(BLE_SCM_Conn_T *p_conn)
 {
     BLE_SCM_ConfigStatus_T  result;
@@ -358,6 +433,14 @@ static BLE_SCM_ConfigStatus_T ble_scm_EnableServiceChangeIndication(BLE_SCM_Conn
     return result;
 }
 
+
+/**
+ * @brief Write Client Supported Features.
+ * 
+ * @param[in] p_conn Pointer to the BLE connection object.
+ * 
+ * @retval The status of the write operation.
+ */
 static BLE_SCM_ConfigStatus_T ble_scm_WriteClientSupportFeatures(BLE_SCM_Conn_T *p_conn)
 {
     BLE_SCM_ConfigStatus_T  result;
@@ -378,7 +461,14 @@ static BLE_SCM_ConfigStatus_T ble_scm_WriteClientSupportFeatures(BLE_SCM_Conn_T 
     return result;
 }
 
-static void ble_scm_ConfigProcedureStateMachine(BLE_SCM_Conn_T *p_conn, BLE_SCM_CofigProcedure_T procedure)
+
+/**
+ * @brief State machine for BLE SCM configuration procedures.
+ * 
+ * @param[in] p_conn    Pointer to the BLE connection object.
+ * @param[in] procedure The configuration procedure to execute.
+ */
+static void ble_scm_ConfigProcedureStateMachine(BLE_SCM_Conn_T *p_conn, BLE_SCM_ConfigProcedure_T procedure)
 {
     if (procedure == BLE_SCM_CONFIG_GATT_ENABLE_INDICATION)
     {
@@ -434,6 +524,12 @@ static void ble_scm_ConfigProcedureStateMachine(BLE_SCM_Conn_T *p_conn, BLE_SCM_
     }
 }
 
+
+/**
+ * @brief Process GATT events.
+ * 
+ * @param[in] p_event Pointer to the GATT event.
+ */
 static void ble_scm_GattEventProcess(GATT_Event_T *p_event)
 {
     switch (p_event->eventId)
@@ -517,6 +613,12 @@ static void ble_scm_GattEventProcess(GATT_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Process SMP events.
+ * 
+ * @param[in] p_event Pointer to the SMP event.
+ */
 static void ble_scm_SmpEventProcess(BLE_SMP_Event_T *p_event)
 {
     switch (p_event->eventId)
@@ -558,6 +660,12 @@ static void ble_scm_SmpEventProcess(BLE_SMP_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Initialize the BLE Service Change Manager.
+ * 
+ * @retval The result of the initialization process.
+ */
 uint16_t BLE_SCM_Init(void)
 {
     BLE_DD_DiscSvc_T gattDisc;
@@ -622,11 +730,23 @@ uint16_t BLE_SCM_Init(void)
     return BLE_DD_ServiceDiscoveryRegister(&gattDisc);
 }
 
+
+/**
+ * @brief Register an event callback for BLE Service Change Manager events.
+ * 
+ * @param[in] eventCb The callback function to register.
+ */
 void BLE_SCM_EventRegister(BLE_SCM_EventCb_T eventCb)
 {
     s_scmEventCb = eventCb;
 }
 
+
+/**
+ * @brief BLE event handler for the Service Change Manager.
+ * 
+ * @param[in] p_stackEvent Pointer to the stack event.
+ */
 void BLE_SCM_BleEventHandler(STACK_Event_T *p_stackEvent)
 {
     switch (p_stackEvent->groupId)
@@ -657,6 +777,12 @@ void BLE_SCM_BleEventHandler(STACK_Event_T *p_stackEvent)
     }
 }
 
+
+/**
+ * @brief BLE Device Discovery event handler for the Service Change Manager.
+ * 
+ * @param[in] p_event Pointer to the device discovery event.
+ */
 void BLE_SCM_BleDdEventHandler(BLE_DD_Event_T *p_event)
 {
     switch (p_event->eventId)
@@ -711,6 +837,13 @@ void BLE_SCM_BleDdEventHandler(BLE_DD_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Set the bonded characteristics information for a given connection.
+ * 
+ * @param[in] connHandle    The handle of the connection.
+ * @param[in] p_charInfo    Pointer to the characteristics information.
+ */
 void BLE_SCM_SetBondedCharInfo(uint16_t connHandle, BLE_DD_CharInfo_T *p_charInfo)
 {
     BLE_SCM_Conn_T *p_conn;

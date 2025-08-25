@@ -31,20 +31,14 @@
     ble_dm_sm.h
 
   Summary:
-    This file contains the Security Manager functions for 
-    BLE Device Manager module internal use.
+    Defines the internal Security Manager interface for the BLE Device Manager.
 
   Description:
-    This file contains the Security Manager functions for 
-    BLE Device Manager module internal use.
+    This header specifies the function prototypes and data structures used by
+    the BLE Device Manager's Security Manager. It is intended for internal
+    use within the BLE middleware stack to handle security-related tasks such
+    as authentication and encryption.
  *******************************************************************************/
-
-
-/**
- * @addtogroup BLE_DM_SM BLE DM SM
- * @{
- * @brief Header file for the BLE Device Manager (ble_dm_sm) internal module.
- */
  
 #ifndef BLE_DM_SM_H
 #define BLE_DM_SM_H
@@ -58,24 +52,68 @@
 #include <stdbool.h>
 #include "stack_mgr.h"
 
+// DOM-IGNORE-BEGIN
+#ifdef __cplusplus  // Provide C++ Compatibility
+extern "C" {
+#endif
+// DOM-IGNORE-END
+
+/**
+ * @defgroup BLE_DM_SM BLE device manager security management
+ * @brief Header file for the BLE Device Manager (ble_dm_sm) internal module.
+ * @{
+ */
 // *****************************************************************************
 // *****************************************************************************
 // Section: Function Prototypes
 // *****************************************************************************
 // *****************************************************************************
-
+/**
+ * @brief Main entry point for BLE device manager security events.
+ * 
+ * @param p_stackEvent[in]  Pointer to the stack event structure.
+ */
 void BLE_DM_Sm(STACK_Event_T *p_stackEvent);
 
-uint16_t BLE_DM_SmConfig(bool autoAccept);
-
-uint16_t BLE_DM_SmPairing(uint16_t connHandle, bool repairing);
-
-void BLE_DM_SmInit(void);
-
-void BLE_DM_SmWriteCompleteCallback(uint8_t devId);
-
-#endif
 
 /**
-  @}
-*/
+ * @brief Configures the device manager with auto-accept option.
+ * 
+ * @param autoAccept[in]    Indicates whether to auto-accept security requests.
+ * 
+ * @retval MBA_RES_SUCCESS on successful configuration.
+ */
+uint16_t BLE_DM_SmConfig(bool autoAccept);
+
+
+/**
+ * @brief Initiates pairing or encryption with a BLE device.
+ * 
+ * @param connHandle[in]    Connection handle to identify the BLE connection.
+ * @param repairing[in]     Indicates whether this is a re-pairing attempt.
+ * 
+ * @retval Result of    the pairing or encryption initiation.
+ */
+uint16_t BLE_DM_SmPairing(uint16_t connHandle, bool repairing);
+
+
+/** @brief Initializes the BLE device manager with default values. */
+void BLE_DM_SmInit(void);
+
+
+/**
+ * @brief Callback function to handle completion of PDS write operations.
+ * 
+ * @param devId[in] Device ID for which the write operation was completed.
+ */
+void BLE_DM_SmWriteCompleteCallback(uint8_t devId);
+
+/** @} */
+
+//DOM-IGNORE-BEGIN
+#ifdef __cplusplus
+}
+#endif
+//DOM-IGNORE-END
+
+#endif //BLE_DM_SM_H

@@ -92,6 +92,8 @@ typedef void (*_BLE_LOG_FunTbl_T)(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket
 // *****************************************************************************
 // *****************************************************************************
 static void ble_log_PackDisconnect(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
+static void ble_log_PackReadAfhChannelAssessmentMode(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
+static void ble_log_PackWriteAfhChannelAssessmentMode(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
 static void ble_log_PackReadAuthenticatedPayloadTimeout(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
 static void ble_log_PackWriteAuthenticatedPayloadTimeout(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
 static void ble_log_PackReadBdAddr(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
@@ -156,6 +158,7 @@ static void ble_log_PackSetPathLossEnable(BT_SYS_LogEvent_T *p_log, uint8_t *p_l
 static void ble_log_PackSetHostFeature(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
 static void ble_log_PackSetDefaultSubrate(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
 static void ble_log_PackSubrateRequest(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
+static void ble_log_PackSetDataRelatedAddrChange(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
 
 
 
@@ -319,7 +322,7 @@ static const _BLE_LOG_FunTbl_T  s_hciCmdFun[] =
     ble_log_PackSetPathLossEnable,                      // HCI_LE_SET_PLR_ENABLE (0x79)
     ble_log_PackSetTransmitPowerReportingEnable,        // HCI_LE_SET_TRANSMIT_POWER_REPORTING_ENABLE (0x7A)
     ble_log_PackTransmitterTestV4,                      // HCI_LE_TRANSMITTER_TEST_V4 (0x7B)
-    NULL,   // (0x7C)
+    ble_log_PackSetDataRelatedAddrChange,               // HCI_LE_SET_DATA_REL_ADDR_CHG (0x7C)
     ble_log_PackSetDefaultSubrate,                      // HCI_LE_SET_DEFAULT_SUBRATE (0x7D)
     ble_log_PackSubrateRequest                          // HCI_LE_SUBRATE_REQUEST (0x7E)
 };
@@ -517,7 +520,7 @@ static const uint8_t s_hciCmdPktSize[] =
     HCI_CMD_SIZE_SET_PATH_LOSS_ENABLE,               // HCI_LE_SET_PLR_ENABLE (0x79)
     HCI_CMD_SIZE_SET_TRANSMIT_POWER_REPORTING_ENABLE,// HCI_LE_SET_TRANSMIT_POWER_REPORTING_ENABLE (0x7A)
     HCI_CMD_SIZE_TX_TEST_V4,                         // HCI_LE_TRANSMITTER_TEST_V4 (0x7B)
-    0x00, // (0x7C)
+    HCI_CMD_SIZE_SET_DATA_REL_ADDR_CHANGE,           // HCI_LE_SET_DATA_REL_ADDR_CHG (0x7C)
     HCI_CMD_SIZE_SET_DEFAULT_SUBRATE,                // HCI_LE_SET_DEFAULT_SUBRATE (0X7D)
     HCI_CMD_SIZE_SUBRATE_REQUEST                     // HCI_LE_SUBRATE_REQUEST (0X7E)
 
@@ -716,7 +719,11 @@ static void ble_log_GenerateHciCommandComplete(uint16_t logId, uint8_t result, u
     }
     else if (ogf == HCI_HC)
     {
-        if (ocf == HCI_READ_AUTHENTICATED_PAYLOAD_TIMEOUT)
+        if (ocf == HCI_READ_AFH_CHANNEL_ASSESS_MODE)
+        {
+            VARIABLE_COPY_TO_STREAM(&p_buf, (p_returnParams+HCI_EVENT_CC_PARAMETER_STATUS_SIZE), (HCI_CC_EVT_SIZE_READ_AFH_CHAN_ASSESS_MODE-HCI_EVENT_CC_PARAMETER_STATUS_SIZE));
+        }
+        else if (ocf == HCI_READ_AUTHENTICATED_PAYLOAD_TIMEOUT)
         {
             VARIABLE_COPY_TO_STREAM(&p_buf, (p_returnParams+HCI_EVENT_CC_PARAMETER_STATUS_SIZE), (HCI_CC_EVT_SIZE_READ_AUTH_PAYLOAD_TO-HCI_EVENT_CC_PARAMETER_STATUS_SIZE));
         }
@@ -799,6 +806,37 @@ static void ble_log_PackDisconnect(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacke
     U8_TO_STREAM(&p_buf, ((HCI_Disconnect_T *)p_log->p_logPayload)->reason);
     ble_log_Print(BLE_LOG_TYPE_HCI_COMMAND, logLength, p_logPacket);
     ble_log_GenerateHciCommandStatus(p_log->logId, *(uint8_t *)p_log->p_returnParams);
+}
+
+
+/**
+ * @brief Packs the read AFH channel assessment mode event into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
+static void ble_log_PackReadAfhChannelAssessmentMode(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
+{
+    ble_log_Print(BLE_LOG_TYPE_HCI_COMMAND, logLength, p_logPacket);
+    ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
+}
+
+
+/**
+ * @brief Packs the write AFH channel assessment mode event into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
+static void ble_log_PackWriteAfhChannelAssessmentMode(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
+{
+    uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
+
+    U8_TO_STREAM(&p_buf, ((HCI_WriteAfhChannelAssessMode_T *)p_log->p_logPayload)->AfhChannelAssessMode);
+    ble_log_Print(BLE_LOG_TYPE_HCI_COMMAND, logLength, p_logPacket);
+    ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
 
@@ -2024,6 +2062,24 @@ static void ble_log_PackTransmitterTestV4(BT_SYS_LogEvent_T *p_log, uint8_t *p_l
 
 
 /**
+ * @brief Packs the Set Data Related Address Changes command into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
+static void ble_log_PackSetDataRelatedAddrChange(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
+{
+    uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
+
+    U8_TO_STREAM(&p_buf, ((HCI_LE_SetDataRelatedAddrChange_T *)p_log->p_logPayload)->advHandle);
+    U8_TO_STREAM(&p_buf, ((HCI_LE_SetDataRelatedAddrChange_T *)p_log->p_logPayload)->changeReasons);
+    ble_log_Print(BLE_LOG_TYPE_HCI_COMMAND, logLength, p_logPacket);
+    ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
+}
+
+
+/**
  * @brief Packs the Set Path Loss Reporting Parameters command into a log packet.
  * 
  * @param p_log         Pointer to the log event structure.
@@ -2130,7 +2186,15 @@ static uint16_t ble_log_GetHciCommandParametersSize(uint8_t ogf, uint16_t ocf)
         }
         else if (ogf == HCI_HC)
         {
-            if (ocf == HCI_READ_AUTHENTICATED_PAYLOAD_TIMEOUT)
+            if (ocf == HCI_READ_AFH_CHANNEL_ASSESS_MODE)
+            {
+                cmdParamsSize = HCI_CMD_SIZE_READ_AFH_CHAN_ASSESS_MODE;
+            }
+            else if (ocf == HCI_WRITE_AFH_CHANNEL_ASSESS_MODE)
+            {
+                cmdParamsSize = HCI_CMD_SIZE_WRITE_AFH_CHAN_ASSESS_MODE;
+            }
+            else if (ocf == HCI_READ_AUTHENTICATED_PAYLOAD_TIMEOUT)
             {
                 cmdParamsSize = HCI_CMD_SIZE_READ_AUTH_PAYLOAD_TO;
             }
@@ -2187,7 +2251,15 @@ static void ble_log_GenerateHciCommand(BT_SYS_LogEvent_T *p_log, uint8_t *p_logP
         }
         else if (ogf == HCI_HC)
         {
-            if (ocf == HCI_READ_AUTHENTICATED_PAYLOAD_TIMEOUT)
+            if (ocf == HCI_READ_AFH_CHANNEL_ASSESS_MODE)
+            {
+                ble_log_PackReadAfhChannelAssessmentMode(p_log, p_logPacket, logLength);
+            }
+            else if (ocf == HCI_WRITE_AFH_CHANNEL_ASSESS_MODE)
+            {
+                ble_log_PackWriteAfhChannelAssessmentMode(p_log, p_logPacket, logLength);
+            }
+            else if (ocf == HCI_READ_AUTHENTICATED_PAYLOAD_TIMEOUT)
             {
                 ble_log_PackReadAuthenticatedPayloadTimeout(p_log, p_logPacket, logLength);
             }

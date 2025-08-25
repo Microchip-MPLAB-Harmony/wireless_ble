@@ -31,10 +31,13 @@
     ble_otas.c
 
   Summary:
-    This file contains the BLE OTA Service functions for application user.
+    Implements the service functions for the Bluetooth Low Energy (BLE) Over-The-Air 
+    Software Update feature.
 
   Description:
-    This file contains the BLE OTA Service functions for application user.
+    This source file provides the interface and operational functions necessary for 
+    managing BLE OTA updates. It is designed for application developers who need to 
+    integrate firmware update capabilities over BLE communication.
  *******************************************************************************/
 
 
@@ -58,16 +61,14 @@
 // *****************************************************************************
 // *****************************************************************************
 
-#define BLE_OTAS_CCCD_NUM                                           0x02
+#define BLE_OTAS_CCCD_NUM                                    0x02   // Number of Client Characteristic Configuration Descriptors (CCCDs) for BLE OTA Service.
+#define BLE_OTAS_MIN_KEY_SIZE                                0x10   // The minimum key size for attribute permissions (OTAS).
 
-/**@defgroup UUID UUID
- * @brief The definition of UUID
- * @{ */
-#define UUID_OTA_SERVICE_16                                  0xD7,0x15,0x82,0x8E,0x1B,0xE6,0x23,0x99,0xB3,0x46,0x3D,0x25,0x50,0x48,0x43,0x4D     /**< Service UUID in little endian format. */
-#define UUID_OTA_CHAR_FEATURE                                0x58,0x63,0x90,0x2F,0x4A,0x0C,0x03,0xAF,0x46,0x42,0xE4,0x22,0x50,0x48,0x43,0x4D     /**< Characteristic UUID in little endian format. */
-#define UUID_OTA_CHAR_CTRL_PT                                0x76,0x8A,0x02,0x39,0x7F,0xC9,0x82,0x88,0xDE,0x45,0x27,0x93,0x50,0x48,0x43,0x4D     /**< Characteristic UUID in little endian format. */
-#define UUID_OTA_CHAR_DATA                                   0x78,0xD4,0x8C,0x7C,0xF5,0x56,0x7E,0xBA,0xA6,0x40,0xD9,0x34,0x50,0x48,0x43,0x4D     /**< Characteristic UUID in little endian format. */
-/** @} */
+#define UUID_OTA_SERVICE_16                                  0xD7,0x15,0x82,0x8E,0x1B,0xE6,0x23,0x99,0xB3,0x46,0x3D,0x25,0x50,0x48,0x43,0x4D     // 128-bit UUID for OTA Service in little-endian format.
+#define UUID_OTA_CHAR_FEATURE                                0x58,0x63,0x90,0x2F,0x4A,0x0C,0x03,0xAF,0x46,0x42,0xE4,0x22,0x50,0x48,0x43,0x4D     // 128-bit UUID for OTA Feauture Characteristic in little-endian format.
+#define UUID_OTA_CHAR_CTRL_PT                                0x76,0x8A,0x02,0x39,0x7F,0xC9,0x82,0x88,0xDE,0x45,0x27,0x93,0x50,0x48,0x43,0x4D     // 128-bit UUID for OTA Control Point Characteristic in little-endian format.
+#define UUID_OTA_CHAR_DATA                                   0x78,0xD4,0x8C,0x7C,0xF5,0x56,0x7E,0xBA,0xA6,0x40,0xD9,0x34,0x50,0x48,0x43,0x4D     // 128-bit UUID for OTA Data Characteristic in little-endian format.
+
 
 // *****************************************************************************
 // *****************************************************************************
@@ -199,18 +200,19 @@ static GATTS_Attribute_T s_otasList[] =
     }
 };
 
+/* CCCD settings for the BLE OTA Service characteristics. */
 static const GATTS_CccdSetting_T s_otasCccdSetting[] = 
 {
     {(uint16_t)BLE_OTAS_HDL_CTRL_CCCD, (NOTIFICATION)},
     {(uint16_t)BLE_OTAS_HDL_DATA_CCCD, (NOTIFICATION)}
 };
 
-/* OTA Service structure */
+/* BLE OTA Service structure */
 static GATTS_Service_T s_svcOtas =
 {
     NULL,
     (GATTS_Attribute_T *) s_otasList,
-    (GATTS_CccdSetting_T const *)s_otasCccdSetting,
+    (GATTS_CccdSetting_T *)s_otasCccdSetting,
     (uint16_t)BLE_OTAS_START_HDL,
     (uint16_t)BLE_OTAS_END_HDL,
     BLE_OTAS_CCCD_NUM
@@ -221,9 +223,16 @@ static GATTS_Service_T s_svcOtas =
 // Section: Functions
 // *****************************************************************************
 // *****************************************************************************
-
+/**
+ * @brief Adds the BLE OTA Service to the GATT server.
+ *
+ * This function adds the BLE OTA Service to the BLE stack's GATT server,
+ * enabling the service to be discovered and accessed by remote BLE devices.
+ * 
+ * @retval MBA_RES_SUCCESS                    The BLE OTA service was successfully added.
+ * @retval MBA_RES_NO_RESOURCE                Insufficient resource to add the BLE OTA service.
+ */
 uint16_t BLE_OTAS_Add(void)
 {
     return GATTS_AddService(&s_svcOtas, (uint8_t)((uint16_t)BLE_OTAS_END_HDL - (uint16_t)BLE_OTAS_START_HDL + 1U));
 }
-

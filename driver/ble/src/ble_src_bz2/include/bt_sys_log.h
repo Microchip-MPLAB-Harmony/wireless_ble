@@ -31,24 +31,17 @@
     bt_sys_log.h
 
   Summary:
-    This file contains the BT system log definitions for the project.
+    Defines the Bluetooth system logging interface for the application.
 
   Description:
-    This file contains the BT system log definitions for the project.
+    This header file declares the interface and data structures used for
+    system-level logging of Bluetooth-related events and activities within
+    the application. It is intended to provide a consistent logging mechanism
+    to aid in debugging and system monitoring.
  *******************************************************************************/
-
-
-/**
- * @addtogroup BT_SYS
- * @{
- */
 
 #ifndef BT_SYS_LOG_H
 #define BT_SYS_LOG_H
-
-/** @defgroup BT_SYS_LOG Bluetooth System Log
- *  @brief This module defines the interface of the Bluetooth system log.
- *  @{ */
 
 // *****************************************************************************
 // *****************************************************************************
@@ -60,11 +53,20 @@
 
 // DOM-IGNORE-BEGIN
 #ifdef __cplusplus  // Provide C++ Compatibility
-
 extern "C" {
-
 #endif
 // DOM-IGNORE-END
+
+/**
+ * @addtogroup BT_SYS
+ * @{
+ */
+
+/** 
+ * @defgroup BT_SYS_LOG Bluetooth System Log
+ * @brief Defines the interface for the BLE System LOG functions provided by the BLE Library.
+ * @{
+ */
 
 // *****************************************************************************
 // *****************************************************************************
@@ -72,62 +74,76 @@ extern "C" {
 // *****************************************************************************
 // *****************************************************************************
 
-/**@addtogroup BT_SYS_LOG_ENUMS Enumerations
- * @{ */
+/**
+ * @addtogroup BT_SYS_LOG_ENUMS Enumerations
+ * @{
+ */
 
-/**@brief The definition of log type of HCI logs. */
+/** @brief Enumerates the types of HCI (Host Controller Interface) logs. */
 typedef enum BT_SYS_LogType_T
 {
-    BT_SYS_LOG_TYPE_HCI_COMMAND = (0x0100U+0x0001U),          /**< HCI Command. */
-    BT_SYS_LOG_TYPE_HCI_ACL_TX,                             /**< HCI ACL Tx Packet. */
-    BT_SYS_LOG_TYPE_HCI_ACL_RX,                             /**< HCI ACL Rx Packet. */
-    BT_SYS_LOG_TYPE_HCI_EVENT,                              /**< HCI Event. */
-    BT_SYS_LOG_TYPE_HCI_END
+    BT_SYS_LOG_TYPE_HCI_COMMAND = (0x0100U+0x0001U),        /**< HCI Command log type. */
+    BT_SYS_LOG_TYPE_HCI_ACL_TX,                             /**< HCI ACL transmit packet log type. */
+    BT_SYS_LOG_TYPE_HCI_ACL_RX,                             /**< HCI ACL receive packet log type. */
+    BT_SYS_LOG_TYPE_HCI_EVENT,                              /**< HCI Event packet log type. */
+    BT_SYS_LOG_TYPE_HCI_END                                 /**< Sentinel value indicating the end of log types. */
 } BT_SYS_LogType_T;
 
-/**@} */ //BT_SYS_LOG_ENUMS
+/** @} */ //BT_SYS_LOG_ENUMS
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Data Types
 // *****************************************************************************
 
-/**@addtogroup BT_SYS_LOG_STRUCTS Structures
- * @{ */
+/**
+ * @addtogroup BT_SYS_LOG_STRUCTS Structures
+ * @{
+ */
 
-/**@brief BT system log callback event. */
+/** @brief Structure for a Bluetooth system log event. */
 typedef struct BT_SYS_LogEvent_T
 {
-    uint16_t    logType;                            /**< Log type. */
-    uint16_t    logId;                              /**< Log ID or connection handle when logType is @ref BT_SYS_LOG_TYPE_HCI_ACL_TX or @ref BT_SYS_LOG_TYPE_HCI_ACL_RX. */
-    uint16_t    paramsLength;                       /**< Length of return parameters. Value 0 represents no parameters. */
-    uint16_t    payloadLength;                      /**< Length of log payload. */
-    uint8_t     *p_logPayload;                      /**< Log payload. Value 0 represents no payload. */
-    uint8_t     *p_returnParams;                    /**< Return parameters. */
+    uint16_t      logType;                /**< Type of the log event, indicating the category or source of the event. */
+    uint16_t      logId;                  /**< Unique identifier for the log event. When logType corresponds to @ref BT_SYS_LOG_TYPE_HCI_ACL_TX 
+                                                or @ref BT_SYS_LOG_TYPE_HCI_ACL_RX data, this represents the connection handle. */
+    uint16_t      paramsLength;           /**< Length of the additional parameters associated with the log event. A value of 0 indicates that 
+                                                there are no additional parameters. */
+    uint16_t      payloadLength;          /**< Length of the payload data for the log event. A value of 0 indicates that there is no payload. */
+    uint8_t       *p_logPayload;          /**< Pointer to the payload data. A NULL pointer indicates that there is no payload. */
+    uint8_t       *p_returnParams;        /**< Pointer to the additional parameters. A NULL pointer indicates that there are no additional parameters. */
 } BT_SYS_LogEvent_T;
 
-/**@brief BT system log callback type. This callback function sends log events to the application. */
+/**
+ * @brief Callback type for Bluetooth system log events. 
+ * 
+ * @param p_event       Pointer to the log event structure containing details about the log event. See @ref BT_SYS_LogEvent_T.
+*/
 typedef void (*BT_SYS_LogEventCb_T)(BT_SYS_LogEvent_T *p_event);
 
 
-/**@} */ //BT_SYS_LOG_STRUCTS
+/** @} */ //BT_SYS_LOG_STRUCTS
 
 
-/**@addtogroup BT_SYS_LOG_FUNS Functions
- * @{ */
+/**
+ * @addtogroup BT_SYS_LOG_FUNS Functions
+ * @{
+ */
 
-/**@brief The API is used to enable BT log message indication.
+/**
+ * @brief Enables logging for Bluetooth system events.
  *
- * @param[in] logCb                                 BT system log callback.
+ * @param logCb         A function pointer to the callback that will handle the Bluetooth system log events. 
+ *                      The callback should conform to the @ref BT_SYS_LogEventCb_T type definition.
  *
  */
 void BT_SYS_LogEnable(BT_SYS_LogEventCb_T logCb);
 
-/**@} */ //BT_SYS_LOG_FUNS
+/** @} */ //BT_SYS_LOG_FUNS
 
-/**
-  @}
-*/
+/** @} */
+
+/** @} */
 
 //DOM-IGNORE-BEGIN
 #ifdef __cplusplus
@@ -136,7 +152,3 @@ void BT_SYS_LogEnable(BT_SYS_LogEventCb_T logCb);
 //DOM-IGNORE-END
 
 #endif//BT_SYS_LOG_H
-
-/**
-  @}
-*/

@@ -22,7 +22,7 @@
 *******************************************************************************/
 
 /*******************************************************************************
-  BLE OTA Service Header File
+  BLE OTA (Over-The-Air) Service Header File
 
   Company:
     Microchip Technology Inc.
@@ -31,82 +31,100 @@
     ble_otas.h
 
   Summary:
-    This file contains the BLE OTA Service functions for application user.
+    Interface for the BLE OTA Service, providing function prototypes
+    and definitions for use by application developers.
 
   Description:
-    This file contains the BLE OTA Service functions for application user.
+    The BLE OTA Service allows for firmware updates of BLE devices.
+    This file defines the service's interface and should be included by
+    applications that implement the OTA functionality.
  *******************************************************************************/
 
-
-/**
- * @addtogroup BLE_OTAS BLE_OTAS
- * @{
- * @brief Header file for the BLE OTA Service library.
- * @note Definitions and prototypes for the BLE OTA Service stack layer application programming interface.
- */
 #ifndef BLE_OTAS_H
 #define BLE_OTAS_H
 
-
 // DOM-IGNORE-BEGIN
 #ifdef __cplusplus  // Provide C++ Compatibility
-
 extern "C" {
-
 #endif
 // DOM-IGNORE-END
 
+/**
+ * @addtogroup BLE_SERVICE BLE Service
+ * @{
+ */
+
+/**
+ * @addtogroup BLE_OTAS BLE OTA Service
+ * @brief Provides the interface for the BLE Over-The-Air (OTA) Service.
+ * @note This module defines the API for enabling OTA firmware updates
+ *          for BLE devices. It includes function prototypes, data structures,
+ *          and constants relevant to the OTA process.
+ * @{
+ */
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Macros
 // *****************************************************************************
 // *****************************************************************************
+/**
+ * @addtogroup BLE_OTAS_DEFINES Defines
+ * @{
+ */
 
-/**@defgroup BLE_OTAS_ASSIGN_HANDLE BLE_OTAS_ASSIGN_HANDLE
- * @brief Assigned attribute handles of BLE OTA Service.
- * @{ */
-#define BLE_OTAS_START_HDL                                        (0x0100U)                /**< The start attribute handle of BLE OTA service. */
-/** @} */
+/**
+ * @defgroup BLE_OTAS_ASSIGN_HANDLE OTAS assigned handles
+ * @brief Handles associated with the BLE OTA Service attributes.
+ * @{
+ */
+#define BLE_OTAS_START_HDL                                    (0x0100U)                 /**< Start handle for the BLE OTA Service.*/
 
 
-/**@brief Definition of BLE OTA Service attribute handle */
+/* Enumeration of attribute handles for the BLE OTA Service. */
 typedef enum BLE_OTAS_AttributeHandle_T
 {
-    BLE_OTAS_HDL_SRV = BLE_OTAS_START_HDL,                                              /**< Handle of Primary Service of BLE OTA Service. */
-    BLE_OTAS_HDL_FEATURE,                                                               /**< Handle of OTA Feature characteristic. */
-    BLE_OTAS_HDL_FEATURE_VAL,                                                           /**< Handle of OTA Feature characteristic value. */
-    BLE_OTAS_HDL_CTRL,                                                                  /**< Handle of OTA Control Point characteristic. */
-    BLE_OTAS_HDL_CTRL_VAL,                                                              /**< Handle of OTA Control Point characteristic value. */
-    BLE_OTAS_HDL_CTRL_CCCD,                                                             /**< Handle of OTA Control Point characteristic CCCD. */
-    BLE_OTAS_HDL_DATA,                                                                  /**< Handle of OTA Data characteristic. */
-    BLE_OTAS_HDL_DATA_VAL,                                                              /**< Handle of OTA Data characteristic value. */
-    BLE_OTAS_HDL_DATA_CCCD                                                              /**< Handle of OTA Data characteristic CCCD. */
+    BLE_OTAS_HDL_SRV = BLE_OTAS_START_HDL,                                              /**< Handle for the BLE OTA Service primary service. */
+    BLE_OTAS_HDL_FEATURE,                                                               /**< Handle for the OTA Feature characteristic. */
+    BLE_OTAS_HDL_FEATURE_VAL,                                                           /**< Handle for the OTA Feature characteristic value. */
+    BLE_OTAS_HDL_CTRL,                                                                  /**< Handle for the OTA Control Point characteristic. */
+    BLE_OTAS_HDL_CTRL_VAL,                                                              /**< Handle for the OTA Control Point characteristic value. */
+    BLE_OTAS_HDL_CTRL_CCCD,                                                             /**< Handle for the OTA Control Point CCCD value. */
+    BLE_OTAS_HDL_DATA,                                                                  /**< Handle for the OTA Data characteristic. */
+    BLE_OTAS_HDL_DATA_VAL,                                                              /**< Handle for the OTA Data characteristic value. */
+    BLE_OTAS_HDL_DATA_CCCD                                                              /**< Handle for the OTA Data CCCD value. */
 }BLE_OTAS_AttributeHandle_T;
 
-
-/**@defgroup BLE_OTAS_ASSIGN_HANDLE BLE_OTAS_ASSIGN_HANDLE
- * @brief Assigned attribute handles of BLE OTA Service.
- * @{ */
-#define BLE_OTAS_END_HDL                                         BLE_OTAS_HDL_DATA_CCCD     /**< The end attribute handle of BLE OTA Service. */
+#define BLE_OTAS_END_HDL                                      BLE_OTAS_HDL_DATA_CCCD    /**< End handle for the BLE OTA Service. */
 /** @} */
 
-
+/** @} */ //BLE_OTAS_DEFINES
 // *****************************************************************************
 // *****************************************************************************
 // Section: Function Prototypes
 // *****************************************************************************
 // *****************************************************************************
+/**
+ * @addtogroup BLE_OTAS_FUNS Functions
+ * @{
+ */
 
 /**
- *@brief This API is used to register the BLE OTA Service to GATT server.
+ * @brief Adds the BLE OTA Service to the GATT server.
  *
- *
- *@retval MBA_RES_SUCCESS       Successfully registering the service
- *@retval MBA_RES_FAIL          Fail to register the service. The assigned attribute handles in the service conflict or \n
- *                              the start handle of the service is smaller than @ref GATTS_APP_SVC_START_HDL.
+ * This function adds the BLE OTA Service to the BLE stack's GATT server,
+ * enabling the service to be discovered and accessed by remote BLE devices.
+ * 
+ * @retval MBA_RES_SUCCESS                    The BLE OTA service was successfully added.
+ * @retval MBA_RES_NO_RESOURCE                Insufficient resource to add the BLE OTA service.
  */
 uint16_t BLE_OTAS_Add(void);
+
+/** @} */ //BLE_OTAS_FUNS
+
+/** @} */
+
+/** @} */
 
 //DOM-IGNORE-BEGIN
 #ifdef __cplusplus
@@ -114,8 +132,4 @@ uint16_t BLE_OTAS_Add(void);
 #endif
 //DOM-IGNORE-END
 
-#endif
-
-/**
-  @}
- */
+#endif //BLE_OTAS_h

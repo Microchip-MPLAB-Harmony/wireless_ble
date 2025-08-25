@@ -1267,6 +1267,8 @@ uint16_t GATTS_ConfigureBuildInService(GATTS_GattServiceOptions_T *p_gattService
  * @note  This function is used to set minimum key size requirement for accessing attributes in a GATT Service.
  *          Some of attributes required encryption permission to be accessed by remote client.
  *          Encryption with shorter key will be rejected when accessing those attributes.
+ *          If this function is not called for the Service, minimum encryption key size requirement of the Service
+ *          is 16 bytes by default.
  *
  * @param[in] svcUuidLength              Length of the Service UUID.
  * @param[in] p_svcUuid                  Pointer to Service UUID buffer. UUID in little endian format.

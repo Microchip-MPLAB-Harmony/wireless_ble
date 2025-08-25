@@ -92,7 +92,6 @@
 /**@brief Type of HCI command that application implement. */
 typedef enum HCI_CmdCbId_T
 {
-    HCI_CMD_RESET,                   /**< HCI Reset Command. */
     HCI_CMD_CUSTOM                   /**< HCI Custom Command. */
 }HCI_CmdCbId_T;
 
@@ -126,28 +125,119 @@ typedef void (*HCI_CmdCb_T)(HCI_CmdCbId_T cmdID,uint8_t length ,uint8_t *p_packe
 /**@addtogroup HCI_FUNS Functions
  * @{ */
 
-/**@brief Initialize HCI mode.
+/**@brief Initialize main module of HCI mode.
  *
  * @param[in] preferAclTxBufNum               HCI ACL Tx buffer number that application prefer. Note that each buffer is 251 bytes.
  *
  */
 void HCI_Init(uint8_t preferAclTxBufNum);
 
+/**
+ * @brief Initialize legacy advertising module of HCI mode.
+ *
+ * @retval true                                 Successfully initialize legacy advertising module in HCI mode.
+ * @retval false                                Fail to initialize legacy advertising module in HCI mode.
+ */
+bool HCI_AdvInit(void);
+
+/**
+ * @brief Initialize extended advertising module of HCI mode.
+ * @note  @ref HCI_AdvInit must be called prior to enable this module.
+ *
+ * @retval true                                 Successfully initialize extended advertising module of HCI mode.
+ * @retval false                                Fail to initialize extended advertising module of HCI mode.
+ *
+ */
+bool HCI_ExtAdvInit(void);
+
+/**
+ * @brief Initialize periodic advertising module of HCI mode.
+ * @note  Periodic advertising is part of the extended advertising feature. Both @ref HCI_AdvInit and
+ *          @ref HCI_ExtAdvInit must be called prior to enable this module.
+ *
+ * @retval true                                 Successfully initialize periodic advertising module of HCI mode.
+ * @retval false                                Fail to initialize periodic advertising module of HCI mode.
+ *
+ */
+bool HCI_PeriodicAdvInit(void);
+
+/**
+ * @brief Initialize extended connection central module of HCI mode.
+ * @note  @ref HCI_ConnCentralInit is also required for this module enabling.
+ *
+ * @retval true                                 Successfully initialize extended connection central module of HCI mode.
+ * @retval false                                Fail to initialize extended connection central module of HCI mode.
+ *
+ */
+bool HCI_ExtConnCntrlInit(void);
+
+/**
+ * @brief Initialize legacy scan module of HCI mode.
+ *
+ * @retval true                                 Successfully initialize legacy scan module of HCI mode.
+ * @retval false                                Fail to initialize legacy scan module of HCI mode.
+ *
+ */
+bool HCI_ScanInit(void);
+
+/**
+ * @brief Initialize extended scan module of HCI mode.
+ * @note  @ref HCI_ScanInit must be called prior to enable this module.
+ *
+ * @retval true                                 Successfully initialize extended scan module of HCI mode.
+ * @retval false                                Fail to initialize extended scan module of HCI mode.
+ *
+ */
+bool HCI_ExtScanInit(void);
+
+/**
+ * @brief Initialize sync module of HCI mode, which refers to periodic advertising synchronization.
+ * @note  Synchronization is part of the extended advertising feature.
+ *
+ * @retval true                                 Successfully initialize sync module of HCI mode.
+ * @retval false                                Fail to initialize sync module of HCI mode.
+ *
+ */
+bool HCI_SyncInit(void);
+
+/**
+ * @brief Initialize connection central module of HCI mode.
+ *
+ * @retval true                                 Successfully initialize connection central module of HCI mode.
+ * @retval false                                Fail to initialize connection central module of HCI mode.
+ *
+ */
+bool HCI_ConnCentralInit(void);
+
+/**
+ * @brief Initialize connection peripheral module of HCI mode.
+ *
+ * @retval true                                 Successfully initialize connection peripheral module of HCI mode.
+ * @retval false                                Fail to initialize connection peripheral module of HCI mode.
+ *
+ */
+bool HCI_ConnPeripheralInit(void);
+
 /**@brief HCI command.
  *
  * @param[in] length                          The length of HCI command packet.
  * @param[in] p_packet                        Pointer to HCI command packet.
  *
+ *
+ * @retval true                                 Successfully send HCI command.
+ * @retval false                                Fail to send HCI command.
  */
-void HCI_Cmd(uint16_t  length, uint8_t *p_packet);
+bool HCI_Cmd(uint16_t  length, uint8_t *p_packet);
 
 /**@brief HCI ACL data Trasmit.
  *
  * @param[in] length                          The length of HCI ACL data packet to be trasmitted.
  * @param[in] p_packet                        Pointer to HCI ACL data packet to be trasmitted.
  *
+ * @retval true                                 Successfully send HCI ACL.
+ * @retval false                                Fail to send HCI ACL.
  */
-void HCI_AclTx(uint16_t length, uint8_t *p_packet);
+bool HCI_AclTx(uint16_t length, uint8_t *p_packet);
 
 /**@brief HCI event callback registration.
  *

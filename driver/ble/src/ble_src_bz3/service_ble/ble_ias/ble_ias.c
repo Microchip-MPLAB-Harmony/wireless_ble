@@ -31,10 +31,12 @@
     ble_ias.c
 
   Summary:
-    This file contains the BLE Immediate Alert Service functions for application user.
+    Implements the server-side functionality of the BLE Immediate Alert Service.
 
   Description:
-    This file contains the BLE Immediate Alert Service functions for application user.
+    This source file provides the implementation of the server-side functions
+    for the Bluetooth Low Energy (BLE) Immediate Alert Service, enabling the
+    device to receive alert notifications from a connected BLE client.
  *******************************************************************************/
 
 
@@ -55,16 +57,16 @@
 // Section: Macros
 // *****************************************************************************
 // *****************************************************************************
-
+#define BLE_IAS_MIN_KEY_SIZE                                0x10        // The minimum key size for attribute permissions (IAS).
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Local Variables
 // *****************************************************************************
 // *****************************************************************************
-
-static const uint8_t s_svcUuidIas[ATT_UUID_LENGTH_2] =                 {UINT16_TO_BYTES(UUID_IMMEDIATE_ALERT_SERVICE)};
-static const uint8_t s_chUuidAlertLevel[ATT_UUID_LENGTH_2] =             {UINT16_TO_BYTES(UUID_ALERT_LEVEL)};
+/* UUIDs for Immediate Alert Service and its Characteristics */
+static const uint8_t s_svcUuidIas[ATT_UUID_LENGTH_2] =              {UINT16_TO_BYTES(UUID_IMMEDIATE_ALERT_SERVICE)};
+static const uint8_t s_chUuidAlertLevel[ATT_UUID_LENGTH_2] =        {UINT16_TO_BYTES(UUID_ALERT_LEVEL)};
 
 /* Immediate Alert Service Declaration */
 static uint16_t s_svcUuidIasLen = (uint16_t)sizeof(s_svcUuidIas);
@@ -125,7 +127,15 @@ static GATTS_Service_T s_svcIas =
 // Section: Functions
 // *****************************************************************************
 // *****************************************************************************
-
+/**
+ * @brief Adds the BLE Immediate Alert Service to the GATT server.
+ *
+ * This function adds the BLE Immediate Alert Service to the BLE stack's GATT server,
+ * enabling the service to be discovered and accessed by remote BLE devices.
+ * 
+ * @retval MBA_RES_SUCCESS                    The BLE Immediate Alert service was successfully added.
+ * @retval MBA_RES_NO_RESOURCE                Insufficient resource to add the BLE Immediate Alert service.
+ */
 uint16_t BLE_IAS_Add(void)
 {
     return GATTS_AddService(&s_svcIas, (uint8_t)((uint16_t)IAS_END_HDL - (uint16_t)IAS_START_HDL + 1U));

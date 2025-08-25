@@ -45,12 +45,12 @@
 // *****************************************************************************
 #include <string.h>
 #include <stdint.h>
-<#if APP_BLE_DEVICE == "pic32cx_bz6_family">
+<#if BLE_ENABLE_OUTPUT_CONFIG == true>
 #include "configuration.h"
 </#if>
 #include "osal/osal_freertos_extend.h"
 #include "app_ble_handler.h"
-<#if GAP_ADVERTISING == true && BOOL_GAP_EXT_ADV == false && GAP_DSADV_EN == true>
+<#if GAP_ADVERTISING == true && GAP_DSADV_EN == true>
 #include "app_ble_dsadv.h"
 </#if>
 
@@ -99,7 +99,7 @@ void APP_BleGapEvtHandler(BLE_GAP_Event_T *p_event)
         {
             /* TODO: implement your application code.*/
 
-            <#if GAP_ADVERTISING == true && BOOL_GAP_EXT_ADV == false && GAP_DSADV_EN == true>
+            <#if GAP_ADVERTISING == true && GAP_DSADV_EN == true>
             //Restart DSADV when the BLE link is terminated
             APP_BleDsadvRestart();
             </#if>
@@ -224,7 +224,7 @@ void APP_BleGapEvtHandler(BLE_GAP_Event_T *p_event)
         {
             /* TODO: implement your application code.*/
 
-            <#if GAP_ADVERTISING == true && BOOL_GAP_EXT_ADV == false && GAP_DSADV_EN == true>
+            <#if GAP_ADVERTISING == true && GAP_DSADV_EN == true>
             //Handle DSADV complete event
             APP_BleDsadvCompl();
             </#if>
@@ -243,7 +243,7 @@ void APP_BleGapEvtHandler(BLE_GAP_Event_T *p_event)
         }
         break;
 
-        <#if APP_BLE_DEVICE == "pic32cx_bz6_family">
+        <#if BLE_SYS_BT_VER_SUPP == "BT_VER_6_0">
         case BLE_GAP_EVT_SUBRATE_CHANGE:
         {
             /* TODO: implement your application code.*/
@@ -439,19 +439,22 @@ void APP_GattEvtHandler(GATT_Event_T *p_event)
         }
         break;
 
-        <#if APP_BLE_DEVICE == "pic32cx_bz6_family">
-            <#if GAP_SVC_ENC_DATA_KEY_MATL == true>
+        <#if GAP_SVC_ENC_DATA_KEY_MATL_EN == true>
         case GATTS_EVT_ENC_DATA_KEY_MATL_REQ:
         {
             /* TODO: implement your application code.*/
             
+            <#if BLE_ENABLE_OUTPUT_CONFIG == true>
             uint8_t initVector[] = CONFIG_BLE_GAP_SVC_EDKM_IV_C;
             uint8_t key[] = CONFIG_BLE_GAP_SVC_EDKM_KEY_C;
+            <#else>
+            uint8_t initVector[] = {${GAP_SVC_EDKM_IV_C}};
+            uint8_t key[] = {${GAP_SVC_EDKM_KEY_C}};
+            </#if>
 
             GATTS_EncDataKeyMatlRsp(p_event->eventField.onEncDataKeyMatlReq.connHandle, key, initVector);
         }
         break;
-            </#if>
         </#if>
 
         default:

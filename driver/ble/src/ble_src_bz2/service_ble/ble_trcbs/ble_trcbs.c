@@ -31,10 +31,12 @@
     ble_trcbs.c
 
   Summary:
-    This file contains the BLE Transparent Credit Based Service functions for application user.
+    Implements the BLE Transparent Credit Based Service (TRCB) for data transfer.
 
   Description:
-    This file contains the BLE Transparent Credit Based Service functions for application user.
+    This source file provides the interface and handling functions for the BLE
+    Transparent Credit Based Service, enabling the application to facilitate
+    data transfer operations over BLE with credit-based flow control.
  *******************************************************************************/
 
 
@@ -58,9 +60,9 @@
 // *****************************************************************************
 // *****************************************************************************
 
-#define BLE_TRCBS_MAX_MTU_LEN                                      BLE_ATT_MAX_MTU_LEN
-#define BLE_TRCBS_CCCD_NUM                                         0x01
-
+#define BLE_TRCBS_MAX_MTU_LEN                                      BLE_ATT_MAX_MTU_LEN  // Maximum MTU length for BLE Transparent Credit Based Service.
+#define BLE_TRCBS_CCCD_NUM                                         0x01                 // Number of Client Characteristic Configuration Descriptors (CCCDs) for BLE Transparent Credit Based Service.
+#define BLE_TRCBS_MIN_KEY_SIZE                                     0x10                 // The minimum key size for attribute permissions (TRCBS).
 
 // *****************************************************************************
 // *****************************************************************************
@@ -153,7 +155,9 @@ static GATTS_Attribute_T s_bleTrcbList[] = {
     }
 };
 
-static const GATTS_CccdSetting_T s_trcbCccdSetting[] = 
+
+/* CCCD settings for the Transparent Credit Based Service characteristics. */
+static const GATTS_CccdSetting_T s_trcbCccdSetting[] =
 {
     {(uint16_t)BLE_TRCB_HDL_CCCD_CTRL, (NOTIFICATION)}
 };
@@ -163,7 +167,7 @@ static GATTS_Service_T s_svcBleTrcb =
 {
     NULL,
     (GATTS_Attribute_T *) s_bleTrcbList,
-    (GATTS_CccdSetting_T const *)s_trcbCccdSetting,
+    (GATTS_CccdSetting_T *)s_trcbCccdSetting,
     (uint16_t)BLE_TRCB_START_HDL,
     (uint16_t)BLE_TRCB_END_HDL,
     BLE_TRCBS_CCCD_NUM
@@ -174,7 +178,15 @@ static GATTS_Service_T s_svcBleTrcb =
 // Section: Functions
 // *****************************************************************************
 // *****************************************************************************
-
+/**
+ * @brief Adds the BLE Transparent Credit Based Service to the GATT server.
+ *
+ * This function adds the BLE Transparent Credit Based Service to the BLE stack's GATT server,
+ * enabling the service to be discovered and accessed by remote BLE devices.
+ * 
+ * @retval MBA_RES_SUCCESS                    The BLE Transparent Credit Based service was successfully added.
+ * @retval MBA_RES_NO_RESOURCE                Insufficient resource to add the BLE Transparent Credit Based service.
+ */
 uint16_t BLE_TRCBS_Add(void)
 {
     return GATTS_AddService(&s_svcBleTrcb, (uint8_t)((uint16_t)BLE_TRCB_END_HDL - (uint16_t)BLE_TRCB_START_HDL + 1U));

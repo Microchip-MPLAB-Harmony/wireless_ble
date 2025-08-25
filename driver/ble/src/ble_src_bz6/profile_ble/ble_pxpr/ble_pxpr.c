@@ -95,7 +95,7 @@ typedef struct BLE_PXPR_ConnList_T
 static BLE_PXPR_AlertLevel_T s_pxprLlsAlertLevel;
 
 // Array to keep track of the connection list 
-static BLE_PXPR_ConnList_T   s_pxprConnList[BLE_PXPR_MAX_CONN_NBR];
+static BLE_PXPR_ConnList_T   *sp_pxprConnList[BLE_PXPR_MAX_CONN_NBR];
 #ifdef BLE_PXPR_TPS_ENABLE
 // The Tx power level for the Proximity Profile's Tx Power Service (TPS).
 static int8_t s_pxprTpsTxPowerLevel;
@@ -125,13 +125,22 @@ static void ble_pxpr_FreeRetryData(BLE_PXPR_ConnList_T *p_conn) {
 
 
 /**
- * @brief Initializes a BLE connection list structure by setting its content to zero.
+ * @brief Free the connection list for the PXPR.
  *
- * @param p_conn Pointer to the BLE connection list structure to initialize.
+ * @param p_conn Pointer to the PXPR connection list structure to initialize.
  */
-static void ble_pxpr_InitConnList(BLE_PXPR_ConnList_T *p_conn)
+static void ble_pxpr_FreeConnList(BLE_PXPR_ConnList_T *p_conn)
 {
-    (void)memset(p_conn, 0, sizeof(BLE_PXPR_ConnList_T));
+    uint8_t i;
+    for (i = 0; i < BLE_PXPR_MAX_CONN_NBR; i++)
+    {
+        if (sp_pxprConnList[i] == p_conn)
+        {
+            OSAL_Free(sp_pxprConnList[i]);
+            sp_pxprConnList[i] = NULL;
+            break;
+        }
+    }
 }
 
 
@@ -145,14 +154,13 @@ static BLE_PXPR_ConnList_T * ble_pxpr_GetConnListByHandle(uint16_t connHandle)
 {
     uint8_t i;
 
-    for(i=0; i<BLE_PXPR_MAX_CONN_NBR;i++)
+    for(i=0; i<BLE_PXPR_MAX_CONN_NBR; i++)
     {
-        if ((s_pxprConnList[i].state == BLE_PXPR_STATE_CONNECTED) && (s_pxprConnList[i].connHandle == connHandle))
+        if ((sp_pxprConnList[i] != NULL) && (sp_pxprConnList[i]->state == BLE_PXPR_STATE_CONNECTED) && (sp_pxprConnList[i]->connHandle == connHandle))
         {
-            return &s_pxprConnList[i];
+            return sp_pxprConnList[i];
         }
     }
-
     return NULL;
 }
 
@@ -165,17 +173,23 @@ static BLE_PXPR_ConnList_T * ble_pxpr_GetConnListByHandle(uint16_t connHandle)
 static BLE_PXPR_ConnList_T *ble_pxpr_GetFreeConnList(void)
 {
     uint8_t i;
+    BLE_PXPR_ConnList_T *p_conn = NULL;
 
-    for(i=0; i<BLE_PXPR_MAX_CONN_NBR;i++)
+    for(i = 0; i < BLE_PXPR_MAX_CONN_NBR; i++)
     {
-        if (s_pxprConnList[i].state == BLE_PXPR_STATE_IDLE)
+        if (sp_pxprConnList[i] == NULL)
         {
-            s_pxprConnList[i].state = BLE_PXPR_STATE_CONNECTED;
-            return &s_pxprConnList[i];
+            sp_pxprConnList[i] = OSAL_Malloc(sizeof(BLE_PXPR_ConnList_T));
+            p_conn = sp_pxprConnList[i];
+            if (p_conn != NULL)
+            {
+                (void)memset(p_conn, 0, sizeof(BLE_PXPR_ConnList_T));
+                p_conn->state     = BLE_PXPR_STATE_CONNECTED;
+            }
+            break;
         }
     }
-
-    return NULL;
+    return p_conn;
 }
 
 
@@ -415,14 +429,12 @@ static void ble_pxpr_GapEventProcess(BLE_GAP_Event_T *p_event)
 
             p_conn = ble_pxpr_GetConnListByHandle(p_event->eventField.evtDisconnect.connHandle);
 
-            if (p_conn == NULL)
+            if (p_conn != NULL)
             {
-                ble_pxpr_ConveyEvent(BLE_PXPR_EVT_ERR_UNSPECIFIED_IND, NULL, 0);
-                return;
+                ble_pxpr_FreeRetryData(p_conn);
+                ble_pxpr_FreeConnList(p_conn);
             }
 
-            ble_pxpr_FreeRetryData(p_conn);
-            ble_pxpr_InitConnList(p_conn);
         }
         break;
         case BLE_GAP_EVT_TX_BUF_AVAILABLE:

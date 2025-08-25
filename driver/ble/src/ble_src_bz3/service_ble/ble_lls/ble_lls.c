@@ -31,10 +31,13 @@
     ble_lls.c
 
   Summary:
-    This file contains the BLE Link Loss Service functions for application user.
+    Implements the BLE Link Loss Service, providing functions to manage the
+    service's behavior for the application user.
 
   Description:
-    This file contains the BLE Link Loss Service functions for application user.
+    This source file includes the necessary functions to manage the BLE Link 
+    Loss Service as part of the application's BLE stack. It allows the application 
+    to handle events related to the link loss between a BLE connection.
  *******************************************************************************/
 
 
@@ -55,14 +58,14 @@
 // Section: Macros
 // *****************************************************************************
 // *****************************************************************************
-
+#define BLE_LLS_MIN_KEY_SIZE                                0x10        // The minimum key size for attribute permissions (LLS).
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Local Variables
 // *****************************************************************************
 // *****************************************************************************
-
+/* UUIDs for Link Loss Service and its Characteristics */
 static const uint8_t s_svcUuidLls[ATT_UUID_LENGTH_2] =                 {UINT16_TO_BYTES(UUID_LINKLOSS_SERVICE)};
 static const uint8_t s_chUuidLlsAlertLevel[ATT_UUID_LENGTH_2] =        {UINT16_TO_BYTES(UUID_ALERT_LEVEL)};
 
@@ -125,7 +128,15 @@ static GATTS_Service_T s_svcLls =
 // Section: Functions
 // *****************************************************************************
 // *****************************************************************************
-
+/**
+ * @brief Adds the BLE Link Loss Service to the GATT server.
+ *
+ * This function adds the BLE Link Loss Service to the BLE stack's GATT server,
+ * enabling the service to be discovered and accessed by remote BLE devices.
+ * 
+ * @retval MBA_RES_SUCCESS                    The BLE Link Loss service was successfully added.
+ * @retval MBA_RES_NO_RESOURCE                Insufficient resource to add the BLE Link Loss service.
+ */
 uint16_t BLE_LLS_Add(void)
 {
     return GATTS_AddService(&s_svcLls, (uint8_t)((uint16_t)LLS_END_HDL - (uint16_t)LLS_START_HDL + 1U));

@@ -10,6 +10,7 @@ antennaGain = 3
 txPwrMaxNonFHSS = 15
 txPwrMaxFHSS = 15
 txPwrMin = -26
+devDefaultEnOutputConfig = True
 
 execfile(Module.getPath() + '/driver/ble/config/dev_info.py')
 processor = Variables.get("__PROCESSOR")
@@ -19,25 +20,43 @@ if devFamily == "pic32cx_bz2_family":
     srcPath = "ble_src_bz2"
     devSupp = 'pic32cx_bz2_devsupport'
     libObj = "ble_stack_bz2_lib.a"
-    if processor == 'WBZ450' or processor == 'PIC32CX1012BZ24032':
+    if (processor == 'WBZ450') or (processor == 'PIC32CX1012BZ24032'):
         devId = '450'
         conMinTxPwr = -25
+        devDefaultBtSupp = "SUPP_BT_5_2"
+        devDefaultEnOutputConfig = False
     else:
         if (processor == 'WBZ451H'):
             devId = '451H'
             conMinTxPwr = -26
+            devDefaultBtSupp = "SUPP_BT_5_2"
+            devDefaultEnOutputConfig = False
         else:
+            if (processor == 'WBZ451') or (processor == 'PIC32CX1012BZ25032') or (processor == 'PIC32CX1012BZ25048'):
+                devDefaultBtSupp = "SUPP_BT_5_2"
+                devDefaultEnOutputConfig = False
+            else: # PIC32WM_BW1 and later devices
+                devDefaultBtSupp = "SUPP_BT_6_0"
             devId = '451'
             conMinTxPwr = -29
-elif devFamily == "pic32cx_bz3_family":
+elif (devFamily == "pic32cx_bz3_family") or (devFamily == "pic32cx_bz36_family"):
     srcPath = "ble_src_bz3"
     devSupp = 'pic32cx_bz3_devsupport'
     libObj = "ble_stack_bz3_lib.a"
-    if processor == 'WBZ350' or processor == 'PIC32CX5109BZ31032':
-        devId = '350'
-    else:
-        devId = '351'
     conMinTxPwr = -24
+    if devFamily == "pic32cx_bz3_family":
+        if (processor == 'WBZ350') or (processor == 'PIC32CX5109BZ31032'):
+            devId = '350'
+        else:
+            devId = '351'
+        devDefaultBtSupp = "SUPP_BT_5_2"
+        devDefaultEnOutputConfig = False
+    else:
+        if (processor == 'PIC32WM_BZ3601') or (processor == 'PIC32CX5109BZ36032'):
+            devId = '360'
+        else:
+            devId = '361'
+        devDefaultBtSupp = "SUPP_BT_6_0"
 elif devFamily == "pic32cx_bz6_family":
     srcPath = "ble_src_bz6"
     devSupp = 'pic32cx_bz6_devsupport'
@@ -47,12 +66,14 @@ elif devFamily == "pic32cx_bz6_family":
     else:
         devId = '650'
     conMinTxPwr = -24
+    devDefaultBtSupp = "SUPP_BT_6_0"
 else:
     srcPath = ""
     devSupp = ''
     libObj = ""
     devId = ''
     conMinTxPwr = -29
+    devDefaultBtSupp = ""
     print("Device not support")
 
 
@@ -73,7 +94,7 @@ def bleConfigDsadvEnable(symbol, event):
     global bleCtrlOnly
 
     if bleCtrlOnly.getValue() == False:
-        if gapExtAdvEn.getValue()==False and gapAdvertising.getValue()==True and gapDsadvEn.getValue()==True:
+        if gapAdvertising.getValue()==True and gapDsadvEn.getValue()==True:
             symbol.setEnabled(True)
         else:
             symbol.setEnabled(False)
@@ -129,15 +150,12 @@ def dmFileChange(symbol, event):
     symbol.setEnabled(value)
 
 def aesFileChange(symbol, event):
-    if event["id"] == "BLE_SYS_CTRL_ONLY_EN" and event["value"] == True:
+    if (bleCtrlOnly.getValue()==True):
         value = False
     else:
         centralValue = event['source'].getSymbolValue('GAP_CENTRAL')
         peripheralValue = event['source'].getSymbolValue('GAP_PERIPHERAL')
-        if devFamily == "pic32cx_bz6_family":
-            encValue = event['source'].getSymbolValue('GAP_SVC_ENC_DATA_KEY_MATL')
-        else:
-            encValue = False
+        encValue = event['source'].getSymbolValue('GAP_SVC_ENC_DATA_KEY_MATL_EN')
         if centralValue == True or peripheralValue == True or encValue == True:
             value = True
         else:
@@ -145,16 +163,13 @@ def aesFileChange(symbol, event):
     symbol.setEnabled(value)
 
 def miscFileChange(symbol, event):
-    if devFamily == "pic32cx_bz6_family":
-        if event["id"] == "GAP_SVC_ENC_DATA_KEY_MATL":
-            value = event["value"]
-        else: #BLE_SYS_CTRL_ONLY_EN
-            if event["value"] == False:
-                value = event['source'].getSymbolValue('GAP_SVC_ENC_DATA_KEY_MATL')
-            else:
-                value = False
-    else:
-        value = False
+    if event["id"] == "GAP_SVC_ENC_DATA_KEY_MATL_EN":
+        value = event["value"]
+    else: #BLE_SYS_CTRL_ONLY_EN
+        if event["value"] == False:
+            value = event['source'].getSymbolValue('GAP_SVC_ENC_DATA_KEY_MATL_EN')
+        else:
+            value = False
     symbol.setEnabled(value)
 
 def ddFileChange(symbol, event):
@@ -217,6 +232,35 @@ def sendTxPwrUpdateMessage():
     Database.sendMessage(devSupp, "TX_PWR_INFO_UPDATE", {"target": devSupp,
                                                     "source": "BLE_STACK_LIB"})
 
+global sendWolfcryptSymlConfigMessage
+def sendWolfcryptSymlConfigMessage():
+    if devFamily == "pic32cx_bz2_family":
+        Database.sendMessage(devSupp, "WOLFCRYPT_SYMBOL_CONFIG", {"target": devSupp,
+                                                       "source": "BLE_STACK_LIB",
+                                                       "wolfcrypt_hw": True,
+                                                       "wolfcrypt_md5": False,
+                                                       "wolfcrypt_sha1": False,
+                                                       "wolfcrypt_sha256": False,
+                                                       "wolfcrypt_hmac": False,
+                                                       "wolfcrypt_tdes": False,
+                                                       "wolfcrypt_aes": True,
+                                                       "wolfcrypt_aes_hw": True,
+                                                       "wolfcrypt_aes_128": True,
+                                                       "wolfcrypt_aes_192": False,
+                                                       "wolfcrypt_aes_256": False,
+                                                       "wolfcrypt_aes_ecb": False,
+                                                       "wolfcrypt_aes_ecb_hw": False,
+                                                       "wolfcrypt_aes_cbc": True,
+                                                       "wolfcrypt_aes_cbc_hw": True,
+                                                       "wolfcrypt_aes_ctr": False,
+                                                       "wolfcrypt_aes_gcm": False,
+                                                       "wolfcrypt_aes_ofb": False,
+                                                       "wolfcrypt_aes_ccm": False,
+                                                       "wolfcrypt_ecc": False,
+                                                       "wolfcrypt_rsa": False,
+                                                       "wolfcrypt_oaep": False,
+                                                       "wolfcrypt_asn1": False})
+
 def handleMessage(messageID, args):
     # Log.writeInfoMessage('BLEStack:handleMessage ID={} argLen={}'.format(messageID, len(args)))
     ''' This message handler is designed to process messages
@@ -251,7 +295,12 @@ def handleMessage(messageID, args):
         gapConfigTxPwr(component, txPwrMaxNonFHSS, txPwrMaxFHSS, txPwrMin)
     elif (messageID == "PTA_SUPPORT_ENABLE"):
         blePta.setValue(args["isEnabled"])
-
+    elif (messageID == "BLE_RET_RAM_UPDATE"):
+        sendDeepSleepRetRamMessage()
+    elif (messageID == "WOLFCRYPT_DEPENDENCY_CONFIG"):
+        # get Local Component from any of its symbols
+        component=blePta.getComponent()
+        component.setDependencyEnabled('BLE_WolfCrypt_Dependency', args["isEnabled"])
 
 def instantiateComponent(libBLEStackComponent):
     global antennaGain
@@ -312,7 +361,7 @@ def instantiateComponent(libBLEStackComponent):
         bleInit[n].setSourcePath('driver/ble/templates/system/' + f)
         bleInit[n].setMarkup(True)
         if f == 'system_configuration_ble.h.ftl':
-            bleInit[n].setEnabled((devFamily == "pic32cx_bz6_family"))
+            bleInit[n].setEnabled(devDefaultEnOutputConfig)
             bleInit[n].setDependencies(bleConfigEnable, ["BLE_ENABLE_OUTPUT_CONFIG"])
         print('{} file: {} pos: {}'.format(n, f, p))
         n = n + 1
@@ -375,7 +424,7 @@ def instantiateComponent(libBLEStackComponent):
     ### Add Source/Header Files ###
     ############################################################################
 
-    # Add app generated  files
+    # Add app generated files
     bleAppFile = [('app_ble.c.ftl', 'app_ble.c', 'SOURCE'),
                   ('app_ble.h.ftl', 'app_ble.h', 'HEADER'),
                   ('app_ble_handler.c.ftl', 'app_ble_handler.c', 'SOURCE'),
@@ -383,7 +432,6 @@ def instantiateComponent(libBLEStackComponent):
                   ('app_ble_dsadv.c.ftl', 'app_ble_dsadv.c', 'SOURCE'),
                   ('app_ble_bz2_3.c.ftl', 'app_ble.c', 'SOURCE'),
                   ]
-
 
     for name, outputName, type in bleAppFile:
         fsymbol = libBLEStackComponent.createFileSymbol(None, None)
@@ -396,15 +444,15 @@ def instantiateComponent(libBLEStackComponent):
         fsymbol.setEnabled(True)
         fsymbol.setMarkup(True)
         if name == 'app_ble_dsadv.c.ftl':
-            fsymbol.setDependencies(bleConfigDsadvEnable, ["GAP_DSADV_EN","BOOL_GAP_EXT_ADV","GAP_ADVERTISING","BLE_SYS_CTRL_ONLY_EN"])
+            fsymbol.setDependencies(bleConfigDsadvEnable, ["GAP_DSADV_EN","GAP_ADVERTISING","BLE_SYS_CTRL_ONLY_EN"])
             fsymbol.setEnabled(False)
         elif name.find('app_ble_handler') != -1:
             fsymbol.setDependencies(bleConfigHandlerEnable, ["DISABLE_APP_CODE_GEN", "BLE_SYS_CTRL_ONLY_EN"])
         elif name == 'app_ble.c.ftl':
-            fsymbol.setEnabled((devFamily == "pic32cx_bz6_family"))
+            fsymbol.setEnabled(devDefaultEnOutputConfig)
             fsymbol.setDependencies(bleConfigAppBleBz6Enable, ["BLE_ENABLE_OUTPUT_CONFIG"])
         elif name == 'app_ble_bz2_3.c.ftl':
-            fsymbol.setEnabled((devFamily != "pic32cx_bz6_family"))
+            fsymbol.setEnabled(not devDefaultEnOutputConfig)
             fsymbol.setDependencies(bleConfigAppBleBz23Enable, ["BLE_ENABLE_OUTPUT_CONFIG"])
         else:
             fsymbol.setDependencies(ctrlOnlyFileChange, ["BLE_SYS_CTRL_ONLY_EN"])
@@ -412,7 +460,6 @@ def instantiateComponent(libBLEStackComponent):
 
     # Add controller only static files
     bleAppFile = [('app_ble_hci.h', 'HEADER'),
-                  ('app_ble_hci.c', 'SOURCE'),
                   ]
 
     for name, type in bleAppFile:
@@ -426,6 +473,22 @@ def instantiateComponent(libBLEStackComponent):
         fsymbol.setEnabled(False)
         fsymbol.setDependencies(bleConfigEnable, ["BLE_SYS_CTRL_ONLY_EN"])
         print('App staic {} file: {} '.format(n, name))
+
+    # Add controller only generated files
+    bleAppFile = [('app_ble_hci.c.ftl', 'app_ble_hci.c', 'SOURCE'),
+                  ]
+
+    for name, outputName, type in bleAppFile:
+        fsymbol = libBLEStackComponent.createFileSymbol(None, None)
+        fsymbol.setSourcePath('driver/ble/templates/app/'+ name)
+        fsymbol.setOutputName(outputName)
+        fsymbol.setOverwrite(True)
+        fsymbol.setDestPath('../../app_ble')
+        fsymbol.setProjectPath('app_ble')
+        fsymbol.setType(type)
+        fsymbol.setEnabled(False)
+        fsymbol.setMarkup(True)
+        fsymbol.setDependencies(bleConfigEnable, ["BLE_SYS_CTRL_ONLY_EN"])
 
 
     # Add pta static files
@@ -521,13 +584,10 @@ def instantiateComponent(libBLEStackComponent):
             fsymbol.setDependencies(dmFileChange, ["BLE_SYS_CTRL_ONLY_EN", "GAP_CENTRAL", "GAP_PERIPHERAL"])
         elif name.find('mw_aes') != -1:
             fsymbol.setEnabled(True)
-            fsymbol.setDependencies(aesFileChange, ["BLE_SYS_CTRL_ONLY_EN", "GAP_CENTRAL", "GAP_PERIPHERAL", "GAP_SVC_ENC_DATA_KEY_MATL"])
+            fsymbol.setDependencies(aesFileChange, ["BLE_SYS_CTRL_ONLY_EN", "GAP_CENTRAL", "GAP_PERIPHERAL", "GAP_SVC_ENC_DATA_KEY_MATL_EN"])
         elif name.find('mw_misc') != -1:
-            if devFamily == "pic32cx_bz6_family":
-                fsymbol.setEnabled(True)
-            else:
-                fsymbol.setEnabled(False)
-            fsymbol.setDependencies(miscFileChange, ["BLE_SYS_CTRL_ONLY_EN", "GAP_SVC_ENC_DATA_KEY_MATL"])
+            fsymbol.setEnabled(False)
+            fsymbol.setDependencies(miscFileChange, ["BLE_SYS_CTRL_ONLY_EN", "GAP_SVC_ENC_DATA_KEY_MATL_EN"])
         else:
             fsymbol.setEnabled(True)
             fsymbol.setDependencies(ctrlOnlyFileChange, ["BLE_SYS_CTRL_ONLY_EN"])
@@ -592,8 +652,8 @@ def finalizeComponent(libBLEStackComponent):
     if devFamily == "pic32cx_bz2_family":
         print('finalizeComponent bz2')
         requiredComponents = ['pic32cx_bz2_devsupport', 'lib_crypto', 'lib_wolfcrypt']
-        Database.setSymbolValue("core", "AES_CLOCK_ENABLE", True)
-    elif devFamily == "pic32cx_bz3_family":
+        Database.sendMessage("core", "AES_CLOCK_ENABLE", {"isEnabled":True})
+    elif (devFamily == "pic32cx_bz3_family") or (devFamily == "pic32cx_bz36_family"):
         print('finalizeComponent bz3')
         requiredComponents = ['pic32cx_bz3_devsupport']
     elif devFamily == "pic32cx_bz6_family":
@@ -617,8 +677,6 @@ def finalizeComponent(libBLEStackComponent):
     # ask an update of Tx Power Info
     sendTxPwrUpdateMessage()
 
-
-
 def onAttachmentConnected(source, target):
 
     localComponent = source["component"]
@@ -634,7 +692,7 @@ def onAttachmentConnected(source, target):
         print("BLE LIB:onAttachmentConnected configuring pic32xcx_wbz")
         bleSleepEnabled = localComponent.getSymbolByID("BLE_SYS_SLEEP_MODE_EN").getValue()
 
-        if localComponent.getSymbolByID("BOOL_GAP_EXT_ADV").getValue()==False and localComponent.getSymbolByID("GAP_ADVERTISING").getValue()==True and localComponent.getSymbolByID("GAP_DSADV_EN").getValue()==True:
+        if localComponent.getSymbolByID("GAP_ADVERTISING").getValue()==True and localComponent.getSymbolByID("GAP_DSADV_EN").getValue()==True:
             bleDeepSleepEnabled = True
         else:
             bleDeepSleepEnabled = False
@@ -648,30 +706,36 @@ def onAttachmentConnected(source, target):
             sendDeepSleepEnableMessage(True)
         else:
             sendDeepSleepEnableMessage(False)
-
+            
+        sendDeepSleepRetRamMessage()
     elif (connectID == "BLE_WolfCrypt_Dependency"):
         print("BLE LIB:onAttachmentConnected configuring lib_wolfcrypt")
-        Database.setSymbolValue("lib_wolfcrypt", "wolfcrypt_hw", True)
-        Database.setSymbolValue("lib_wolfcrypt", "wolfcrypt_md5", False)
-        Database.setSymbolValue("lib_wolfcrypt", "wolfcrypt_sha1", False)
-        Database.setSymbolValue("lib_wolfcrypt", "wolfcrypt_sha256", False)
-        Database.setSymbolValue("lib_wolfcrypt", "wolfcrypt_hmac", False)
-        Database.setSymbolValue("lib_wolfcrypt", "wolfcrypt_tdes", False)
-        Database.setSymbolValue("lib_wolfcrypt", "wolfcrypt_aes", True)
-        Database.setSymbolValue("lib_wolfcrypt", "wolfcrypt_aes_hw", True)
-        Database.setSymbolValue("lib_wolfcrypt", "wolfcrypt_aes_128", True)
-        Database.setSymbolValue("lib_wolfcrypt", "wolfcrypt_aes_192", False)
-        Database.setSymbolValue("lib_wolfcrypt", "wolfcrypt_aes_256", False)
-        Database.setSymbolValue("lib_wolfcrypt", "wolfcrypt_aes_ecb", False)
-        Database.setSymbolValue("lib_wolfcrypt", "wolfcrypt_aes_ecb_hw", False)
-        Database.setSymbolValue("lib_wolfcrypt", "wolfcrypt_aes_cbc", True)
-        Database.setSymbolValue("lib_wolfcrypt", "wolfcrypt_aes_cbc_hw", True)
-        Database.setSymbolValue("lib_wolfcrypt", "wolfcrypt_aes_ctr", False)
-        Database.setSymbolValue("lib_wolfcrypt", "wolfcrypt_aes_gcm", False)
-        Database.setSymbolValue("lib_wolfcrypt", "wolfcrypt_aes_ofb", False)
-        Database.setSymbolValue("lib_wolfcrypt", "wolfcrypt_aes_ccm", False)
-        Database.setSymbolValue("lib_wolfcrypt", "wolfcrypt_ecc", False)
-        Database.setSymbolValue("lib_wolfcrypt", "wolfcrypt_rsa", False)
-        Database.setSymbolValue("lib_wolfcrypt", "wolfcrypt_oaep", False)
-        Database.setSymbolValue("lib_wolfcrypt", "wolfcrypt_asn1", False)
+        Database.clearSymbolValue('lib_wolfcrypt', "wolfcrypt_hw")
+        Database.clearSymbolValue("lib_wolfcrypt", "wolfcrypt_md5")
+        Database.clearSymbolValue("lib_wolfcrypt", "wolfcrypt_sha1")
+        Database.clearSymbolValue("lib_wolfcrypt", "wolfcrypt_sha256")
+        Database.clearSymbolValue("lib_wolfcrypt", "wolfcrypt_hmac")
+        Database.clearSymbolValue("lib_wolfcrypt", "wolfcrypt_tdes")
+        Database.clearSymbolValue("lib_wolfcrypt", "wolfcrypt_aes")
+        Database.clearSymbolValue("lib_wolfcrypt", "wolfcrypt_aes_hw")
+        Database.clearSymbolValue("lib_wolfcrypt", "wolfcrypt_aes_128")
+        Database.clearSymbolValue("lib_wolfcrypt", "wolfcrypt_aes_192")
+        Database.clearSymbolValue("lib_wolfcrypt", "wolfcrypt_aes_256")
+        Database.clearSymbolValue("lib_wolfcrypt", "wolfcrypt_aes_ecb")
+        Database.clearSymbolValue("lib_wolfcrypt", "wolfcrypt_aes_ecb_hw")
+        Database.clearSymbolValue("lib_wolfcrypt", "wolfcrypt_aes_cbc")
+        Database.clearSymbolValue("lib_wolfcrypt", "wolfcrypt_aes_cbc_hw")
+        Database.clearSymbolValue("lib_wolfcrypt", "wolfcrypt_aes_ctr")
+        Database.clearSymbolValue("lib_wolfcrypt", "wolfcrypt_aes_gcm")
+        Database.clearSymbolValue("lib_wolfcrypt", "wolfcrypt_aes_ofb")
+        Database.clearSymbolValue("lib_wolfcrypt", "wolfcrypt_aes_ccm")
+        Database.clearSymbolValue("lib_wolfcrypt", "wolfcrypt_ecc")
+        Database.clearSymbolValue("lib_wolfcrypt", "wolfcrypt_rsa")
+        Database.clearSymbolValue("lib_wolfcrypt", "wolfcrypt_oaep")
+        Database.clearSymbolValue("lib_wolfcrypt", "wolfcrypt_asn1")
+        localComponent.setDependencyEnabled('BLE_WolfCrypt_Dependency', False)
+        # ask to configure symbols on wolfcrypt
+        sendWolfcryptSymlConfigMessage()
+    elif (connectID == "BLE_CRYPTO"):
+        localComponent.setDependencyEnabled('BLE_CRYPTO', False)
 

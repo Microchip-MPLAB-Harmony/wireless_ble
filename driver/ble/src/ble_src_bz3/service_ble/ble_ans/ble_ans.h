@@ -31,82 +31,110 @@
     ble_ans.h
 
   Summary:
-    This file contains the BLE Device Information Service functions for application user.
+    Interface for the BLE Alert Notification Service, providing function prototypes and data structures.
 
   Description:
-    This file contains the BLE Device Information Service functions for application user.
+    This header defines the interface for the BLE Alert Notification Service within the application. It 
+    includes function prototypes and data structures required to manage the ANS, facilitating communication 
+    between BLE devices for alert notifications.
  *******************************************************************************/
 
-
-/**
- * @addtogroup BLE_ANS BLE ANS
- * @{
- * @brief Header file for the BLE Alert Notification Service.
- * @note Definitions and prototypes for the BLE Alert Notification Service stack layer application programming interface.
- */
 #ifndef BLE_ANS_H
 #define BLE_ANS_H
 
 // DOM-IGNORE-BEGIN
 #ifdef __cplusplus  // Provide C++ Compatibility
-
 extern "C" {
-
 #endif
 // DOM-IGNORE-END
+
+/**
+ * @addtogroup BLE_SERVICE BLE Service
+ * @{
+ */
+
+/**
+ * @addtogroup BLE_ANS BLE Alert Notification Service
+ * @brief Provides the interface for the Alert Notification Service over BLE.
+ * @note This section documents the API for the BLE Alert Notification Service. It includes definitions, 
+ *      function prototypes, and data structures necessary for handling alert notifications between BLE devices.
+ * @{
+ */
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Macros
 // *****************************************************************************
 // *****************************************************************************
+/**
+ * @addtogroup BLE_ANS_DEFINES Defines
+ * @{
+ */
 
-/**@defgroup BLE_ANS_ASSIGN_HANDLE BLE_ANS_ASSIGN_HANDLE
- * @brief Assigned attribute handles of BLE Alert Notification Service.
- * @{ */
-#define BLE_ANS_START_HDL                  (0x0150U)      /**< The start attribute handle of alert notification service. */
-/** @} */
+/**
+ * @defgroup BLE_ANS_ASSIGN_HANDLE BLE ANS assigned handles
+ * @brief Handles for attributes within the BLE Alert Notification Service (ANS).
+ * @{
+ */
+#define BLE_ANS_START_HDL                  (0x0150U)      /**< Start handle for the Alert Notification Service. */
 
-/**@brief Definition of BLE Device Information Service attribute handle */
+/** 
+ * Enumeration of attribute handles for the BLE Alert Notification Service.
+ */
 typedef enum BLE_ANS_AttributeHandle_T
 {
-    ANS_HDL_SVC = BLE_ANS_START_HDL,        /**< Handle of Primary Service of BLE Device Information Service. */
+    ANS_HDL_SVC = BLE_ANS_START_HDL,                      /**< Handle for the Alert Notificationprimary service. */
 
-    ANS_HDL_CHAR_SUPP_NEW_ALERT_CAT,        /**< Handle of Supported New Alert Category. */
-    ANS_HDL_CHARVAL_SUPP_NEW_ALERT_CAT,     /**< Handle of Supported New Alert Category value. */
+    ANS_HDL_CHAR_SUPP_NEW_ALERT_CAT,                      /**< Handle for the Supported New Alert Category characteristic.  */
+    ANS_HDL_CHARVAL_SUPP_NEW_ALERT_CAT,                   /**< Handle for the Supported New Alert Category value. */
 
-    ANS_HDL_CHAR_NEW_ALERT,                 /**< Handle of New Alert. */
-    ANS_HDL_CHARVAL_NEW_ALERT,              /**< Handle of New Alert value. */
-    ANS_HDL_CHARVAL_NEW_ALERT_CCC,          /**< Handle of New Alert Client Characteristic Configuration value. */
+    ANS_HDL_CHAR_NEW_ALERT,                               /**< Handle for the New Alert characteristic. */
+    ANS_HDL_CHARVAL_NEW_ALERT,                            /**< handle for the New Alert value. */
+    ANS_HDL_CHARVAL_NEW_ALERT_CCC,                        /**< handle for the New Alert CCCD value. */
 
-    ANS_HDL_CHAR_SUPP_UNREAD_ALERT_CAT,     /**< Handle of Supported Unread Alert Category. */
-    ANS_HDL_CHARVAL_SUPP_UNREAD_ALERT_CAT,  /**< Handle of Supported Unread Alert Category value. */
+    ANS_HDL_CHAR_SUPP_UNREAD_ALERT_CAT,                   /**< Handle for the Supported Unread Alert Category characteristic. */
+    ANS_HDL_CHARVAL_SUPP_UNREAD_ALERT_CAT,                /**< Handle for the Supported Unread Alert Category characteristic value. */
 
-    ANS_HDL_CHAR_UNREAD_ALERT_STAT,         /**< Handle of Unread Alert. */
-    ANS_HDL_CHARVAL_UNREAD_ALERT_STAT,      /**< Handle of Unread Alert value. */
-    ANS_HDL_CHARVAL_UNREAD_ALERT_STAT_CCC,  /**< Handle of Unread Alert Status Client Characteristic Configuration value. */
+    ANS_HDL_CHAR_UNREAD_ALERT_STAT,                       /**< Handle for the Unread Alert Status characteristic. */
+    ANS_HDL_CHARVAL_UNREAD_ALERT_STAT,                    /**< Handle for the Unread Alert Status characteristic value. */
+    ANS_HDL_CHARVAL_UNREAD_ALERT_STAT_CCC,                /**< Handle for the Unread Alert Status CCCD value. */
 
-    ANS_HDL_CHAR_ANCP,     /**< Handle of Alert Notification Control Point. */
-    ANS_HDL_CHARVAL_ANCP  /**< Handle of Alert Notification Control Point value. */
+    ANS_HDL_CHAR_ANCP,                                    /**< Handle for the Alert Notification Control Point characteristic. */
+    ANS_HDL_CHARVAL_ANCP                                  /**< Handle for the Alert Notification Control Point characteristic value. */
 
 }BLE_ANS_AttributeHandle_T;
 
-/**@defgroup BLE_ANS_ASSIGN_HANDLE BLE_ANS_ASSIGN_HANDLE
- * @brief Assigned attribute handles of BLE Alert Notification Service.
- * @{ */
-
-#define BLE_ANS_END_HDL   ANS_HDL_CHARVAL_ANCP /**< The end attribute handle of alert notification service. */
+#define BLE_ANS_END_HDL   ANS_HDL_CHARVAL_ANCP            /**< End handle for the Alert Notification Service. */
 /** @} */
 
+/** @} */ //BLE_ANS_DEFINES
+// *****************************************************************************
+// *****************************************************************************
+// Section: Function Prototypes
+// *****************************************************************************
+// *****************************************************************************
 /**
- *@brief Initialize BLE Alert Notificaiton Service callback function.
+ * @addtogroup BLE_ANS_FUNS Functions
+ * @{
+ */
+
+/**
+ * @brief Adds the BLE Alert Notificaiton Service to the GATT server.
  *
+ * This function adds the BLE Alert Notificaiton Service to the BLE stack's GATT server,
+ * enabling the service to be discovered and accessed by remote BLE devices.
  *
- *@return MBA_RES_SUCCESS                    Successfully register BLE Alert Notification service.
- *@return MBA_RES_NO_RESOURCE                Fail to register service.
+ * @retval MBA_RES_SUCCESS                    The BLE Alert Notificaiton service was successfully added.
+ * @retval MBA_RES_NO_RESOURCE                Insufficient resource to add the BLE Alert Notificaiton service.
  *
  */
 uint16_t BLE_ANS_Add(void);
+
+/** @} */ //BLE_ANS_FUNS
+
+/** @} */
+
+/** @} */
 
 //DOM-IGNORE-BEGIN
 #ifdef __cplusplus
@@ -114,7 +142,4 @@ uint16_t BLE_ANS_Add(void);
 #endif
 //DOM-IGNORE-END
 
-#endif
-/**
-  @}
- */
+#endif//BLE_ANS_H

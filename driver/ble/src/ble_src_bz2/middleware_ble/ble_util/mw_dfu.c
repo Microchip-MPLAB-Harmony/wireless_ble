@@ -31,10 +31,13 @@
     mw_dfu.c
 
   Summary:
-    This file contains the Middleware Device Firmware Udpate functions for application user.
+    This source file implements the middleware functions necessary for handling
+    device firmware updates (DFU).
 
   Description:
-    This file contains the Middleware Device Firmware Udpate functions for application user.
+    The functions within this file provide the application user with the tools
+    required to manage firmware updates. These include routines for checking
+    update integrity, initiating the update process, and applying firmware patches.
  *******************************************************************************/
 
 
@@ -49,25 +52,52 @@
 #include "mba_error_defs.h"
 #include "mw_dfu.h"
 
+// *****************************************************************************
+// *****************************************************************************
+// Section: Macros
+// *****************************************************************************
+// *****************************************************************************
 
-#define MW_DFU_FW_START_ADDR                   0x01080000UL
-#define MW_DFU_FW_PAGE_SIZE                    0x1000U
-#define MW_DFU_FW_QUAD_WORD_SIZE               0x10U
+#define MW_DFU_FW_START_ADDR                   0x01080000UL         // Start address of the firmware in the device's flash memory.
+#define MW_DFU_FW_PAGE_SIZE                    0x1000U              // The size of a page in the device's flash memory.
+#define MW_DFU_FW_QUAD_WORD_SIZE               0x10U                // The size of a quad word in the device's flash memory.
 
-enum
+/* Enumeration of the different states in the DFU (Device Firmware Update) process. */
+typedef enum MW_DFU_State_T
 {
-    MW_DFU_STATE_IDLE=0X00U,
-    MW_DFU_STATE_CONFIG,
-    MW_DFU_STATE_FW_START,
-    MW_DFU_STATE_FW_UPDATE
-};
+    MW_DFU_STATE_IDLE=0X00U,                                        // DFU process is idle.
+    MW_DFU_STATE_CONFIG,                                            // DFU process is in configuration state.
+    MW_DFU_STATE_FW_START,                                          // DFU process has started firmware update.
+    MW_DFU_STATE_FW_UPDATE                                          // DFU process is updating firmware.
+}MW_DFU_State_T;
+
+// *****************************************************************************
+// *****************************************************************************
+// Section: Local Variables
+// *****************************************************************************
+// *****************************************************************************
+
+static uint8_t          s_dfuState;                                 // Current state of the DFU process.
+static MW_DFU_Info_T    s_dfuSizeInfo;                              // Structure holding size information for the DFU process.
+static uint32_t         s_dfuAddr;                                  // Current address pointer for the DFU process.
+static uint32_t         *sp_dfuIdent;                               // Pointer to an identifier used in the DFU process.
 
 
-static uint8_t s_dfuState = MW_DFU_STATE_IDLE;
-static MW_DFU_Info_T s_dfuSizeInfo;
-static uint32_t s_dfuAddr;
-static uint32_t *sp_dfuIdent = NULL;
-
+// *****************************************************************************
+// *****************************************************************************
+// Section: Functions
+// *****************************************************************************
+// *****************************************************************************
+/**
+ * @brief Configures the device information for the Device Firmware Update (DFU) process.
+ *
+ * @param[in] p_dfuInfo            Pointer to the structure containing the DFU image size information. 
+                                    Refer to @ref MW_DFU_Info_T for the structure's detailed information.
+ *
+ *
+ * @retval MBA_RES_SUCCESS         Configuration successful.
+ * @retval MBA_RES_INVALID_PARA    Invalid parameters. The size exceeds the maximum allowable size, or the size is not aligned to a 16-byte boundary.
+ */
 uint16_t MW_DFU_Config(MW_DFU_Info_T * p_dfuInfo)
 {
     if ((p_dfuInfo->fwImageSize > MW_DFU_MAX_SIZE_FW_IMAGE) || (p_dfuInfo->fwImageSize == 0U)
@@ -83,6 +113,15 @@ uint16_t MW_DFU_Config(MW_DFU_Info_T * p_dfuInfo)
     return MBA_RES_SUCCESS;
 }
 
+
+/**
+ * @brief Starts or restarts the firmware image update procedure.
+ * @note  Calling this API resets the state machine and parameters of the DFU module.
+ *
+ *
+ * @retval MBA_RES_SUCCESS         Firmware image update procedure started or restarted successfully.
+ * @retval MBA_RES_BAD_STATE       The API cannot be executed in the current state of the DFU process.
+ */
 uint16_t MW_DFU_FwImageStart(void)
 {
     if (s_dfuState == (uint8_t)MW_DFU_STATE_IDLE)
@@ -96,6 +135,22 @@ uint16_t MW_DFU_FwImageStart(void)
     return MBA_RES_SUCCESS;
 }
 
+
+/**
+ * @brief Updates a fragment of the firmware image in flash memory.
+ * @note  This API should be called multiple times to update all fragments of the firmware image.
+ *
+ * @param[in] length               The length of the image fragment to update, in bytes. Must be aligned to 16 bytes.
+ * @param[in] p_content            Pointer to the image fragment data.
+ *
+ *
+ * @retval MBA_RES_SUCCESS         Fragment of firmware image updated successfully.
+ * @retval MBA_RES_INVALID_PARA    Invalid parameters. The length exceeds the image size, the maximum block length, 
+ *                                  or is not 16-byte aligned.
+ * @retval MBA_RES_BAD_STATE       The API cannot be executed in the current state of the DFU process.
+ * @retval MBA_RES_OOM             Out of memory error.
+ * @retval MBA_RES_FAIL            Failed to update the fragment to flash memory.
+ */
 uint16_t MW_DFU_FwImageUpdate(uint16_t length, uint8_t *p_content)
 {
     uint32_t * p_data;
@@ -209,6 +264,21 @@ uint16_t MW_DFU_FwImageUpdate(uint16_t length, uint8_t *p_content)
     return MBA_RES_SUCCESS;
 }
 
+
+/**
+ * @brief Reads a fragment of the firmware image from flash memory.
+ * @note  The first 16 bytes of the image fragment read from flash are invalid until the full firmware image is updated.
+ *
+ *
+ * @param[in] offset               The offset in flash memory from where to start reading the image fragment.
+ * @param[in] length               The length of the image fragment to read, in bytes.
+ * @param[in] p_content            Pointer to the buffer where the image fragment will be stored.
+ *
+ *
+ * @retval MBA_RES_SUCCESS         Fragment of firmware image read successfully.
+ * @retval MBA_RES_INVALID_PARA    Invalid parameters. The sum of offset and length exceeds the maximum firmware image size, 
+ *                                  or the length exceeds the maximum block length.
+ */
 uint16_t MW_DFU_FwImageRead(uint32_t offset, uint16_t length, uint8_t *p_content)
 {
     //Check read range 

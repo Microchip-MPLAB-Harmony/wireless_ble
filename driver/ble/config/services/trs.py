@@ -5,7 +5,7 @@ devFamily = GetDeviceFamily()
 # print('Config Name: {}, device family: {}'.format(configName, devFamily))
 if devFamily == "pic32cx_bz2_family":
     srcPath = "ble_src_bz2"
-elif devFamily == "pic32cx_bz3_family":
+elif (devFamily == "pic32cx_bz3_family") or (devFamily == "pic32cx_bz36_family"):
     srcPath = "ble_src_bz3"
 elif devFamily == "pic32cx_bz6_family":
     srcPath = "ble_src_bz6"

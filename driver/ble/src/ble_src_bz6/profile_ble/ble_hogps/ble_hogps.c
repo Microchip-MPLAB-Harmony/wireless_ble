@@ -116,7 +116,7 @@ typedef struct BLE_HOGPS_Database_T
 // *****************************************************************************
 
 static BLE_HOGPS_EventCb_T      sp_hogpsCbRoutine;      // Pointer to the callback function for BLE HID over GATT Profile (HOGP) events.
-static BLE_HOGPS_ConnParams_T   s_hogpsConnParams;      // Structure to hold the connection parameters for the BLE HID over GATT Profile.
+static BLE_HOGPS_ConnParams_T   *sp_hogpsConnParams;    // Structure to hold the connection parameters for the BLE HID over GATT Profile.
 static BLE_HOGPS_Database_T     s_hogpsDb;              // Instance of the database structure for the BLE HID over GATT Profile services and characteristics.
 
 // *****************************************************************************
@@ -224,12 +224,30 @@ static void ble_hogps_GapEventProcess(BLE_GAP_Event_T *p_event)
     {
         case BLE_GAP_EVT_CONNECTED:
         {
-            s_hogpsConnParams.connHandle = p_event->eventField.evtConnect.connHandle;
-            s_hogpsConnParams.protocolMode = HID_MODE_REPORT_PROTOCOL;
-            s_hogpsConnParams.suspendStatus = HID_HOST_SUSPEND_EXIT;
+            if ((sp_hogpsConnParams == NULL) && (p_event->eventField.evtConnect.status == GAP_STATUS_SUCCESS))
+            {
+                sp_hogpsConnParams = OSAL_Malloc(sizeof(BLE_HOGPS_ConnParams_T));
+                if(sp_hogpsConnParams != NULL)
+                {
+                    sp_hogpsConnParams->connHandle = p_event->eventField.evtConnect.connHandle;
+                    sp_hogpsConnParams->protocolMode = HID_MODE_REPORT_PROTOCOL;
+                    sp_hogpsConnParams->suspendStatus = HID_HOST_SUSPEND_EXIT;
+                }
+            }
+
         }
         break;
 
+        case BLE_GAP_EVT_DISCONNECTED:
+        {
+            if ((sp_hogpsConnParams != NULL) && (p_event->eventField.evtDisconnect.connHandle == sp_hogpsConnParams->connHandle))
+            {
+                OSAL_Free(sp_hogpsConnParams);
+                sp_hogpsConnParams = NULL;
+            }
+        }
+        break;
+                                      
         default:
         {
             //Do nothing
@@ -307,7 +325,7 @@ static void ble_hogps_GattEventProcess(GATT_Event_T *p_event)
             if (p_event->eventField.onRead.attrHandle == (uint16_t)HIDS_HDL_CHARVAL_HID_PROTOCOL_MODE)
             {
                 valueLen = 0x01;
-                p_value = &s_hogpsConnParams.protocolMode;
+                p_value = &sp_hogpsConnParams->protocolMode;
             }
             #endif
             #ifdef HIDS_KEYBOARD_SUPPORT
@@ -392,7 +410,7 @@ static void ble_hogps_GattEventProcess(GATT_Event_T *p_event)
                     if (p_event->eventField.onWrite.writeValue[0] == (uint8_t)HID_HOST_SUSPEND_ENTER)
                     {
                         /* Enter suspend mode */
-                        s_hogpsConnParams.suspendStatus = HID_HOST_SUSPEND_ENTER;
+                        sp_hogpsConnParams->suspendStatus = HID_HOST_SUSPEND_ENTER;
                         hogpsEvent.eventId = BLE_HOGPS_EVT_HOST_SUSPEND_ENTER_IND;
                         hogpsEvent.eventField.evtHostSuspendEnter.connHandle = p_event->eventField.onWrite.connHandle;
                         ble_hogps_ConveyEvent(&hogpsEvent);
@@ -400,7 +418,7 @@ static void ble_hogps_GattEventProcess(GATT_Event_T *p_event)
                     else if (p_event->eventField.onWrite.writeValue[0] == (uint8_t)HID_HOST_SUSPEND_EXIT)
                     {
                         /* Exit suspend mode */
-                        s_hogpsConnParams.suspendStatus = HID_HOST_SUSPEND_EXIT;
+                        sp_hogpsConnParams->suspendStatus = HID_HOST_SUSPEND_EXIT;
                         hogpsEvent.eventId = BLE_HOGPS_EVT_HOST_SUSPEND_EXIT_IND;
                         hogpsEvent.eventField.evtHostSuspendExit.connHandle = p_event->eventField.onWrite.connHandle;
                         ble_hogps_ConveyEvent(&hogpsEvent);
@@ -421,7 +439,7 @@ static void ble_hogps_GattEventProcess(GATT_Event_T *p_event)
                     if (p_event->eventField.onWrite.writeValue[0] == (uint8_t)HID_MODE_BOOT_PROTOCOL)
                     {
                         /* Enter boot mode */
-                        s_hogpsConnParams.protocolMode = HID_MODE_BOOT_PROTOCOL;
+                        sp_hogpsConnParams->protocolMode = HID_MODE_BOOT_PROTOCOL;
                         hogpsEvent.eventId = BLE_HOGPS_EVT_BOOT_MODE_ENTER_IND;
                         hogpsEvent.eventField.evtBootModeEnter.connHandle = p_event->eventField.onWrite.connHandle;
                         ble_hogps_ConveyEvent(&hogpsEvent);
@@ -429,7 +447,7 @@ static void ble_hogps_GattEventProcess(GATT_Event_T *p_event)
                     else if (p_event->eventField.onWrite.writeValue[0] == (uint8_t)HID_MODE_REPORT_PROTOCOL)
                     {
                         /* Enter report mode */
-                        s_hogpsConnParams.protocolMode = HID_MODE_REPORT_PROTOCOL;
+                        sp_hogpsConnParams->protocolMode = HID_MODE_REPORT_PROTOCOL;
                         hogpsEvent.eventId = BLE_HOGPS_EVT_REPORT_MODE_ENTER_IND;
                         hogpsEvent.eventField.evtReportModeEnter.connHandle = p_event->eventField.onWrite.connHandle;
                         ble_hogps_ConveyEvent(&hogpsEvent);
@@ -758,7 +776,7 @@ uint16_t BLE_HOGPS_SendKeyboardInputReport(uint16_t connHandle, uint8_t *p_keyCo
     GATTS_HandleValueParams_T hvParams;
     uint16_t result;
 
-    if (s_hogpsConnParams.connHandle != connHandle)
+    if (sp_hogpsConnParams->connHandle != connHandle)
     {
         return MBA_RES_INVALID_PARA;
     }
@@ -796,7 +814,7 @@ uint16_t BLE_HOGPS_SendMouseButtonInputReport(uint16_t connHandle, uint8_t butto
     GATTS_HandleValueParams_T hvParams;
     uint16_t result;
 
-    if (s_hogpsConnParams.connHandle != connHandle)
+    if (sp_hogpsConnParams->connHandle != connHandle)
     {
         return MBA_RES_INVALID_PARA;
     }
@@ -830,7 +848,7 @@ uint16_t BLE_HOGPS_SendMouseMotionInputReport(uint16_t connHandle, int16_t xAxis
     GATTS_HandleValueParams_T hvParams;
     uint16_t result;
 
-    if (s_hogpsConnParams.connHandle != connHandle)
+    if (sp_hogpsConnParams->connHandle != connHandle)
     {
         return MBA_RES_INVALID_PARA;
     }
@@ -873,7 +891,7 @@ uint16_t BLE_HOGPS_SendBootKeyboardInputReport(uint16_t connHandle, uint8_t *p_k
     GATTS_HandleValueParams_T hvParams;
     uint16_t result;
 
-    if (s_hogpsConnParams.connHandle != connHandle)
+    if (sp_hogpsConnParams->connHandle != connHandle)
     {
         return MBA_RES_INVALID_PARA;
     }
@@ -915,7 +933,7 @@ uint16_t BLE_HOGPS_SendBootMouseInputReport(uint16_t connHandle, uint8_t buttons
     GATTS_HandleValueParams_T hvParams;
     uint16_t result;
 
-    if (s_hogpsConnParams.connHandle != connHandle)
+    if (sp_hogpsConnParams->connHandle != connHandle)
     {
         return MBA_RES_INVALID_PARA;
     }
@@ -947,7 +965,7 @@ uint16_t BLE_HOGPS_SendBatteryLevel(uint16_t connHandle)
 {
     GATTS_HandleValueParams_T hvParams;
 
-    if (s_hogpsConnParams.connHandle != connHandle)
+    if (sp_hogpsConnParams->connHandle != connHandle)
     {
         return MBA_RES_INVALID_PARA;
     }

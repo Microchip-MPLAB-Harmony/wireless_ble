@@ -1,4 +1,4 @@
-<#if GAP_ADVERTISING && (!BOOL_GAP_EXT_ADV) && GAP_DSADV_EN>
+<#if GAP_ADVERTISING && GAP_DSADV_EN>
             bool flag=false;
 
             flag = APP_BleDsadvIsEnable();

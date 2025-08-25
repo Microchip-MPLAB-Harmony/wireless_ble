@@ -31,12 +31,13 @@
     ble_dm_conn.c
 
   Summary:
-    This file contains the BLE Device Manager functions and event for application user.
+    Implements BLE device connections and handles related events for BLE Device Manager.
 
   Description:
-    This file contains the BLE Device Manager functions and event for application user.
-    The "BLE_DM_Init" function shall be called in the "APP_Initialize" function to 
-    initialize the this modules in the system.
+    This source file provides the functions and data structures used by the BLE 
+    Device Manager for handling BLE connections. It is intended for internal 
+    use within the BLE Device Manager module and should not be included 
+    directly by application code.
  *******************************************************************************/
 
 
@@ -59,8 +60,8 @@
 
 typedef enum BLE_DM_CONN_State_T
 {
-    BLE_DM_CONN_STATE_IDLE = 0x00,                          /**< Default state (Disconnected). */
-    BLE_DM_CONN_STATE_CONNECTED                             /**< Connected. */
+    BLE_DM_CONN_STATE_IDLE = 0x00,                          // Default state (Disconnected).
+    BLE_DM_CONN_STATE_CONNECTED                             // Connected state.
 } BLE_DM_CONN_State_T;
 
 // *****************************************************************************
@@ -68,19 +69,21 @@ typedef enum BLE_DM_CONN_State_T
 // Section: Data Types
 // *****************************************************************************
 // *****************************************************************************
-
+/* Structure to hold connection update database information. */
 typedef struct BLE_DM_ConnUpdateDb_T
 {
-    uint16_t                    connHandle;                 /**< The connection handle. */
-    BLE_DM_CONN_State_T         state;                      /**< Connection state. */
-    bool                        isProcedureInitiator;       /**< Record the update procedure is initiated by this module or remote */
+    uint16_t                    connHandle;                         // The connection handle.
+    BLE_DM_CONN_State_T         state;                              // Connection state.
+    bool                        isProcedureInitiator;               // Indicates if the update procedure is initiated by this module or remotely.
 } BLE_DM_ConnUpdateDb_T;
 
+
+/* Structure to control BLE connection related operations. */
 typedef struct BLE_DM_ConnCtrl_T
 {
-    BLE_DM_ConnUpdateDb_T       updateDb[BLE_GAP_MAX_LINK_NBR];         /**< Connection update instances for each link. */
-    BLE_DM_ConnConfig_T         userConnConfig;
-    bool                        autoReplyUpdate;                        /**< Automatically accept connection parameter update request from peer. */
+    BLE_DM_ConnUpdateDb_T       updateDb[BLE_GAP_MAX_LINK_NBR];     // Connection update instances for each link.
+    BLE_DM_ConnConfig_T         userConnConfig;                     // User-defined connection configuration.
+    bool                        autoReplyUpdate;                    // Flag to automatically accept connection parameter update requests from peer.
 } BLE_DM_ConnCtrl_T;
 
 // *****************************************************************************
@@ -89,19 +92,28 @@ typedef struct BLE_DM_ConnCtrl_T
 // *****************************************************************************
 // *****************************************************************************
 
-static BLE_DM_ConnCtrl_T *              sp_dmConnCtrl;
+static BLE_DM_ConnCtrl_T *      sp_dmConnCtrl;                      // Pointer to BLE_DM_ConnCtrl_T structure.
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Functions
 // *****************************************************************************
 // *****************************************************************************
-
+/**
+ * @brief Initializes the connection update database.
+ * 
+ * @param[in] p_conn Pointer to the connection update database structure.
+ */
 static void ble_dm_ConnInitUpdateDb(BLE_DM_ConnUpdateDb_T *p_conn)
 {
     (void)memset((uint8_t *)p_conn, 0, sizeof(BLE_DM_ConnUpdateDb_T));
 }
 
+/**
+ * @brief Retrieves a free connection instance from the connection update database.
+ * 
+ * @retval Pointer to the free connection instance, or NULL if none are available.
+ */
 static BLE_DM_ConnUpdateDb_T *ble_dm_GetFreeConn(void)
 {
     uint8_t i;
@@ -117,6 +129,14 @@ static BLE_DM_ConnUpdateDb_T *ble_dm_GetFreeConn(void)
     return NULL;
 }
 
+
+/**
+ * @brief Finds a connection instance by its handle.
+ * 
+ * @param[in] connHandle The connection handle to search for.
+ * 
+ * @retval Pointer to the connection instance, or NULL if not found.
+ */
 static BLE_DM_ConnUpdateDb_T *ble_dm_ConnFindConnByHandle(uint16_t connHandle)
 {
     uint8_t i;
@@ -131,6 +151,12 @@ static BLE_DM_ConnUpdateDb_T *ble_dm_ConnFindConnByHandle(uint16_t connHandle)
     return NULL;
 }
 
+
+/**
+ * @brief Initializes the BLE Device Manager connection submodule.
+ * 
+ * @retval true if initialization is successful, false otherwise.
+ */
 bool BLE_DM_ConnInit(void)
 {
     uint8_t i;
@@ -155,6 +181,12 @@ bool BLE_DM_ConnInit(void)
     return true;
 }
 
+
+/**
+ * @brief Processes the GAP connected event.
+ * 
+ * @param[in] p_event Pointer to the GAP event structure.
+ */
 static void ble_dm_ConnProcGapConnected(BLE_GAP_Event_T *p_event)
 {
     if ((p_event->eventField.evtConnect.status == GAP_STATUS_SUCCESS))
@@ -171,6 +203,12 @@ static void ble_dm_ConnProcGapConnected(BLE_GAP_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Processes the GAP disconnected event.
+ * 
+ * @param[in] p_event Pointer to the GAP event structure.
+ */
 static void ble_dm_ConnProcGapDisconnected(BLE_GAP_Event_T *p_event)
 {
     BLE_DM_ConnUpdateDb_T *p_conn;
@@ -183,6 +221,12 @@ static void ble_dm_ConnProcGapDisconnected(BLE_GAP_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Processes the GAP connection parameter update event.
+ * 
+ * @param[in] p_event Pointer to the GAP event structure.
+ */
 static void ble_dm_ConnProcGapConnParamUpdate(BLE_GAP_Event_T *p_event)
 {
     BLE_DM_ConnUpdateDb_T *p_conn;
@@ -211,6 +255,20 @@ static void ble_dm_ConnProcGapConnParamUpdate(BLE_GAP_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Check if the remote device's connection update parameters are acceptable.
+ *
+ * This function checks if the given connection parameters are within the acceptable range as per
+ * the Bluetooth specification and user-defined preferences.
+ *
+ * @param[in] minInterval   Minimum allowed connection interval.
+ * @param[in] maxInterval   Maximum allowed connection interval.
+ * @param[in] latency       Peripheral latency for the connection in number of connection events.
+ * @param[in] timeout       Supervision timeout for the LE link.
+ * 
+ * @retval true if the parameters are acceptable, false otherwise.
+ */
 static bool ble_dm_ConnCheckRemoteUpdateParams(uint16_t minInterval, uint16_t maxInterval, uint16_t latency, uint16_t timeout)
 {
     uint16_t minRequireTimeout;
@@ -242,6 +300,16 @@ static bool ble_dm_ConnCheckRemoteUpdateParams(uint16_t minInterval, uint16_t ma
     return true;
 }
 
+
+/**
+ * @brief Process GAP Remote Connection Update Request.
+ *
+ * This function processes the remote connection update request event. It checks if the connection parameters
+ * requested by the remote device are valid and either accepts the request with the provided parameters or
+ * rejects it if the parameters are not acceptable.
+ *
+ * @param[in] p_event Pointer to the BLE GAP event structure.
+ */
 static void ble_dm_ConnProcGapRemoteConnUpdateReq(BLE_GAP_Event_T *p_event)
 {
     BLE_GAP_ConnParams_T    connParams;
@@ -267,6 +335,12 @@ static void ble_dm_ConnProcGapRemoteConnUpdateReq(BLE_GAP_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Handles BLE GAP events.
+ * 
+ * @param[in] p_event Pointer to the GAP event structure.
+ */
 static void ble_dm_ConnStackEvtBleGapHandler(BLE_GAP_Event_T *p_event)
 {
     switch (p_event->eventId)
@@ -303,6 +377,12 @@ static void ble_dm_ConnStackEvtBleGapHandler(BLE_GAP_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Processes the L2CAP connection parameter update request event.
+ * 
+ * @param[in] p_event Pointer to the L2CAP event structure.
+ */
 static void ble_dm_ConnProcL2capCpUpdateReq(BLE_L2CAP_Event_T *p_event)
 {
     BLE_DM_ConnUpdateDb_T *p_conn;
@@ -339,6 +419,12 @@ static void ble_dm_ConnProcL2capCpUpdateReq(BLE_L2CAP_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Processes the L2CAP connection parameter update response event.
+ * 
+ * @param[in] p_event Pointer to the L2CAP event structure.
+ */
 static void ble_dm_ConnProcL2capCpUpdateResp(BLE_L2CAP_Event_T *p_event)
 {
     BLE_DM_ConnUpdateDb_T *p_conn;
@@ -359,6 +445,12 @@ static void ble_dm_ConnProcL2capCpUpdateResp(BLE_L2CAP_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Handles BLE L2CAP events.
+ * 
+ * @param[in] p_event Pointer to the L2CAP event structure.
+ */
 static void ble_dm_ConnStackEvtBleL2capHandler(BLE_L2CAP_Event_T *p_event)
 {
     switch (p_event->eventId)
@@ -383,6 +475,12 @@ static void ble_dm_ConnStackEvtBleL2capHandler(BLE_L2CAP_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Main entry function for BLE Device Manager connection-related events.
+ * 
+ * @param[in] p_stackEvent Pointer to the stack event structure.
+ */
 void BLE_DM_Conn(STACK_Event_T *p_stackEvent)
 {
     switch (p_stackEvent->groupId)
@@ -407,6 +505,14 @@ void BLE_DM_Conn(STACK_Event_T *p_stackEvent)
     }
 }
 
+
+/**
+ * @brief Configures the connection parameters.
+ * 
+ * @param[in] p_config Pointer to the connection configuration structure.
+ * 
+ * @retval MBA_RES_SUCCESS on success, MBA_RES_INVALID_PARA on invalid parameters.
+ */
 uint16_t BLE_DM_ConnConfig(BLE_DM_ConnConfig_T *p_config)
 {
     if (p_config->autoReplyUpdateRequest==true)
@@ -438,6 +544,15 @@ uint16_t BLE_DM_ConnConfig(BLE_DM_ConnConfig_T *p_config)
     }
 }
 
+
+/**
+ * @brief Updates the connection parameters.
+ * 
+ * @param[in] connHandle The connection handle.
+ * @param[in] p_params Pointer to the connection parameter update structure.
+ * 
+ * @retval MBA_RES_SUCCESS on success, MBA_RES_INVALID_PARA on invalid parameters.
+ */
 uint16_t BLE_DM_ConnectionParameterUpdate(uint16_t connHandle, BLE_DM_ConnParamUpdate_T *p_params)
 {
     BLE_DM_ConnUpdateDb_T *p_conn;
@@ -474,4 +589,3 @@ uint16_t BLE_DM_ConnectionParameterUpdate(uint16_t connHandle, BLE_DM_ConnParamU
     }
     return error;
 }
-

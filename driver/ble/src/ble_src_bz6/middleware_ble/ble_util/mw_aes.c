@@ -257,7 +257,7 @@ uint16_t MW_AES_CcmEncryptInit(MW_AES_Ctx_T * p_ctx, uint8_t *p_aesKey, uint8_t 
  * @param[in] length               The length of the data to be encrypted. 
  *                                 Must be a multiple of 16 bytes, except for the last data fragment.
  * @param[in] p_plainText          Pointer to the buffer containing the data to be encrypted.
- * @param[out] p_chiperText        Pointer to the buffer where the encrypted data will be stored.
+ * @param[out] p_cipherText        Pointer to the buffer where the encrypted data will be stored.
  * @param[out] p_tag               Pointer to the buffer where the authentication tag will be stored.
  *                                 Only valid if p_plainText is the last data fragment.
  *
@@ -362,9 +362,9 @@ uint16_t MW_AES_CcmDecryptInit(MW_AES_Ctx_T * p_ctx, uint8_t *p_aesKey, uint8_t 
  * @param[in] p_ctx                Pointer to the AES context structure.
  * @param[in] length               The length of the data to be decrypted. 
  *                                 Must be a multiple of 16 bytes, except for the last data fragment.
- * @param[in] p_chiperText         Pointer to the buffer containing the data to be decrypted.
+ * @param[in] p_cipherText         Pointer to the buffer containing the data to be decrypted.
  * @param[in] p_tag                Pointer to the buffer containing the authentication tag.
- *                                 Only be used if p_chiperText is the last data fragment.
+ *                                 Only be used if p_cipherText is the last data fragment.
  * @param[out] p_plainText         Pointer to the buffer where the decrypted data will be stored.
  *
  * @retval MBA_RES_SUCCESS         Encryption successful.

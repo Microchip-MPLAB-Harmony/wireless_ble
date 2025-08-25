@@ -31,21 +31,15 @@
     ble_dm_conn.h
 
   Summary:
-    This file contains the Device Information functions for 
-    BLE Device Manager module internal use.
+    Defines the interface for BLE connection management within the BLE Device 
+    Manager module.
 
   Description:
-    This file contains the Device Information functions for 
-    BLE Device Manager module internal use.
+    This header file declares the functions and data structures used by the BLE 
+    Device Manager for handling BLE connections. It is intended for internal 
+    use within the BLE Device Manager module and should not be included 
+    directly by application code.
  *******************************************************************************/
-
-
-/**
- * @addtogroup BLE_DM_INFO BLE_DM_INFO
- * @{
- * @brief Header file for the BLE Device Manager (ble_dm_info) internal module.
- */
- 
 #ifndef BLE_DM_CONN_H
 #define BLE_DM_CONN_H
 
@@ -58,12 +52,17 @@
 #include <stdint.h>
 #include "stack_mgr.h"
 
+// DOM-IGNORE-BEGIN
+#ifdef __cplusplus  // Provide C++ Compatibility
+extern "C" {
+#endif
+// DOM-IGNORE-END
 
-// *****************************************************************************
-// *****************************************************************************
-// Section: Data Types
-// *****************************************************************************
-// *****************************************************************************
+/**
+ * @defgroup BLE_DM_COMM BLE device manger connection management
+ * @brief Header file for the BLE Device Manager (ble_dm_conn) internal module.
+ * @{
+ */
 
 // *****************************************************************************
 // *****************************************************************************
@@ -71,39 +70,38 @@
 // *****************************************************************************
 // *****************************************************************************
 
-/**@brief Initialize BLE_DM_ConnInit module.
- *
- * @retval true      Successfully initialize BLE_DM_ConnInit module.
- * @retval false     Fail to initialize BLE_DM_ConnInit module.
-*/
+/**
+ * @brief Initializes the BLE Device Manager connection submodule.
+ * 
+ * @retval true if initialization is successful, false otherwise.
+ */
 bool BLE_DM_ConnInit(void);
 
 
-/**@brief Function for handling BLE events.
- *        This function should be called for every BLE event
- *
- * @param[in] p_stackEvent        Pointer to BLE events buffer.
- *
-*/
+/**
+ * @brief Main entry function for BLE Device Manager connection-related events.
+ * 
+ * @param[in] p_stackEvent Pointer to the stack event structure.
+ */
 void BLE_DM_Conn(STACK_Event_T *p_stackEvent);
 
-/**@brief Initialize configuration parameters of BLE_DM_CONN module.\n 
- *        User can configure automatic or manual reply when receive gap/l2cap connection parameters update requests. \n
- *        If user choose to reply manually, related events BLE_L2CAP_EVT_CONN_PARA_UPD_REQ or BLE_GAP_EVT_REMOTE_CONN_PARAM_REQUEST need to handle by user-self.
- *        Either accept or reject. Connection will be terminated if such requests are not handled properly. \n
- *        If automatic reply is adopted, related parameters min/max acceptable connection interval, min/max acceptable Peripheral latency need to be set properly.
- *        The BLE_DM_CONN module will accept or reject these requests based on the acceptable parameters range.
- *
- * @param[in] p_config              Pointer to configuration parameters. @ref BLE_DM_ConnConfig_T.
- *
- * @retval MBA_RES_SUCCESS          Successfully initialize the configuration parameters.
- * @retval MBA_RES_INVALID_PARA     The invalid acceptable parameters are used.
-*/
-uint16_t BLE_DM_ConnConfig(BLE_DM_ConnConfig_T *p_config);
-
-#endif
 
 /**
-  @}
-*/
+ * @brief Configures the connection parameters.
+ * 
+ * @param[in] p_config Pointer to the connection configuration structure.
+ * 
+ * @retval MBA_RES_SUCCESS on success, MBA_RES_INVALID_PARA on invalid parameters.
+ */
+uint16_t BLE_DM_ConnConfig(BLE_DM_ConnConfig_T *p_config);
+
+/** @} */
+
+//DOM-IGNORE-BEGIN
+#ifdef __cplusplus
+}
+#endif
+//DOM-IGNORE-END
+
+#endif //BLE_DM_CONN_H
 

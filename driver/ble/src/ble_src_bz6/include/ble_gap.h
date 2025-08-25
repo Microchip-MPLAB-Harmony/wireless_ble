@@ -376,6 +376,7 @@ extern "C" {
  * @{
  */
 #define BLE_GAP_PERIODIC_ADV_DATA_OP_COMPLETE                   (0x03U)        /**< Indicates that the periodic advertising data is complete and ready for use or broadcast. */
+#define BLE_GAP_PERIODIC_ADV_DATA_OP_UNCHANGED                  (0x04U)        /**< Operation indicating unchanged data (only update the Advertising DID). */
 /** @} */
 
 
@@ -574,6 +575,7 @@ extern "C" {
  */
 #define BLE_GAP_SYNC_CREATE_OPTION_USE_ADV_LIST                 (1U << 0U)    /**< Option to use the Periodic Advertiser List for synchronization. */
 #define BLE_GAP_SYNC_CREATE_OPTION_REPORT_DISABLED              (1U << 1U)    /**< Option to disable reporting initially when synchronization is created. */
+#define BLE_GAP_SYNC_CREATE_OPTION_FILTER_ENABLED               (1U << 2U)    /**< Option to enable duplicate filtering initially when synchronization is created. */
 /** @} */
 
 /**
@@ -743,6 +745,35 @@ extern "C" {
 #define BLE_GAP_SUBRATE_SUPV_TIMEOUT_MIN                        (0x000AU)      /**< Minimum permissible supervision timeout for the connection. (Unit: 10 ms) */
 #define BLE_GAP_SUBRATE_SUPV_TIMEOUT_MAX                        (0x0C80U)      /**< Maximum permissible supervision timeout for the connection. (Unit: 10 ms) */
 /** @} */
+
+/**
+ * @defgroup BLE_GAP_PA_ENABLE_OPTION Options for enabling periodic advertising
+ * @brief Defines the options for enabling periodic advertising.
+ * @{
+ */
+#define BLE_GAP_PA_ENABLE_OPTION_EN                             (1U <<0U)      /**< Enable periodic advertising.*/
+#define BLE_GAP_PA_ENABLE_OPTION_ADI                            (1U <<1U)      /**< Include the ADI field in AUX_SYNC_IND PDUs. */
+
+/** @} */
+
+/**
+ * @defgroup BLE_GAP_PA_ENABLE_RX_OPTION Options for enabling periodic advertising train
+ * @brief Defines the options for enabling periodic advertising train.
+ * @{
+ */
+#define BLE_GAP_PA_ENABLE_RX_OPTION_EN                          (1U << 0U)     /**< Indicates to enable reporting. */
+#define BLE_GAP_PA_ENABLE_RX_OPTION_FILTER                      (1U << 1U)     /**< Indicates to enable duplicate filtering. */
+/** @} */
+
+/**
+ * @defgroup BLE_GAP_EXT_ADV_ADDR_CHG_REASON Reasons for changing the address
+ * @brief Defines the reason for changing the address.
+ * @{
+ */
+#define BLE_GAP_EXT_ADV_ADDR_CHG_WTIH_ADV_DATA                  (1U << 0U)     /**< Indicates to change the address whenever the advertising data changes. */
+#define BLE_GAP_EXT_ADV_ADDR_CHG_WTIH_SCAN_RESP_DATA            (1U << 1U)     /**< Indicates to change the address whenever the scan response data changes. */
+/** @} */
+
 
 /** @} */ //BLE_GAP_DEFINES
 
@@ -1765,6 +1796,23 @@ uint16_t BLE_GAP_EnableOneTimeAdv(uint8_t option);
 
 
 /**
+ * @brief Sets data related address changes.
+ * @note  This function refreshes the Resolvable Private Address used by the advertising set identified by the advHandle
+ *          parameter, whether or not the address timeout period has been reached.
+ *          The changeReasons parameter specifies the reason(s) for refreshing addresses.
+ *          If any legacy advertising feature API has been used previously, the advHandle parameter is ignored.
+ *
+ * @param[in] advHandle                     Identifies the advertising set.
+ * @param[in] changeReasons                 Indicates when to change the address, see @ref BLE_GAP_EXT_ADV_ADDR_CHG_REASON.
+ *
+ * @retval MBA_RES_SUCCESS                  Successfully sets data related address changes.
+ * @retval MBA_RES_INVALID_PARA             The parameters provided are invalid.
+ * @retval MBA_RES_UNKNOWN_ADV_ID           Unknown advertising identifier.
+ */
+uint16_t BLE_GAP_SetDataRelatedAddrChange(uint8_t advHandle, uint8_t changeReasons);
+
+
+/**
  * @brief Unlocks BLE data traffic.
  * @note The BLE stack will lock data traffic when @ref BLE_GAP_EnableOneTimeAdv is called and a connection 
  *          is established automatically. The application should call this function to unlock BLE data traffic 
@@ -2240,14 +2288,17 @@ uint16_t BLE_GAP_SetTxPowerReportingEnable(uint16_t connHandle, bool localEnable
  *          If extended advertising PDU types are being used, then:\n
  *          - The advertisement shall not be both connectable and scannable.\n
  *          - High duty cycle directed connectable advertising shall not be used (bit 3 = 0).\n
- *       This API only accepts 2 configurations from the 2nd advertising set:\n
- *           1. Event property is non-connectable and non-scannable: This advertising set will use Non-RPA 
- *              automatically and change periodically.  The default address timeout is 15 minutes if the application 
- *              has not set local privacy via @ref BLE_GAP_SetLocalPrivacy.\n
- *           2. Event property is connectable or scannable: The peer address must be in the resolving list and local 
- *              privacy must be enabled. This peer address should not use the same IRK as other advertising sets. 
- *              This advertising set will use RPA.\n
- *        
+ *      For the address of the 2nd advertising set,\n
+ *          If local privacy via @ref BLE_GAP_SetLocalPrivacy is enabled, this API only accepts 2 configurations:\n
+ *              1. Event property is non-connectable and non-scannable: This advertising set will use Non-RPA
+ *                 automatically and change periodically.  The default address timeout is 15 minutes if the application
+ *                 has not set local privacy.\n
+ *              2. Event property is connectable or scannable: The peer address must be in the resolving list and local
+ *                 privacy must be enabled. This peer address should not use the same IRK as other advertising sets.
+ *                 This advertising set will use RPA.\n
+ *          Otherwise the address will use the device address which can be updated via @ref BLE_GAP_SetDeviceAddr
+ *              and it will be same as the address of 1st advertising set.\n
+ *
  *      It is recommended to clear and reconfigure all advertising sets after calling @ref BLE_GAP_SetLocalPrivacy 
  *      or @ref BLE_GAP_SetResolvingList due to potential changes in privacy settings.
  *
@@ -2345,6 +2396,28 @@ uint16_t BLE_GAP_SetExtAdvEnable(bool enable, uint8_t numOfSets, BLE_GAP_ExtAdvE
 
 
 /**
+ * @brief Starts a one-time extended advertising event.
+ * @note This API is part of the extended advertising feature set. It will be disallowed if any API from the legacy 
+ *          advertising feature set has been used prior to this call. See @ref BLE_GAP_ADV_CATS for details on advertising APIs. 
+ *          Initialization with @ref BLE_GAP_AdvInit or @ref BLE_GAP_ExtAdvInit is required before calling this API. If the option is set to 
+ *          BLE_GAP_ADV_OPTION_STORE_PARAMS, the APIs @ref BLE_GAP_SetExtAdvParams, @ref BLE_GAP_SetExtAdvData, or @ref BLE_GAP_SetExtScanRspData 
+ *          must be called beforehand to set the appropriate parameters. The combined advertising or scanRsp data length must not be over 230 bytes.
+ *
+ * @par Events generated
+ * @ref BLE_GAP_EVT_ADV_COMPL is generated when one time extended advertising event is completed. 
+ * If a connection is established, @ref BLE_GAP_EVT_CONNECTED is generated instead of @ref BLE_GAP_EVT_ADV_COMPL.
+ *
+ * @param[in] option                        Option for one time advertising. See @ref BLE_GAP_ADV_OPTION.
+ * @param[in] advHandle                     The advertising handle identifying the advertising set to be enabled.
+ *
+ * @retval MBA_RES_SUCCESS                  Successfully starts advertising.
+ * @retval MBA_RES_OOM                      Internal memory allocation failure occurred.
+ * @retval MBA_RES_INVALID_PARA             The parameters provided are invalid.
+ * @retval MBA_RES_COMMAND_DISALLOWED       Command disallowed when extended advertising feature is in use.
+ */
+uint16_t BLE_GAP_EnableOneTimeExtAdv(uint8_t option, uint8_t advHandle);
+
+/**
  * @brief Removes an advertising set.
  * @note  This API is part of the extended advertising feature and is incompatible with legacy advertising APIs. 
  *          See @ref BLE_GAP_ADV_CATS for details on advertising APIs. 
@@ -2440,7 +2513,7 @@ uint16_t BLE_GAP_SetPeriAdvData(BLE_GAP_PeriAdvDataParams_T *p_advDataParam);
  *          advertising APIs. Initialization with @ref BLE_GAP_AdvInit, @ref BLE_GAP_ExtAdvInit, and @ref BLE_GAP_PeriodicAdvInit 
  *          is required before using this API.
  *
- * @param[in] enable                        True to enable periodic advertising, false to disable it.
+ * @param[in] enable                        Set @ref BLE_GAP_PA_ENABLE_OPTION to enable periodic advertising; otherwise, set it to 0.
  * @param[in] advHandle                     Advertising set identifier to enable or disable periodic advertising for.
  *
  * @retval MBA_RES_SUCCESS                  Successfully enables or disables the periodic advertising.
@@ -2449,7 +2522,7 @@ uint16_t BLE_GAP_SetPeriAdvData(BLE_GAP_PeriAdvDataParams_T *p_advDataParam);
  * @retval MBA_RES_COMMAND_DISALLOWED       Command disallowed due to a conflicting operation or state.
  * @retval MBA_RES_UNKNOWN_ADV_ID           Unknown advertising identifier.
  */
-uint16_t BLE_GAP_SetPeriAdvEnable(bool enable, uint8_t advHandle);
+uint16_t BLE_GAP_SetPeriAdvEnable(uint8_t enable, uint8_t advHandle);
 
 
 /**
@@ -2685,14 +2758,14 @@ uint16_t BLE_GAP_SetDevToPeriAdvList(uint8_t num, BLE_GAP_SyncSetDev_T *p_syncSe
  * @ref BLE_GAP_EVT_PERI_ADV_REPORT is generated when reporting is enabled.
  *
  * @param[in] syncHandle                    Identity of the periodic advertising train.
- * @param[in] enable                        Set to true to enable reports, or false to disable them.
+ * @param[in] enable                        Set @ref BLE_GAP_PA_ENABLE_RX_OPTION to enable reporting; otherwise, set it to 0.
  *
  * @retval MBA_RES_SUCCESS                  Successfully enables or disables for the periodic advertising train.
  * @retval MBA_RES_OOM                      Internal memory allocation failure occurred.
  * @retval MBA_RES_COMMAND_DISALLOWED       Command disallowed due to a conflicting operation or state.
  * @retval MBA_RES_UNKNOWN_ADV_ID           Unknown advertising identifier.
  */
-uint16_t BLE_GAP_SetPeriAdvRxEnable(uint16_t syncHandle, bool enable);
+uint16_t BLE_GAP_SetPeriAdvRxEnable(uint16_t syncHandle, uint8_t enable);
 
 
 /**
@@ -2746,8 +2819,8 @@ uint16_t BLE_GAP_SetPathLossReportingEnable(uint16_t connHandle, bool enable);
  * @brief Sets the initial values for the acceptable parameters for subrating requests.
  * @note  This command should be used only after the @ref BLE_GAP_EVT_FEATURE_EXCHANGE_COMPL event has been received.
  *          The following conditions will result in an MBA_RES_INVALID_PARA response:\n
- *          - Subrate Max × (Max Latency + 1) is greater than 500.\n
- *          - Current connection interval × Subrate Max × (Max Latency + 1) is greater than or equal to half the 
+ *          - Subrate Max x (Max Latency + 1) is greater than 500.\n
+ *          - Current connection interval x Subrate Max x (Max Latency + 1) is greater than or equal to half the 
  *              Supervision Timeout parameter.\n
  *          - Subrate Max is less than Subrate Min.\n
  *          - Continuation Number is greater than or equal to Subrate Max.\n
@@ -2764,8 +2837,8 @@ uint16_t BLE_GAP_SetDefaultSubrate(BLE_GAP_SubrateParams_T  *p_subrateParams);
  * @brief Request a change to the subrating factor and/or other parameters.
  * @note  This command should be used only after the @ref BLE_GAP_EVT_FEATURE_EXCHANGE_COMPL event has been received.
  *          The following conditions will result in an MBA_RES_INVALID_PARA response:\n
- *          - Subrate Max × (Max Latency + 1) is greater than 500.\n
- *          - Current connection interval × Subrate Max × (Max Latency + 1) is greater than or equal to half the 
+ *          - Subrate Max x (Max Latency + 1) is greater than 500.\n
+ *          - Current connection interval x Subrate Max x (Max Latency + 1) is greater than or equal to half the 
  *              Supervision Timeout parameter.\n
  *          - Subrate Max is less than Subrate Min.\n
  *          - Continuation Number is greater than or equal to Subrate Max.\n
@@ -2773,11 +2846,34 @@ uint16_t BLE_GAP_SetDefaultSubrate(BLE_GAP_SubrateParams_T  *p_subrateParams);
  * @param[in] connHandle                    Connection handle associated with this connection.
  * @param[in] p_subrateParams               Pointer to a @ref BLE_GAP_SubrateParams_T structure containing the subrate parameters.
  *
- * @retval MBA_RES_SUCCESS                  Successfully request a change to the subrating factor and/or other parameters..
+ * @retval MBA_RES_SUCCESS                  Successfully request a change to the subrating factor and/or other parameters.
  * @retval MBA_RES_INVALID_PARA             The parameters provided are invalid.
  * @retval MBA_RES_COMMAND_DISALLOWED       Command disallowed due to a conflicting operation or state.
  */
 uint16_t BLE_GAP_SubrateRequest(uint16_t connHandle, BLE_GAP_SubrateParams_T  *p_subrateParams);
+
+
+/**
+ * @brief Reads AFH channel assessment mode.
+ *
+ * @param[out] p_enable                     Pointer to a bool containing true if the mode is enabled, otherwise false.
+ *
+ * @retval MBA_RES_SUCCESS                  Successfully read the mode.
+ * @retval MBA_RES_FAIL                     The mode is not supported.
+ * @retval MBA_RES_INVALID_PARA             The parameters provided are invalid.
+ */
+uint16_t BLE_GAP_ReadAfhChannelAssessMode(bool *p_enable);
+
+
+/**
+ * @brief Writes AFH channel assessment mode.
+ *
+ * @param[in] enable                        Set to true to enable the mode, or false to disable it.
+ *
+ * @retval MBA_RES_SUCCESS                  Successfully write the mode.
+ * @retval MBA_RES_FAIL                     The mode is not supported.
+ */
+uint16_t BLE_GAP_WriteAfhChannelAssessMode(bool enable);
 
 
 /** @} */ //BLE_GAP_FUNS

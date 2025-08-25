@@ -31,12 +31,13 @@
     ble_dm_sm.c
 
   Summary:
-    This file contains the Security Manager functions for 
-    BLE Device Manager module internal use.
+    Implements Security Manager functions used internally by the BLE Device Manager.
 
   Description:
-    This file contains the Security Manager functions for 
-    BLE Device Manager module internal use.
+    This source file provides the implementation of the Security Manager functions
+    that are utilized internally by the BLE Device Manager module. These functions
+    are integral to managing security features such as authentication and encryption
+    in BLE (Bluetooth Low Energy) applications.
  *******************************************************************************/
 
 
@@ -59,7 +60,7 @@
 // *****************************************************************************
 // *****************************************************************************
 
-static bool s_autoAccept;
+static bool     s_autoAccept;       // Indicate whether to auto-accept security requests.
 
 // *****************************************************************************
 // *****************************************************************************
@@ -67,6 +68,12 @@ static bool s_autoAccept;
 // *****************************************************************************
 // *****************************************************************************
 
+/**
+ * @brief Conveys a BLE security start event.
+ * 
+ * @param[in] connHandle    Connection handle to identify the BLE connection.
+ * @param[in] procedure     Security procedure that is being started.
+ */
 static void ble_dm_SmConveyStartEvt(uint16_t connHandle, BLE_DM_SecurityProc_T procedure)
 {
     BLE_DM_Event_T  dmEvt;
@@ -76,6 +83,14 @@ static void ble_dm_SmConveyStartEvt(uint16_t connHandle, BLE_DM_SecurityProc_T p
     BLE_DM_ConveyEvent(&dmEvt);
 }
 
+
+/**
+ * @brief Conveys a BLE security success event.
+ * 
+ * @param[in] connHandle    Connection handle to identify the BLE connection.
+ * @param[in] procedure     Security procedure that was successful.
+ * @param[in] bonded        Indicates if the device is bonded.
+ */
 static void ble_dm_SmConveySuccessEvt(uint16_t connHandle, BLE_DM_SecurityProc_T procedure, bool bonded)
 {
     BLE_DM_Event_T  dmEvt;
@@ -86,6 +101,15 @@ static void ble_dm_SmConveySuccessEvt(uint16_t connHandle, BLE_DM_SecurityProc_T
     BLE_DM_ConveyEvent(&dmEvt);
 }
 
+
+/**
+ * @brief Conveys a BLE security failure event.
+ * 
+ * @param[in] connHandle    Connection handle to identify the BLE connection.
+ * @param[in] procedure     Security procedure that failed.
+ * @param[in] error         Error code indicating the type of failure.
+ * @param[in] reason        Additional reason code providing more context on the failure.
+ */
 static void ble_dm_SmConveyFailEvt(uint16_t connHandle, BLE_DM_SecurityProc_T procedure, uint8_t error, uint8_t reason)
 {
      BLE_DM_Event_T  dmEvt;
@@ -98,6 +122,11 @@ static void ble_dm_SmConveyFailEvt(uint16_t connHandle, BLE_DM_SecurityProc_T pr
 }
 
 
+/**
+ * @brief Handles BLE security manager events.
+ * 
+ * @param[in] p_event       Pointer to the BLE SMP event structure.
+ */
 static void ble_dm_SecurityManager(BLE_SMP_Event_T *p_event)
 {
     switch (p_event->eventId)
@@ -158,11 +187,39 @@ static void ble_dm_SecurityManager(BLE_SMP_Event_T *p_event)
 
                 if (p_conn->role == BLE_GAP_ROLE_PERIPHERAL)
                 {
-                    result = BLE_SMP_AcceptPairingRequest(p_event->eventField.evtPairingReq.connHandle);
+                    bool accept = true;
+                    BLE_DM_PairedDevInfo_T bonding;
 
-                    if (MBA_RES_SUCCESS == result)
+                    (void)memset(&bonding, 0, sizeof(BLE_DM_PairedDevInfo_T));
+                    if (BLE_DM_DdsGetPairedDevice(p_conn->devId, &bonding) == MBA_RES_SUCCESS)
                     {
-                        ble_dm_SmConveyStartEvt(p_event->eventField.evtPairingReq.connHandle, DM_SECURITY_PROC_PAIRING);
+                        if (bonding.auth == 1U)
+                        {
+                            if ((p_event->eventField.evtPairingReq.authReq & BLE_SMP_OPTION_MITM) != 0U)
+                            {
+                                if ((bonding.lesc == 1U) && ((p_event->eventField.evtPairingReq.authReq & BLE_SMP_OPTION_SECURE_CONNECTION) == 0U))
+                                {
+                                    accept = false;
+                                }
+                            }
+                            else
+                            {
+                                accept = false;
+                            }
+                        }
+                    }
+
+                    if (accept)
+                    {
+                        result = BLE_SMP_AcceptPairingRequest(p_event->eventField.evtPairingReq.connHandle);
+                        if (MBA_RES_SUCCESS == result)
+                        {
+                            ble_dm_SmConveyStartEvt(p_event->eventField.evtPairingReq.connHandle, DM_SECURITY_PROC_PAIRING);
+                        }
+                    }
+                    else
+                    {
+                        result = BLE_SMP_RejectPairingRequest(p_event->eventField.evtPairingReq.connHandle);
                     }
                 }
             }
@@ -215,7 +272,7 @@ static void ble_dm_SecurityManager(BLE_SMP_Event_T *p_event)
             {
                 return;
             }
-            
+            memset(p_devInfo,0,sizeof(BLE_DM_PairedDevInfo_T));
             p_key = &p_event->eventField.evtNotifyKeys.keys;
 
             p_devInfo->remoteAddr = p_key->remote.idInfo.addr;
@@ -247,7 +304,7 @@ static void ble_dm_SecurityManager(BLE_SMP_Event_T *p_event)
 
             if (p_conn->role == BLE_GAP_ROLE_CENTRAL)
             {
-                if (p_key->local.encInfo.lesc == 1)
+                if (p_key->local.encInfo.lesc == 1U)
                 {
                     (void)memcpy(p_devInfo->ltk, (uint8_t *)(&p_key->local.encInfo.ltk[0]), 16);
                 }
@@ -292,6 +349,12 @@ static void ble_dm_SecurityManager(BLE_SMP_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Main entry point for BLE Device Manager security events.
+ * 
+ * @param[in] p_stackEvent  Pointer to the stack event structure.
+ */
 void BLE_DM_Sm(STACK_Event_T *p_stackEvent)
 {
     if (p_stackEvent->groupId == STACK_GRP_BLE_SMP)
@@ -366,12 +429,29 @@ void BLE_DM_Sm(STACK_Event_T *p_stackEvent)
     }
 }
 
+
+/**
+ * @brief Configures the Device Manager with auto-accept option.
+ * 
+ * @param[in] autoAccept    Indicates whether to auto-accept security requests.
+ * 
+ * @retval MBA_RES_SUCCESS on successful configuration.
+ */
 uint16_t BLE_DM_SmConfig(bool autoAccept)
 {
     s_autoAccept = autoAccept;
     return MBA_RES_SUCCESS;
 }
 
+
+/**
+ * @brief Initiates pairing or encryption with a BLE device.
+ * 
+ * @param[in] connHandle    Connection handle to identify the BLE connection.
+ * @param[in] repairing     Indicates whether this is a re-pairing attempt.
+ * 
+ * @retval Result of    the pairing or encryption initiation.
+ */
 uint16_t BLE_DM_SmPairing(uint16_t connHandle, bool repairing)
 {
     BLE_DM_InfoConn_T   *p_conn;
@@ -414,11 +494,18 @@ uint16_t BLE_DM_SmPairing(uint16_t connHandle, bool repairing)
     }
 }
 
+
+/** @brief Initializes the BLE Device Manager with default values. */
 void BLE_DM_SmInit(void)
 {
     s_autoAccept = true;
 }
 
+/**
+ * @brief Callback function to handle completion of PDS write operations.
+ * 
+ * @param[in] devId Device ID for which the write operation was completed.
+ */
 void BLE_DM_SmWriteCompleteCallback(uint8_t devId)
 {
     BLE_DM_Event_T  dmEvt;

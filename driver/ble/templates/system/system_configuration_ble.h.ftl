@@ -16,14 +16,14 @@
 #define CONFIG_BLE_GAP_SVC_CP_PERI_LATENCY               ${GAP_SVC_CP_PERI_LATENCY}         /* Peripheral Latency */
 #define CONFIG_BLE_GAP_SVC_CP_PERI_SUPERVISION_TIMEOUT   ${GAP_SVC_CP_PERI_SUPERVISION_TIMEOUT} /* Connection Sup ervision Timeout Multiplier */
         </#if>
-        <#if APP_BLE_DEVICE == "pic32cx_bz6_family">
+    </#if>
+    <#if BLE_SYS_BT_VER_SUPP == "BT_VER_6_0">
 #define CONFIG_BLE_GAP_SVC_ENC_DATA_KEY_MATL             ${GAP_SVC_ENC_DATA_KEY_MATL?c}                   /* Enable Encrypted Data Key Material */
-            <#if GAP_SVC_ENC_DATA_KEY_MATL == true>
+        <#if GAP_SVC_ENC_DATA_KEY_MATL == true>
 #define CONFIG_BLE_GAP_SVC_EDKM_KEY_C                    {${GAP_SVC_EDKM_KEY_C}} /* Shared session key*/
 #define CONFIG_BLE_GAP_SVC_EDKM_IV_C                     {${GAP_SVC_EDKM_IV_C}} /* Initialization vector*/
-            </#if>
-#define CONFIG_BLE_GAP_SVC_LE_GATT_SEC_LVLS              ${GAP_SVC_LE_GATT_SEC_LVLS?c}                     /* Enable LE GATT Security Levels */
         </#if>
+#define CONFIG_BLE_GAP_SVC_LE_GATT_SEC_LVLS              ${GAP_SVC_LE_GATT_SEC_LVLS?c}                    /* Enable LE GATT Security Levels */
     </#if>
     <#if BOOL_GAP_PRIVACY == true>
 #define CONFIG_BLE_GAP_PRIV_ADDR_TYPE                    ${GAP_PRIV_ADDR_TYPE} /* Address Type */
@@ -35,14 +35,14 @@
 //Legacy Advertising set
 #define CONFIG_BLE_GAP_ADV_DATA                      {${GAP_ADV_DATA}}
 #define CONFIG_BLE_GAP_ADV_DATA_ORIG_LEN             ${GAP_ADV_DATA_ORIG_LEN}
-            <#if GAP_SVC_ENC_DATA_KEY_MATL == true && GAP_ADV_DATA_ED_EN == true>
+            <#if GAP_SVC_ENC_DATA_KEY_MATL_EN == true && GAP_ADV_DATA_ED_EN == true>
 #define CONFIG_BLE_GAP_ADV_DATA_ED_C                 {${GAP_ADV_DATA_ED_C}}
             </#if>
         </#if>
         <#if GAP_SCAN_RSP_DATA_LEN != 0>
 #define CONFIG_BLE_GAP_SCAN_RSP_DATA                 {${GAP_SCAN_RSP_DATA}}
 #define CONFIG_BLE_GAP_SCAN_RSP_DATA_ORIG_LEN        ${GAP_SCAN_RSP_DATA_ORIG_LEN}
-            <#if GAP_SVC_ENC_DATA_KEY_MATL == true && GAP_SCAN_RSP_DATA_ED_EN == true>
+            <#if GAP_SVC_ENC_DATA_KEY_MATL_EN == true && GAP_SCAN_RSP_DATA_ED_EN == true>
 #define CONFIG_BLE_GAP_SCAN_RSP_DATA_ED_C            {${GAP_SCAN_RSP_DATA_ED_C}}
             </#if>
         </#if>
@@ -59,14 +59,14 @@
         <#if GAP_EXT_ADV_DATA_LEN != 0>
 #define CONFIG_BLE_GAP_EXT_ADV_DATA                  {${GAP_EXT_ADV_DATA}}
 #define CONFIG_BLE_GAP_EXT_ADV_DATA_ORIG_LEN         ${GAP_EXT_ADV_DATA_ORIG_LEN}
-            <#if GAP_SVC_ENC_DATA_KEY_MATL == true && GAP_EXT_ADV_DATA_ED_EN == true>
+            <#if GAP_SVC_ENC_DATA_KEY_MATL_EN == true && GAP_EXT_ADV_DATA_ED_EN == true>
 #define CONFIG_BLE_GAP_EXT_ADV_DATA_ED_C             {${GAP_EXT_ADV_DATA_ED_C}}
             </#if>
         </#if>
         <#if GAP_EXT_SCAN_RSP_DATA_LEN != 0>
 #define CONFIG_BLE_GAP_EXT_SCAN_RSP_DATA             {${GAP_EXT_SCAN_RSP_DATA}}
 #define CONFIG_BLE_GAP_EXT_SCAN_RSP_DATA_ORIG_LEN    ${GAP_EXT_SCAN_RSP_DATA_ORIG_LEN}
-            <#if GAP_SVC_ENC_DATA_KEY_MATL == true && GAP_EXT_SCAN_RSP_DATA_ED_EN == true>
+            <#if GAP_SVC_ENC_DATA_KEY_MATL_EN == true && GAP_EXT_SCAN_RSP_DATA_ED_EN == true>
 #define CONFIG_BLE_GAP_EXT_SCAN_RSP_DATA_ED_C        {${GAP_EXT_SCAN_RSP_DATA_ED_C}}
             </#if>
         </#if>
@@ -100,7 +100,7 @@
 #define CONFIG_BLE_GAP_EXT_ADV_SEC_ADV_PHY           ${GAP_SEC_ADV_PHY}      /* Secondary Advertising PHY */
 #define CONFIG_BLE_GAP_EXT_ADV_SID                   ${GAP_EXT_ADV_SID}     /* Advertising SID */
 #define CONFIG_BLE_GAP_EXT_ADV_SCAN_ENABLE           ${GAP_EXT_ADV_SCAN_ENABLE?c}   /* Scan Request Notification Enable */
-        <#if APP_BLE_DEVICE == "pic32cx_bz6_family">
+        <#if BLE_SYS_BT_VER_SUPP == "BT_VER_6_0">
             <#if GAP_PRI_ADV_PHY == 'BLE_GAP_PHY_TYPE_LE_CODED'>
 #define CONFIG_BLE_GAP_EXT_ADV_PRI_ADV_PHY_OPT       ${GAP_PRI_ADV_PHY_OPTION}  /* Primary Advertising PHY Option */
             <#else>
@@ -119,14 +119,14 @@
             <#if GAP_EXT_ADV_DATA_LEN_2 != 0>
 #define CONFIG_BLE_GAP_EXT_ADV_DATA_2                {${GAP_EXT_ADV_DATA_2}}
 #define CONFIG_BLE_GAP_EXT_ADV_DATA_ORIG_LEN_2       ${GAP_EXT_ADV_DATA_ORIG_LEN_2}
-                <#if GAP_SVC_ENC_DATA_KEY_MATL == true && GAP_EXT_ADV_DATA_ED_EN_2 == true>
+                <#if GAP_SVC_ENC_DATA_KEY_MATL_EN == true && GAP_EXT_ADV_DATA_ED_EN_2 == true>
 #define CONFIG_BLE_GAP_EXT_ADV_DATA_ED_C_2           {${GAP_EXT_ADV_DATA_ED_C_2}}
                 </#if>
             </#if>
             <#if GAP_EXT_SCAN_RSP_DATA_LEN_2 != 0>
 #define CONFIG_BLE_GAP_EXT_SCAN_RSP_DATA_2           {${GAP_EXT_SCAN_RSP_DATA_2}}
 #define CONFIG_BLE_GAP_EXT_SCAN_RSP_DATA_ORIG_LEN_2  ${GAP_EXT_SCAN_RSP_DATA_ORIG_LEN_2}
-                <#if GAP_SVC_ENC_DATA_KEY_MATL == true && GAP_EXT_SCAN_RSP_DATA_ED_EN_2 == true>
+                <#if GAP_SVC_ENC_DATA_KEY_MATL_EN == true && GAP_EXT_SCAN_RSP_DATA_ED_EN_2 == true>
 #define CONFIG_BLE_GAP_EXT_SCAN_RSP_DATA_ED_C_2      {${GAP_EXT_SCAN_RSP_DATA_ED_C_2}}
                 </#if>
             </#if>
@@ -160,7 +160,7 @@
 #define CONFIG_BLE_GAP_EXT_ADV_SEC_ADV_PHY_2         ${GAP_SEC_ADV_PHY_2}      /* Secondary Advertising PHY */
 #define CONFIG_BLE_GAP_EXT_ADV_SID_2                 ${GAP_EXT_ADV_SID_2}     /* Advertising SID */
 #define CONFIG_BLE_GAP_EXT_ADV_SCAN_ENABLE_2         ${GAP_EXT_ADV_SCAN_ENABLE_2?c}   /* Scan Request Notification Enable */
-            <#if APP_BLE_DEVICE == "pic32cx_bz6_family">
+            <#if BLE_SYS_BT_VER_SUPP == "BT_VER_6_0">
                 <#if GAP_PRI_ADV_PHY_2 == 'BLE_GAP_PHY_TYPE_LE_CODED'>
 #define CONFIG_BLE_GAP_EXT_ADV_PRI_ADV_PHY_OPT_2     ${GAP_PRI_ADV_PHY_OPTION_2}  /* Primary Advertising PHY Option */
                 <#else>

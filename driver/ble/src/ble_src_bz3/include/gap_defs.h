@@ -31,44 +31,45 @@
     gap_defs.h
 
   Summary:
-    This file contains the GAP definitions.
+    Defines constants, types, and structures associated with the GAP layer of the BLE stack.
 
   Description:
-    This file contains the GAP definitions.
+    This header file provides the necessary definitions for interfacing with the 
+    Generic Access Profile (GAP) layer of the BLE stack. It includes the declaration 
+    of types, and constants that are used by the application to manage GAP-related 
+    operations such as advertising, connectivity, security, and device discovery.
  *******************************************************************************/
-
-
-/**
- *@addtogroup BLE_GAP
- *@{
- *@brief Header file for the BT/BLE Generic Access Profile library.
- * @note Definitions and prototypes for the BT/BLE GAP stack layer application programming interface.
- */
 #ifndef GAP_DEFS_H
 #define GAP_DEFS_H
 
-
 // DOM-IGNORE-BEGIN
 #ifdef __cplusplus  // Provide C++ Compatibility
-
 extern "C" {
-
 #endif
 // DOM-IGNORE-END
+
+/**
+ * @addtogroup BLE_GAP
+ * @{
+ */
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Macros
 // *****************************************************************************
 // *****************************************************************************
-/**@addtogroup BLE_GAP_DEFINES Defines
- * @{ */
+/**
+ * @addtogroup BLE_GAP_DEFINES Defines
+ * @{
+ */
  
  
-/**@defgroup GAP_STATUS Status definitions
- * @brief The definitions list the various possible status.
- * @{ */
-#define GAP_STATUS_SUCCESS                                   (0x00U)        /**< Successful status. */
+/**
+ * @defgroup GAP_STATUS Status definitions
+ * @brief Defines the various possible status.
+ * @{
+ */
+#define GAP_STATUS_SUCCESS                                   (0x00U)        /**< Successful Status. */
 #define GAP_STATUS_UNKNOWN_HCI_COMMAND                       (0x01U)        /**< Unknown HCI Command. */
 #define GAP_STATUS_UNKNOWN_CONNECTION_IDENTIFIER             (0x02U)        /**< Unknown Connection Identifier. */
 #define GAP_STATUS_HARDWARE_FAILURE                          (0x03U)        /**< Hardware Failure. */
@@ -87,9 +88,9 @@ extern "C" {
 #define GAP_STATUS_CONNECTION_ACCEPT_TIMEOUT                 (0x10U)        /**< Connection Accept Timeout Exceeded. */
 #define GAP_STATUS_UNSUPPORTED_FEATURE                       (0x11U)        /**< Unsupported Feature or Parameter Value. */
 #define GAP_STATUS_INVALID_HCI_COMMAND_PARAMETERS            (0x12U)        /**< Invalid HCI Command Parameters. */
-#define GAP_STATUS_REMOTE_TML_CONN               			 (0x13U)        /**< Remote User Terminated Connection. */
-#define GAP_STATUS_REMOTE_TML_CONN_LOW_RESOURCE  			 (0x14U)        /**< Remote Device Terminated Connection due to Low Resources. */
-#define GAP_STATUS_REMOTE_TML_CONN_POWEROFF      			 (0x15U)        /**< Remote Device Terminated Connection due to Power Off. */
+#define GAP_STATUS_REMOTE_TML_CONN               			       (0x13U)        /**< Remote User Terminated Connection. */
+#define GAP_STATUS_REMOTE_TML_CONN_LOW_RESOURCE  			       (0x14U)        /**< Remote Device Terminated Connection due to Low Resources. */
+#define GAP_STATUS_REMOTE_TML_CONN_POWEROFF      			       (0x15U)        /**< Remote Device Terminated Connection due to Power Off. */
 #define GAP_STATUS_LOCAL_HOST_TERMINATE_CONNECTION           (0x16U)        /**< Connection Terminated By Local Host. */
 #define GAP_STATUS_REPEATED_ATTEMPTS                         (0x17U)        /**< Repeated Attempts. */
 #define GAP_STATUS_PAIRING_NOT_ALLOWED                       (0x18U)        /**< Pairing Not Allowed. */
@@ -136,48 +137,57 @@ extern "C" {
 #define GAP_STATUS_OPERATION_CANCELLED_BY_HOST               (0x44U)        /**< Operation Cancelled by Host. */
 /** @} */
 
-/**@defgroup GAP_MAX_ADDRESS_LEN Address length
- * @brief The definition of maximum Bluetooth address length.
- * @{ */
-#define GAP_MAX_BD_ADDRESS_LEN                               (0x06U)        /**< Maximum length of BD address . */
+/**
+ * @defgroup GAP_MAX_ADDRESS_LEN Address length
+ * @brief Defines the maximum length of a Bluetooth address.
+ * @{
+ */
+#define GAP_MAX_BD_ADDRESS_LEN                               (0x06U)        /**< Maximum length of a Bluetooth Device address in bytes.  */
 /** @} */
 
 
-/**@defgroup GAP_MAX_DEVICE_NAME_LEN Maximum device name length
- * @brief The definition of maximum length of device name.
- * @{ */
-#define GAP_MAX_DEVICE_NAME_LEN                              (0x20U)        /**< Maximum length of device name. */
+/**
+ * @defgroup GAP_MAX_DEVICE_NAME_LEN Maximum device name length
+ * @brief Defines the maximum length of a device name.
+ * @{
+ */
+#define GAP_MAX_DEVICE_NAME_LEN                              (0x20U)        /**< Maximum length of a device name in bytes. */
 /** @} */
 
 
-/**@defgroup GAP_DISC_REASON Disconnect reason
- * @brief The definition of disconnection reason.
- * @{ */
-#define GAP_DISC_REASON_AUTH_FAIL                            (0x05U)        /**< Authentication failure */
-#define GAP_DISC_REASON_REMOTE_TERMINATE                     (0x13U)        /**< Remote User Terminated Connection */
-#define GAP_DISC_REASON_LOW_RESOURCES                        (0x14U)        /**< Remote Device Terminated Connection due to Low Resources */
-#define GAP_DISC_REASON_POWER_OFF                            (0x15U)        /**< Remote Device Terminated Connection due to Power Off */
-#define GAP_DISC_REASON_UNSUPPORTED                          (0x1AU)        /**< Unsupported Remote Feature / Unsupported LMP Feature */
-#define GAP_DISC_REASON_KEY_LEN_UNSUPPORTED                  (0x29U)        /**< Pairing with Unit Key Not Supported */
-#define GAP_DISC_REASON_UNACCEPTABLE_CP                      (0x3BU)        /**< Unacceptable Connection Parameters */
+/**
+ * @defgroup GAP_DISC_REASON Disconnect reason
+ * @brief Defines the reasons for disconnection in the GAP (Generic Access Profile).
+ * @{
+ */
+#define GAP_DISC_REASON_AUTH_FAIL                            (0x05U)        /**< Authentication failure. */
+#define GAP_DISC_REASON_REMOTE_TERMINATE                     (0x13U)        /**< Remote User Terminated Connection. */
+#define GAP_DISC_REASON_LOW_RESOURCES                        (0x14U)        /**< Remote Device Terminated Connection due to Low Resources. */
+#define GAP_DISC_REASON_POWER_OFF                            (0x15U)        /**< Remote Device Terminated Connection due to Power Off. */
+#define GAP_DISC_REASON_UNSUPPORTED                          (0x1AU)        /**< Unsupported Remote Feature / Unsupported LMP Feature. */
+#define GAP_DISC_REASON_KEY_LEN_UNSUPPORTED                  (0x29U)        /**< Pairing with Unit Key Not Supported. */
+#define GAP_DISC_REASON_UNACCEPTABLE_CP                      (0x3BU)        /**< Unacceptable Connection Parameters. */
 /** @} */
 
 
-/**@defgroup GAP_APPEARANCE_DEF Appearance definition
- * @brief The definition of appearance.
- * @{ */
-#define GAP_APPEARANCE_UNKNOWN                                  (0U)        /**< Unknown. */
-#define GAP_APPEARANCE_GENERIC_PHONE                           (64U)        /**< Generic Phone. */
-#define GAP_APPEARANCE_GENERIC_COMPUTER                       (128U)        /**< Generic Computer. */
-#define GAP_APPEARANCE_GENERIC_WATCH                          (192U)        /**< Generic Watch. */
-#define GAP_APPEARANCE_GENERIC_HID                            (960U)        /**< Human Interface Device (HID). */
-#define GAP_APPEARANCE_GENERIC_GLUCOSE_METER                 (1024U)        /**< Generic Glucose Meter. */
-#define GAP_APPEARANCE_GENERIC_CYCLING                       (1152U)        /**< Generic Cycling. */
-#define GAP_APPEARANCE_GENERIC_WEIGHT_SCALE                  (3200U)        /**< Generic Weight Scale. */
+/**
+ * @defgroup GAP_APPEARANCE_DEF Appearance definition
+ * @brief Defines the standard appearance values used in GAP (Generic Access Profile).
+ * @{
+ */
+#define GAP_APPEARANCE_UNKNOWN                               (0U)           /**< Appearance value for an unknown or unspecified device.  */
+#define GAP_APPEARANCE_GENERIC_PHONE                         (64U)          /**< Appearance value for a generic phone device. */
+#define GAP_APPEARANCE_GENERIC_COMPUTER                      (128U)         /**< Appearance value for a generic computer device. */
+#define GAP_APPEARANCE_GENERIC_WATCH                         (192U)         /**< Appearance value for a generic watch device.  */
+#define GAP_APPEARANCE_GENERIC_HID                           (960U)         /**< Appearance value for a generic Human Interface Device (HID). */
+#define GAP_APPEARANCE_GENERIC_GLUCOSE_METER                 (1024U)        /**< Appearance value for a generic glucose meter. */
+#define GAP_APPEARANCE_GENERIC_CYCLING                       (1152U)        /**< Appearance value for a generic cycling-related device.  */
+#define GAP_APPEARANCE_GENERIC_WEIGHT_SCALE                  (3200U)        /**< Appearance value for a generic weight scale. */
 /** @} */
 
+/** @} */ //BLE_GAP_DEFINES
 
-/**@} */ //BLE_GAP_DEFINES
+/** @} */
 
 //DOM-IGNORE-BEGIN
 #ifdef __cplusplus
@@ -185,9 +195,4 @@ extern "C" {
 #endif
 //DOM-IGNORE-END
 
-#endif
-
-
-/**
-  @}
-*/
+#endif//GAP_DEFS_H

@@ -31,10 +31,14 @@
     ble_otapc.c
 
   Summary:
-    This file contains the BLE OTA Profile Client functions for application user.
+    Implements the client-side functionality of the BLE Over-The-Air (OTA) 
+    Profile, enabling OTA firmware updates for BLE devices.
 
   Description:
-    This file contains the BLE OTA Profile Client functions for application user.
+    This source file provides the necessary functions to interface with the 
+    BLE OTA Profile from the client's perspective. It facilitates the initiation 
+    and management of firmware updates over a BLE connection, as per the 
+    specifications and requirements of the OTA process.
  *******************************************************************************/
 
 
@@ -42,7 +46,7 @@
 // *****************************************************************************
 // Section: Included Files
 // *****************************************************************************
-// *****************************************************************************// *****************************************************************************
+// *****************************************************************************
 #include <string.h>
 #include "osal/osal_freertos.h"
 #include "mba_error_defs.h"
@@ -51,68 +55,51 @@
 #include "ble_util/byte_stream.h"
 #include "ble_otapc.h"
 
-
+// *****************************************************************************
 // *****************************************************************************
 // Section: Macros
 // *****************************************************************************
 // *****************************************************************************
+#define BLE_OTAPC_OP_CODE_RESPONSE                          (0x01U)                 // Response operation code for BLE OTAPC.
+#define BLE_OTAPC_OP_CODE_UPDATE_REQUEST                    (0x02U)                 // Request to initiate an update operation.
+#define BLE_OTAPC_OP_CODE_UPDATE_START                      (0x03U)                 // Request to start an update operation.
+#define BLE_OTAPC_OP_CODE_UPDATE_COMPLETE                   (0x04U)                 // Indication that update process is complete.
+#define BLE_OTAPC_OP_CODE_RESET_REQUEST                     (0x05U)                 // Request to reset the BLE OTAPC.
 
-#define BLE_OTAPC_OP_CODE_RESPONSE                              (0x01U)
-#define BLE_OTAPC_OP_CODE_UPDATE_REQUEST                        (0x02U)
-#define BLE_OTAPC_OP_CODE_UPDATE_START                          (0x03U)
-#define BLE_OTAPC_OP_CODE_UPDATE_COMPLETE                       (0x04U)
-#define BLE_OTAPC_OP_CODE_RESET_REQUEST                         (0x05U)
+#define BLE_OTAPC_STATE_INIT                                (0x00U)                 // Initial state of the BLE OTAPC.
+#define BLE_OTAPC_STATE_CHAR_DISC_COMP                      (0x01U)                 // State after characteristic discovery is complete.
+#define BLE_OTAPC_STATE_RETRY_CTRL_CCCD                     (0x02U)                 // State indicating a retry for writing to the Control Point CCCDs.
+#define BLE_OTAPC_STATE_WRITE_CTRL_CCCD                     (0x03U)                 // State indicating a write to the Control Point CCCD is in progresss.
+#define BLE_OTAPC_STATE_WAIT_SEC                            (0x04U)                 // State indicating waiting for security procedures to complete.
+#define BLE_OTAPC_STATE_CTRL_CCCD_ENABLED                   (0x05U)                 // State indicating the Control Point CCCD is enabled.
+#define BLE_OTAPC_STATE_RETRY_DATA_CCCD                     (0x06U)                 // State indicating a retry for writing to the Data CCCD.
+#define BLE_OTAPC_STATE_WRITE_DATA_CCCD                     (0x07U)                 // State indicating a write to the Data CCCD is in progress.
+#define BLE_OTAPC_STATE_DATA_CCCD_ENABLED                   (0x08U)                 // State indicating the Data CCCD is enabled.
+#define BLE_OTAPC_STATE_REQ_ALLOWED                         (0x09U)                 // State indicating that requests are now allowed.
 
+#define UUID_OTA_SERVICE_16         0xD7,0x15,0x82,0x8E,0x1B,0xE6,0x23,0x99,0xB3,0x46,0x3D,0x25,0x50,0x48,0x43,0x4D     // UUID for the OTA service (little endian format).
+#define UUID_OTA_CHAR_FEATURE       0x58,0x63,0x90,0x2F,0x4A,0x0C,0x03,0xAF,0x46,0x42,0xE4,0x22,0x50,0x48,0x43,0x4D     // UUID for the OTA feature characteristic (little endian format). 
+#define UUID_OTA_CHAR_CTRL_PT       0x76,0x8A,0x02,0x39,0x7F,0xC9,0x82,0x88,0xDE,0x45,0x27,0x93,0x50,0x48,0x43,0x4D     // UUID for the OTA control point characteristic (little endian format).
+#define UUID_OTA_CHAR_DATA          0x78,0xD4,0x8C,0x7C,0xF5,0x56,0x7E,0xBA,0xA6,0x40,0xD9,0x34,0x50,0x48,0x43,0x4D     // UUID for the OTA data characteristic (little endian format).
 
+#define BLE_OTAPC_MAX_CONN_NBR                              BLE_GAP_MAX_LINK_NBR    // Maximum number of concurrent OTA profile client connections.
 
-#define BLE_OTAPC_STATE_INIT                                    (0x00U)
-#define BLE_OTAPC_STATE_CHAR_DISC_COMP                          (0x01U)
-#define BLE_OTAPC_STATE_RETRY_CTRL_CCCD                         (0x02U)
-#define BLE_OTAPC_STATE_WRITE_CTRL_CCCD                         (0x03U)
-#define BLE_OTAPC_STATE_WAIT_SEC                                (0x04U)
-#define BLE_OTAPC_STATE_CTRL_CCCD_ENABLED                       (0x05U)
-#define BLE_OTAPC_STATE_RETRY_DATA_CCCD                         (0x06U)
-#define BLE_OTAPC_STATE_WRITE_DATA_CCCD                         (0x07U)
-#define BLE_OTAPC_STATE_DATA_CCCD_ENABLED                       (0x08U)
-#define BLE_OTAPC_STATE_REQ_ALLOWED                             (0x09U)
-
-
-/**@defgroup UUID UUID
- * @brief The definition of UUID
- * @{ */
-#define UUID_OTA_SERVICE_16                                  0xD7,0x15,0x82,0x8E,0x1B,0xE6,0x23,0x99,0xB3,0x46,0x3D,0x25,0x50,0x48,0x43,0x4D     /**< Service UUID in little endian format. */
-#define UUID_OTA_CHAR_FEATURE                                0x58,0x63,0x90,0x2F,0x4A,0x0C,0x03,0xAF,0x46,0x42,0xE4,0x22,0x50,0x48,0x43,0x4D     /**< Characteristic UUID in little endian format. */
-#define UUID_OTA_CHAR_CTRL_PT                                0x76,0x8A,0x02,0x39,0x7F,0xC9,0x82,0x88,0xDE,0x45,0x27,0x93,0x50,0x48,0x43,0x4D     /**< Characteristic UUID in little endian format. */
-#define UUID_OTA_CHAR_DATA                                   0x78,0xD4,0x8C,0x7C,0xF5,0x56,0x7E,0xBA,0xA6,0x40,0xD9,0x34,0x50,0x48,0x43,0x4D     /**< Characteristic UUID in little endian format. */
-/** @} */
-
-/**@defgroup BLE_OTAPC_MAX_CONN_NBR Maximum connection number
- * @brief The definition of maximum allowed link number of OTA profile client connections.
- * @{ */
-#define BLE_OTAPC_MAX_CONN_NBR                              BLE_GAP_MAX_LINK_NBR                     /**< Maximum allowed OTA profile client connections. */
-/** @} */
-
-/**@brief Enumeration type of BLE OTA profile characteristics. */
 typedef enum BLE_OTAPC_CharIndex_T
 {
-    OTAPC_INDEX_CHAR_FEATURE=0x01U,                          /**< Index of OTA Feature Characteristic. */
-    OTAPC_INDEX_CHAR_CTRL,                                   /**< Index of OTA Control Point characteristic. */
-    OTAPC_INDEX_CHAR_CTRL_CCCD,                              /**< Index of OTA Control Point CCCD. */
-    OTAPC_INDEX_CHAR_DATA,                                   /**< Index of OTA Data Characteristic. */
-    OTAPC_INDEX_CHAR_DATA_CCCD,                              /**< Index of OTA Data Characteristic CCCD. */
+    OTAPC_INDEX_CHAR_FEATURE=0x01U,                          // Index for OTA Feature Characteristic.
+    OTAPC_INDEX_CHAR_CTRL,                                   // Index for OTA Control Point Characteristic.
+    OTAPC_INDEX_CHAR_CTRL_CCCD,                              // Index for OTA Control Point CCCD (Client Characteristic Configuration Descriptor).
+    OTAPC_INDEX_CHAR_DATA,                                   // Index for OTA Data Characteristic.
+    OTAPC_INDEX_CHAR_DATA_CCCD,                              // Index for OTA Data Characteristic CCCD.
 
-    OTAPC_CHAR_NUM                                           /**< Total number of OTA characteristics. */
+    OTAPC_CHAR_NUM                                           // Total number of OTA characteristics.
 }BLE_OTAPC_CharIndex_T;
 
-/**@defgroup BLE_OTAPC_STATE OTAPC state
- * @brief The definition of BLE OTAPC connection state
- * @{ */
 typedef enum BLE_OTAPC_State_T
 {
-    BLE_OTAPC_STATE_IDLE = 0x00U,
-    BLE_OTAPC_STATE_CONNECTED
+    BLE_OTAPC_STATE_IDLE = 0x00U,                           // State indicating the OTA profile client is idle and not currently connected.
+    BLE_OTAPC_STATE_CONNECTED                               // State indicating the OTA profile client is connected.
 } BLE_OTAPC_State_T;
-/** @} */
 
 // *****************************************************************************
 // *****************************************************************************
@@ -120,98 +107,138 @@ typedef enum BLE_OTAPC_State_T
 // *****************************************************************************
 // *****************************************************************************
 
-/**@brief The structure contains information about BLE OTA profile connection parameters for recording connection information. */
+/* Structure for BLE OTA (Over-The-Air) profile connection parameters. */
 typedef struct BLE_OTAPC_ConnList_T
 {
-    uint8_t                     state;                  /**< BLE OTA profile current state. @ref BLE_OTAPC_STATUS.*/
-    uint8_t                     connIndex;
-    uint16_t                    connHandle;             /**< Connection handle associated with this connection. */
-    uint16_t                    attMtu;
-    uint16_t                    maxFragSize;
-    uint16_t                    accFragLen;
-    BLE_OTAPC_State_T           connState;              /**< @ref BLE_OTAPC_STATE */
-    uint8_t                     fwExtFeature;
+    uint8_t                     state;                      // Current state of the BLE OTA profile. See @ref BLE_OTAPC_STATUS for possible states.
+    uint8_t                     connIndex;                  // Index of the connection in the connection list.
+    uint16_t                    connHandle;                 // Unique handle for the active connection.
+    uint16_t                    attMtu;                     // The ATT Maximum Transmission Unit size for this connection.
+    uint16_t                    maxFragSize;                // Maximum size of a single OTA fragment.
+    uint16_t                    accFragLen;                 // Accumulated length of received fragments.
+    BLE_OTAPC_State_T           connState;                  // Detailed connection state. See @ref BLE_OTAPC_STATE for state definitions.
+    uint8_t                     fwExtFeature;               // Firmware extension feature flag.
 } BLE_OTAPC_ConnList_T;
+
+/* The Structure service database and discovery list for BLE OTAPC. */
+typedef struct BLE_OTAPC_OtasServiceDb_T
+{
+    BLE_DD_CharList_T otapcCharList[BLE_OTAPC_MAX_CONN_NBR];
+    BLE_DD_CharInfo_T otapcCharInfoList[BLE_OTAPC_MAX_CONN_NBR][OTAPC_CHAR_NUM];
+    BLE_DD_DiscChar_T otapcDiscCharList[OTAPC_CHAR_NUM];
+    BLE_DD_DiscChar_T *p_otapcDiscCharList[OTAPC_CHAR_NUM];
+} BLE_OTAPC_OtasServiceDb_T;
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Local Variables
 // *****************************************************************************
 // *****************************************************************************
+// Callback routine for BLE Over-The-Air Programming Client (OTAPC) events.
 static BLE_OTAPC_EventCb_T      sp_otapcCbRoutine;
 
+// Array of OTA programming connection structures for each BLE connection.
+static BLE_OTAPC_ConnList_T     *sp_otapcConnList[BLE_OTAPC_MAX_CONN_NBR];
+
+// List of pointers to the discovery information for OTAS characteristics and descriptors.
+static BLE_OTAPC_OtasServiceDb_T *sp_otapcServiceDb;
+// OTA Feature Characteristic UUID.
 static const ATT_Uuid_T         s_otapcDiscCharFeature =    { {UUID_OTA_CHAR_FEATURE}, ATT_UUID_LENGTH_16 };
+
+// OTA Control Point Characteristic UUID.
 static const ATT_Uuid_T         s_otapcDiscCharCtrl =       { {UUID_OTA_CHAR_CTRL_PT}, ATT_UUID_LENGTH_16 };
+
+// Client Characteristic Configuration Descriptor (CCCD) for OTA Control Point.
 static const ATT_Uuid_T         s_otapcDiscCharCtrlCccd =   { {UINT16_TO_BYTES(UUID_DESCRIPTOR_CLIENT_CHAR_CONFIG)}, ATT_UUID_LENGTH_2 };
+
+// OTA Data Characteristic UUID.
 static const ATT_Uuid_T         s_otapcDiscCharData =       { {UUID_OTA_CHAR_DATA}, ATT_UUID_LENGTH_16 };
+
+// CCCD for OTA Data Characteristic.
 static const ATT_Uuid_T         s_otapcDiscCharDataCccd =   { {UINT16_TO_BYTES(UUID_DESCRIPTOR_CLIENT_CHAR_CONFIG)}, ATT_UUID_LENGTH_2 };
-
-
-static BLE_DD_DiscChar_T        s_otapcFeature =         { &s_otapcDiscCharFeature, 0 };
-static BLE_DD_DiscChar_T        s_otapcCtrl =            { &s_otapcDiscCharCtrl, 0 };
-static BLE_DD_DiscChar_T        s_otapcCtrlCccd =        { &s_otapcDiscCharCtrlCccd, CHAR_SET_DESCRIPTOR };
-static BLE_DD_DiscChar_T        s_otapcData =            { &s_otapcDiscCharData, 0 };
-static BLE_DD_DiscChar_T        s_otapcDataCccd =        { &s_otapcDiscCharDataCccd, CHAR_SET_DESCRIPTOR };
-
-static BLE_DD_DiscChar_T        *s_otapcDiscCharList[] =
-{
-    &s_otapcFeature,                 /* OTA Feature Characteristic */
-    &s_otapcCtrl,                    /* OTA Control Point Characteristic */
-    &s_otapcCtrlCccd,                /* OTA Control Point Characteristic CCCD */
-    &s_otapcData,                    /* OTA Data Characteristic */
-    &s_otapcDataCccd,                /* OTA Data Characteristic CCCD */
-};
-
-static BLE_DD_CharInfo_T        s_otapcCharInfoList[BLE_OTAPC_MAX_CONN_NBR][OTAPC_CHAR_NUM];
-static BLE_DD_CharList_T        s_otapcCharList[BLE_OTAPC_MAX_CONN_NBR];
-static BLE_OTAPC_ConnList_T     s_otapcConnList[BLE_OTAPC_MAX_CONN_NBR];
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Functions
 // *****************************************************************************
 // *****************************************************************************
-static void ble_otapc_InitCharList(uint8_t connIndex)
-{
-    s_otapcCharList[connIndex].connHandle = 0;
-    s_otapcCharList[connIndex].p_charInfo = (BLE_DD_CharInfo_T *) &(s_otapcCharInfoList[connIndex]);
 
-    (void)memset(s_otapcCharList[connIndex].p_charInfo, 0x00, sizeof(BLE_DD_CharInfo_T) * (uint8_t)OTAPC_CHAR_NUM);
+/**
+ * @brief Free the connection list for the OTAPC.
+ *
+ * @param p_conn        Pointer to the OTAPC connection list structure to initialize.
+ * @param disconnect    Flag indicating whether to disconnect.
+ */
+static void ble_otapc_FreeConnList(BLE_OTAPC_ConnList_T *p_conn)
+{
+    uint8_t i;
+    for (i = 0; i < BLE_OTAPC_MAX_CONN_NBR; i++)
+    {
+        if (sp_otapcConnList[i] == p_conn)
+        {
+            OSAL_Free(sp_otapcConnList[i]);
+            sp_otapcConnList[i] = NULL;
+            break;
+        }
+    }
 }
 
+/**
+ * @brief Retrieves the connection list entry by connection handle.
+ *
+ * @param connHandle The handle of the connection to search for.
+ * 
+ * @retval Pointer to the connection list entry, or NULL if not found.
+ */
 static BLE_OTAPC_ConnList_T *ble_otapc_GetConnListByHandle(uint16_t connHandle)
 {
     uint8_t i;
 
     for(i=0; i<BLE_OTAPC_MAX_CONN_NBR; i++)
     {
-        if ((s_otapcConnList[i].connState == BLE_OTAPC_STATE_CONNECTED) && (s_otapcConnList[i].connHandle == connHandle))
+        if ((sp_otapcConnList[i] != NULL) && (sp_otapcConnList[i]->connState == BLE_OTAPC_STATE_CONNECTED) && (sp_otapcConnList[i]->connHandle == connHandle))
         {
-            return &s_otapcConnList[i];
+            return sp_otapcConnList[i];
         }
     }
-
     return NULL;
 }
 
+
+/**
+ * @brief Gets a free connection list entry and mark it as connected.
+ *
+ * @retval Pointer to the free connection list entry, or NULL if no free entry is available.
+ */
 static BLE_OTAPC_ConnList_T *ble_otapc_GetFreeConnList(void)
 {
     uint8_t i;
+    BLE_OTAPC_ConnList_T *p_conn = NULL;
 
-    for(i=0; i<BLE_OTAPC_MAX_CONN_NBR; i++)
+    for(i = 0; i < BLE_OTAPC_MAX_CONN_NBR; i++)
     {
-        if (s_otapcConnList[i].connState == BLE_OTAPC_STATE_IDLE)
+        if (sp_otapcConnList[i] == NULL)
         {
-            s_otapcConnList[i].connState = BLE_OTAPC_STATE_CONNECTED;
-            s_otapcConnList[i].connIndex = i;
-            return &s_otapcConnList[i];
+            sp_otapcConnList[i] = OSAL_Malloc(sizeof(BLE_OTAPC_ConnList_T));
+            p_conn = sp_otapcConnList[i];
+            if (p_conn != NULL)
+            {
+                (void)memset(p_conn, 0, sizeof(BLE_OTAPC_ConnList_T));
+                p_conn->connState = BLE_OTAPC_STATE_CONNECTED;
+                p_conn->connIndex = i;
+            }
+            break;
         }
     }
-
-    return NULL;
+    return p_conn;
 }
 
 
+/**
+ * @brief Enables notifications for the OTAP Control Point characteristic.
+ *
+ * @param p_conn Pointer to the connection list entry for which to enable notifications.
+ */
 static void ble_otapc_EnableCtrlCccd(BLE_OTAPC_ConnList_T *p_conn)
 {
     GATTC_WriteParams_T *p_writeParams;
@@ -220,7 +247,7 @@ static void ble_otapc_EnableCtrlCccd(BLE_OTAPC_ConnList_T *p_conn)
     p_writeParams = OSAL_Malloc(sizeof(GATTC_WriteParams_T));
     if (p_writeParams != NULL)
     {
-        p_writeParams->charHandle = s_otapcCharInfoList[p_conn->connIndex][OTAPC_INDEX_CHAR_CTRL_CCCD].charHandle;
+        p_writeParams->charHandle = sp_otapcServiceDb->otapcCharInfoList[p_conn->connIndex][OTAPC_INDEX_CHAR_CTRL_CCCD].charHandle;
         p_writeParams->charLength = 0x02;
         U16_TO_BUF_LE(p_writeParams->charValue, NOTIFICATION);
         p_writeParams->writeType = ATT_WRITE_REQ;
@@ -240,6 +267,12 @@ static void ble_otapc_EnableCtrlCccd(BLE_OTAPC_ConnList_T *p_conn)
     }
 }
 
+
+/**
+ * @brief Enables notifications for the OTAP Data characteristic.
+ *
+ * @param p_conn Pointer to the connection list entry for which to enable notifications.
+ */
 static void ble_otapc_EnableDataCccd(BLE_OTAPC_ConnList_T *p_conn)
 {
     GATTC_WriteParams_T *p_writeParams;
@@ -248,7 +281,7 @@ static void ble_otapc_EnableDataCccd(BLE_OTAPC_ConnList_T *p_conn)
     p_writeParams = OSAL_Malloc(sizeof(GATTC_WriteParams_T));
     if (p_writeParams != NULL)
     {
-        p_writeParams->charHandle = s_otapcCharInfoList[p_conn->connIndex][OTAPC_INDEX_CHAR_DATA_CCCD].charHandle;
+        p_writeParams->charHandle = sp_otapcServiceDb->otapcCharInfoList[p_conn->connIndex][OTAPC_INDEX_CHAR_DATA_CCCD].charHandle;
         p_writeParams->charLength = 0x02;
         U16_TO_BUF_LE(p_writeParams->charValue, NOTIFICATION);
         p_writeParams->writeType = ATT_WRITE_REQ;
@@ -268,6 +301,12 @@ static void ble_otapc_EnableDataCccd(BLE_OTAPC_ConnList_T *p_conn)
     }
 }
 
+
+/**
+ * @brief Processes GATT Read Response for OTAPC (Over The Air Programming Client).
+ *
+ * @param p_event Pointer to the GATT event structure.
+ */
 static void ble_otapc_ProcGattReadResp(GATT_Event_T *p_event)
 {
     BLE_OTAPC_ConnList_T *p_conn = ble_otapc_GetConnListByHandle(p_event->eventField.onReadResp.connHandle);
@@ -280,7 +319,7 @@ static void ble_otapc_ProcGattReadResp(GATT_Event_T *p_event)
         return;
     }
 
-    if (p_event->eventField.onReadResp.charHandle == s_otapcCharInfoList[p_conn->connIndex][OTAPC_INDEX_CHAR_FEATURE].charHandle)
+    if (p_event->eventField.onReadResp.charHandle == sp_otapcServiceDb->otapcCharInfoList[p_conn->connIndex][OTAPC_INDEX_CHAR_FEATURE].charHandle)
     {
         if (sp_otapcCbRoutine != NULL)
         {
@@ -305,6 +344,12 @@ static void ble_otapc_ProcGattReadResp(GATT_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Processes GATT Write Response for OTAPC.
+ *
+ * @param p_event Pointer to the GATT event structure.
+ */
 static void ble_otapc_ProcGattWriteResp(GATT_Event_T *p_event)
 {
     BLE_OTAPC_ConnList_T *p_conn = ble_otapc_GetConnListByHandle(p_event->eventField.onWriteResp.connHandle);
@@ -317,8 +362,8 @@ static void ble_otapc_ProcGattWriteResp(GATT_Event_T *p_event)
         return;
     }
 
-    if (p_event->eventField.onWriteResp.charHandle < s_otapcCharInfoList[p_conn->connIndex][OTAPC_INDEX_CHAR_CTRL].charHandle
-        || p_event->eventField.onWriteResp.charHandle > s_otapcCharInfoList[p_conn->connIndex][OTAPC_INDEX_CHAR_DATA_CCCD].charHandle)
+    if (p_event->eventField.onWriteResp.charHandle < sp_otapcServiceDb->otapcCharInfoList[p_conn->connIndex][OTAPC_INDEX_CHAR_CTRL].charHandle
+        || p_event->eventField.onWriteResp.charHandle > sp_otapcServiceDb->otapcCharInfoList[p_conn->connIndex][OTAPC_INDEX_CHAR_DATA_CCCD].charHandle)
     {
         return;
     }
@@ -353,6 +398,12 @@ static void ble_otapc_ProcGattWriteResp(GATT_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Processes GATT Notification for OTAPC.
+ *
+ * @param p_event Pointer to the GATT event structure.
+ */
 static void ble_otapc_ProcGattNotification(GATT_Event_T *p_event)
 {
     uint8_t *p_value;
@@ -366,7 +417,7 @@ static void ble_otapc_ProcGattNotification(GATT_Event_T *p_event)
         return;
     }
 
-    if (p_event->eventField.onNotification.charHandle == s_otapcCharInfoList[p_conn->connIndex][OTAPC_INDEX_CHAR_CTRL].charHandle)
+    if (p_event->eventField.onNotification.charHandle == sp_otapcServiceDb->otapcCharInfoList[p_conn->connIndex][OTAPC_INDEX_CHAR_CTRL].charHandle)
     {
         if (p_event->eventField.onNotification.receivedValue[0] != BLE_OTAPC_OP_CODE_RESPONSE)
         {
@@ -429,7 +480,7 @@ static void ble_otapc_ProcGattNotification(GATT_Event_T *p_event)
             break;
         }
     }
-    else if (p_event->eventField.onNotification.charHandle == s_otapcCharInfoList[p_conn->connIndex][OTAPC_INDEX_CHAR_DATA].charHandle)
+    else if (p_event->eventField.onNotification.charHandle == sp_otapcServiceDb->otapcCharInfoList[p_conn->connIndex][OTAPC_INDEX_CHAR_DATA].charHandle)
     {
         BLE_OTAPC_Event_T evtPara;
 
@@ -451,6 +502,11 @@ static void ble_otapc_ProcGattNotification(GATT_Event_T *p_event)
 }
 
 
+/**
+ * @brief Processes GATT Error Response for OTAPC.
+ *
+ * @param p_event Pointer to the GATT event structure.
+ */
 static void ble_otapc_ProcGattErrorResp(GATT_Event_T *p_event)
 {
     BLE_OTAPC_ConnList_T * p_conn = ble_otapc_GetConnListByHandle(p_event->eventField.onError.connHandle);
@@ -462,7 +518,7 @@ static void ble_otapc_ProcGattErrorResp(GATT_Event_T *p_event)
         return;
     }
 
-    if (s_otapcCharInfoList[p_conn->connIndex][OTAPC_INDEX_CHAR_CTRL_CCCD].charHandle != p_event->eventField.onError.attrHandle)
+    if (sp_otapcServiceDb->otapcCharInfoList[p_conn->connIndex][OTAPC_INDEX_CHAR_CTRL_CCCD].charHandle != p_event->eventField.onError.attrHandle)
     {
         return;
     }
@@ -492,6 +548,12 @@ static void ble_otapc_ProcGattErrorResp(GATT_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Process GAP (Generic Access Profile) events for OTAPC.
+ *
+ * @param p_event Pointer to the GAP event structure.
+ */
 static void ble_otapc_GapEventProcess(BLE_GAP_Event_T *p_event)
 {
     BLE_OTAPC_ConnList_T *p_conn = NULL;
@@ -522,8 +584,7 @@ static void ble_otapc_GapEventProcess(BLE_GAP_Event_T *p_event)
             p_conn = ble_otapc_GetConnListByHandle(p_event->eventField.evtDisconnect.connHandle);
             if (p_conn != NULL)
             {
-                (void)memset(p_conn, 0x00, sizeof(BLE_OTAPC_ConnList_T));
-                ble_otapc_InitCharList(p_conn->connIndex);
+                ble_otapc_FreeConnList(p_conn);
             }
         }
         break;
@@ -572,6 +633,16 @@ static void ble_otapc_GapEventProcess(BLE_GAP_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Processes GATT events for the BLE Over-The-Air Programming Client (OTAPC).
+ *
+ * This function handles various GATT events and takes appropriate actions
+ * based on the event type, such as updating MTU size, handling errors,
+ * and processing read, write, and notification responses.
+ *
+ * @param p_event Pointer to the GATT event structure containing event details.
+ */
 static void ble_otapc_GattEventProcess(GATT_Event_T *p_event)
 {
     BLE_OTAPC_ConnList_T *p_conn = NULL;
@@ -655,33 +726,95 @@ static void ble_otapc_GattEventProcess(GATT_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Registers a callback function for the BLE OTA profile client events.
+ *
+ * @param[in] bleOtapcRoutine        The callback function to handle BLE OTA profile events.
+ *
+ */
 void BLE_OTAPC_EventRegister(BLE_OTAPC_EventCb_T bleOtapcRoutine)
 {
     sp_otapcCbRoutine = bleOtapcRoutine;
 }
 
+/**
+ * @brief Initializes the OTAS characteristic list to zero.
+ * 
+ * @param connIndex     Index of the connection in the OTAS characteristic list.
+ */
+static void ble_otapc_InitOtasCharList(uint8_t connIndex)
+{
+    (void)memset(&sp_otapcServiceDb->otapcCharList[connIndex], 0x0, sizeof(BLE_DD_CharList_T));
+    (void)memset(sp_otapcServiceDb->otapcCharInfoList[connIndex], 0x0, sizeof(BLE_DD_CharInfo_T)*OTAPC_CHAR_NUM);
+    sp_otapcServiceDb->otapcCharList[connIndex].p_charInfo = sp_otapcServiceDb->otapcCharInfoList[connIndex];
+}
+
+/**
+ * @brief Initializes the BLE Over-The-Air Programming (OTA) profile client.
+ *
+ * @retval MBA_RES_SUCCESS           The initialization of the BLE OTA profile client is successful
+ *
+ */
 uint16_t BLE_OTAPC_Init(void)
 {
-    BLE_DD_DiscSvc_T disc;
     uint8_t i;
+    uint16_t ret;
+    BLE_DD_DiscSvc_T disc;
     uint8_t svc[] = {UUID_OTA_SERVICE_16};
         
-    (void)memset(s_otapcConnList, 0x00, sizeof(s_otapcConnList));
-
-    for (i = 0; i < BLE_OTAPC_MAX_CONN_NBR; i++)
+    if (sp_otapcServiceDb)
     {
-        ble_otapc_InitCharList(i);
+        return MBA_RES_FAIL;
+    }
+    sp_otapcServiceDb = (BLE_OTAPC_OtasServiceDb_T*)OSAL_Malloc(sizeof(BLE_OTAPC_OtasServiceDb_T));
+    if (sp_otapcServiceDb == NULL)
+    {
+        return MBA_RES_OOM;
+    }
+
+    (void)memset(sp_otapcServiceDb->otapcDiscCharList, 0x00, sizeof(BLE_DD_DiscChar_T)*OTAPC_CHAR_NUM);
+    sp_otapcServiceDb->otapcDiscCharList[OTAPC_INDEX_CHAR_FEATURE].p_uuid    = &s_otapcDiscCharFeature;
+    sp_otapcServiceDb->otapcDiscCharList[OTAPC_INDEX_CHAR_CTRL].p_uuid             = &s_otapcDiscCharCtrl;
+    sp_otapcServiceDb->otapcDiscCharList[OTAPC_INDEX_CHAR_CTRL_CCCD].p_uuid         = &s_otapcDiscCharCtrlCccd;
+    sp_otapcServiceDb->otapcDiscCharList[OTAPC_INDEX_CHAR_CTRL_CCCD].settings       = CHAR_SET_DESCRIPTOR;
+    sp_otapcServiceDb->otapcDiscCharList[OTAPC_INDEX_CHAR_DATA].p_uuid = &s_otapcDiscCharData;
+    sp_otapcServiceDb->otapcDiscCharList[OTAPC_INDEX_CHAR_DATA_CCCD].p_uuid     = &s_otapcDiscCharDataCccd;
+    sp_otapcServiceDb->otapcDiscCharList[OTAPC_INDEX_CHAR_DATA_CCCD].settings      = CHAR_SET_DESCRIPTOR;
+
+    for(i = 0; i < OTAPC_CHAR_NUM; i++)
+    {
+        sp_otapcServiceDb->p_otapcDiscCharList[i] = &sp_otapcServiceDb->otapcDiscCharList[i];
+    }
+    for(i = 0; i < BLE_OTAPC_MAX_CONN_NBR; i++)
+    {
+        ble_otapc_InitOtasCharList(i);
     }
 
     disc.svcUuid.uuidLength = ATT_UUID_LENGTH_16;
     (void)memcpy(disc.svcUuid.uuid, svc, ATT_UUID_LENGTH_16);
-    disc.p_discInfo = NULL;
-    disc.p_discChars = s_otapcDiscCharList;
-    disc.p_charList = s_otapcCharList;
+    disc.p_discInfo   = NULL;
+    disc.p_discChars  = sp_otapcServiceDb->p_otapcDiscCharList;
+    disc.p_charList   = sp_otapcServiceDb->otapcCharList;
     disc.discCharsNum = (uint8_t)OTAPC_CHAR_NUM;
-    return BLE_DD_ServiceDiscoveryRegister(&disc);
+    ret = BLE_DD_ServiceDiscoveryRegister(&disc);
+    if (ret != MBA_RES_SUCCESS)
+    {
+        OSAL_Free(sp_otapcServiceDb);
+        sp_otapcServiceDb = NULL;
+    }
+    return ret;
 }
 
+
+/**
+ * @brief Handles BLE_Stack events.
+ *
+ * This function should be called when BLE stack events occur.
+ *
+ * @param[in] p_stackEvent          Pointer to the BLE stack events buffer.
+ *
+*/
 void BLE_OTAPC_BleEventHandler(STACK_Event_T *p_stackEvent)
 {
     switch (p_stackEvent->groupId)
@@ -706,6 +839,20 @@ void BLE_OTAPC_BleEventHandler(STACK_Event_T *p_stackEvent)
     }
 }
 
+
+/**
+ * @brief The callback function to handle BLE OTA profile events.
+ *  
+ * An event of type @ref BLE_OTAPC_EVT_FEATURE_IND will be generated upon completion of the procedure.
+ *
+ * @param[in] connHandle             The connection handle for which to perform feature discovery.
+ *
+ * @retval MBA_RES_SUCCESS           The start of the feature discovery procedure is successful.
+ * @retval MBA_RES_OOM               Internal memory allocation failure.
+ * @retval MBA_RES_INVALID_PARA      The provided connection handle is not valid.
+ * @retval MBA_RES_BAD_STATE         The OTA profile is not in the correct state to perform this operation.
+ *
+ */
 uint16_t BLE_OTAPC_FeatureDisc(uint16_t connHandle)
 {
     BLE_OTAPC_ConnList_T *p_conn;
@@ -722,9 +869,24 @@ uint16_t BLE_OTAPC_FeatureDisc(uint16_t connHandle)
         return MBA_RES_BAD_STATE;
     }
 
-    return GATTC_Read(connHandle, s_otapcCharInfoList[p_conn->connIndex][OTAPC_INDEX_CHAR_FEATURE].charHandle, 0);
+    return GATTC_Read(connHandle, sp_otapcServiceDb->otapcCharInfoList[p_conn->connIndex][OTAPC_INDEX_CHAR_FEATURE].charHandle, 0);
 }
 
+
+/**
+ * @brief Initiates a firmware update request operation.
+ * 
+ * An event of type @ref BLE_OTAPC_EVT_REQ_RSP_IND will be generated upon completion of the procedure.
+ *
+ * @param[in] connHandle             The connection handle for which to perform the firmware update request operation.
+ * @param[in] p_req                  Pointer to the request parameters to send to the server.
+ *
+ * @retval MBA_RES_SUCCESS           The start of the firmware update request operation was successful.
+ * @retval MBA_RES_OOM               Internal memory allocation failure..
+ * @retval MBA_RES_INVALID_PARA      The provided connection handle is not valid.
+ * @retval MBA_RES_BAD_STATE         The OTA profile is not in the correct state to perform this operation.
+ *
+ */
 uint16_t BLE_OTAPC_UpdateRequest(uint16_t connHandle, BLE_OTAPC_Req_T * p_req)
 {
     GATTC_WriteParams_T *p_writeParams;
@@ -747,7 +909,7 @@ uint16_t BLE_OTAPC_UpdateRequest(uint16_t connHandle, BLE_OTAPC_Req_T * p_req)
     p_writeParams = OSAL_Malloc(sizeof(GATTC_WriteParams_T));
     if (p_writeParams != NULL)
     {
-        p_writeParams->charHandle = s_otapcCharInfoList[p_conn->connIndex][OTAPC_INDEX_CHAR_CTRL].charHandle;
+        p_writeParams->charHandle = sp_otapcServiceDb->otapcCharInfoList[p_conn->connIndex][OTAPC_INDEX_CHAR_CTRL].charHandle;
         
         p_buf = p_writeParams->charValue;
         U8_TO_STREAM(&p_buf, BLE_OTAPC_OP_CODE_UPDATE_REQUEST);
@@ -783,6 +945,21 @@ uint16_t BLE_OTAPC_UpdateRequest(uint16_t connHandle, BLE_OTAPC_Req_T * p_req)
 
 }
 
+
+/**
+ * @brief Initiates a firmware update start operation.
+ *
+ * An event of type @ref BLE_OTAPC_EVT_START_RSP_IND will be generated upon completion of the procedure.
+ *
+ * @param[in] connHandle             The connection handle for which to perform the firmware update start operation.
+ * @param[in] imgType                The type of image to use for the firmware update process, as defined by @ref BLE_OTAPC_IMG_TYPE_DEF.
+ *
+ * @retval MBA_RES_SUCCESS           The start of the firmware update start operation was successful.
+ * @retval MBA_RES_OOM               Internal memory allocation failure.
+ * @retval MBA_RES_INVALID_PARA      The provided connection handle is not valid.
+ * @retval MBA_RES_BAD_STATE         The OTA profile is not in the correct state to perform this operation.
+ *
+ */
 uint16_t BLE_OTAPC_UpdateStart(uint16_t connHandle, uint8_t imgType)
 {
     GATTC_WriteParams_T *p_writeParams;
@@ -806,7 +983,7 @@ uint16_t BLE_OTAPC_UpdateStart(uint16_t connHandle, uint8_t imgType)
     p_writeParams = OSAL_Malloc(sizeof(GATTC_WriteParams_T));
     if (p_writeParams != NULL)
     {
-        p_writeParams->charHandle = s_otapcCharInfoList[p_conn->connIndex][OTAPC_INDEX_CHAR_CTRL].charHandle;
+        p_writeParams->charHandle = sp_otapcServiceDb->otapcCharInfoList[p_conn->connIndex][OTAPC_INDEX_CHAR_CTRL].charHandle;
         
         p_buf = p_writeParams->charValue;
         U8_TO_STREAM(&p_buf, BLE_OTAPC_OP_CODE_UPDATE_START);
@@ -833,6 +1010,28 @@ uint16_t BLE_OTAPC_UpdateStart(uint16_t connHandle, uint8_t imgType)
 
 }
 
+
+/**
+ * @brief Distributes a fragmented firmware image to a server device for OTA DFU.
+ * 
+ * The application should wait for the @ref BLE_OTAPC_EVT_FRAGMENT_COMPL_IND event after the total length of 
+ * sent fragmented images reaches the maximum size before sending the next set of fragments. If the remaining 
+ * fragmented image is smaller than the maximum size, @ref BLE_OTAPC_EVT_FRAGMENT_COMPL_IND will be triggered
+ * once the server receives the complete image.
+ *  
+ * @param[in] connHandle             Handle of the connection for image distribution.
+ * @param[in] length                 Length of the fragment, must not exceed ATT_MTU - 3.
+ * @param[in] p_data                 Pointer to the fragmented image data.
+ *
+ * @retval MBA_RES_SUCCESS           Distribution of the fragmented image started successfully.
+ * @retval MBA_RES_OOM               Internal memory allocation failure.
+ * @retval MBA_RES_INVALID_PARA      Invalid parameters, such as:\n
+ *                                      - Invalid connection handle.
+ *                                      - Length exceeds ATT_MTU - 3.
+ *                                      - Total length of sent fragments plus new length exceeds the maximum image size.
+ *@retval MBA_RES_BAD_STATE         The OTA profile is not in the correct state to perform this operation.
+ *
+ */
 uint16_t BLE_OTAPC_FragmentDist(uint16_t connHandle, uint16_t length, uint8_t *p_data)
 {
     GATTC_WriteParams_T *p_writeParams;
@@ -856,7 +1055,7 @@ uint16_t BLE_OTAPC_FragmentDist(uint16_t connHandle, uint16_t length, uint8_t *p
     p_writeParams = OSAL_Malloc(sizeof(GATTC_WriteParams_T));
     if (p_writeParams != NULL)
     {
-        p_writeParams->charHandle = s_otapcCharInfoList[p_conn->connIndex][OTAPC_INDEX_CHAR_DATA].charHandle;
+        p_writeParams->charHandle = sp_otapcServiceDb->otapcCharInfoList[p_conn->connIndex][OTAPC_INDEX_CHAR_DATA].charHandle;
         
         (void)memcpy(p_writeParams->charValue, p_data, length);
         p_writeParams->charLength = length;
@@ -879,6 +1078,20 @@ uint16_t BLE_OTAPC_FragmentDist(uint16_t connHandle, uint16_t length, uint8_t *p
 
 }
 
+
+/**
+ * @brief Initiates the firmware update completion process.
+ *
+ * @ref BLE_OTAPC_EVT_COMPLETE_RSP_IND event will be generated upon completion.
+ *
+ * @param[in] connHandle             Handle of the connection for completing the firmware update.
+ *
+ * @retval MBA_RES_SUCCESS           Firmware update completion process started successfully.
+ * @retval MBA_RES_OOM               Internal memory allocation failure.
+ * @retval MBA_RES_INVALID_PARA      The provided connection handle is not valid.
+ * @retval MBA_RES_BAD_STATE         The OTA profile is not in the correct state to perform this operation.
+ *
+ */
 uint16_t BLE_OTAPC_UpdateComplete(uint16_t connHandle)
 {
     GATTC_WriteParams_T *p_writeParams;
@@ -902,7 +1115,7 @@ uint16_t BLE_OTAPC_UpdateComplete(uint16_t connHandle)
     p_writeParams = OSAL_Malloc(sizeof(GATTC_WriteParams_T));
     if (p_writeParams != NULL)
     {
-        p_writeParams->charHandle = s_otapcCharInfoList[p_conn->connIndex][OTAPC_INDEX_CHAR_CTRL].charHandle;
+        p_writeParams->charHandle = sp_otapcServiceDb->otapcCharInfoList[p_conn->connIndex][OTAPC_INDEX_CHAR_CTRL].charHandle;
         
         p_buf = p_writeParams->charValue;
         U8_TO_STREAM(&p_buf, BLE_OTAPC_OP_CODE_UPDATE_COMPLETE);
@@ -926,6 +1139,18 @@ uint16_t BLE_OTAPC_UpdateComplete(uint16_t connHandle)
 
 }
 
+
+/**
+ * @brief Requests a device reset on the server device after OTA DFU.
+ *
+ * @param[in] connHandle             Handle of the connection for device reset request.
+ *
+ * @retval MBA_RES_SUCCESS           Device reset request initiated successfully.
+ * @retval MBA_RES_OOM               Internal memory allocation failure.
+ * @retval MBA_RES_INVALID_PARA      The provided connection handle is not valid.
+ * @retval MBA_RES_BAD_STATE         The OTA profile is not in the correct state to perform this operation.
+ *
+ */
 uint16_t BLE_OTAPC_DeviceReset(uint16_t connHandle)
 {
     GATTC_WriteParams_T *p_writeParams;
@@ -949,7 +1174,7 @@ uint16_t BLE_OTAPC_DeviceReset(uint16_t connHandle)
     p_writeParams = OSAL_Malloc(sizeof(GATTC_WriteParams_T));
     if (p_writeParams != NULL)
     {
-        p_writeParams->charHandle = s_otapcCharInfoList[p_conn->connIndex][OTAPC_INDEX_CHAR_CTRL].charHandle;
+        p_writeParams->charHandle = sp_otapcServiceDb->otapcCharInfoList[p_conn->connIndex][OTAPC_INDEX_CHAR_CTRL].charHandle;
         
         p_buf = p_writeParams->charValue;
         U8_TO_STREAM(&p_buf, BLE_OTAPC_OP_CODE_RESET_REQUEST);
@@ -974,6 +1199,14 @@ uint16_t BLE_OTAPC_DeviceReset(uint16_t connHandle)
 }
 
 
+/**
+ * @brief Handless BLE Database Discovery (BLE_DD) middleware events.
+ *
+ * This function should be called when BLE_DD events occur.
+ *
+ * @param[in] p_event               Pointer to BLE_DD events buffer.
+ *
+ */
 void BLE_OTAPC_BleDdEventHandler(BLE_DD_Event_T *p_event)
 {
     switch (p_event->eventId)
@@ -987,7 +1220,7 @@ void BLE_OTAPC_BleDdEventHandler(BLE_DD_Event_T *p_event)
             if (p_conn != NULL)
             {
                 /* By checking the discovered handles exist or not. */
-                if (s_otapcCharList[p_conn->connIndex].p_charInfo[OTAPC_INDEX_CHAR_FEATURE].charHandle != 0U)
+                if (sp_otapcServiceDb->otapcCharList[p_conn->connIndex].p_charInfo[OTAPC_INDEX_CHAR_FEATURE].charHandle != 0U)
                 {
                     p_conn->state = BLE_OTAPC_STATE_CHAR_DISC_COMP;
                     ble_otapc_EnableCtrlCccd(p_conn);

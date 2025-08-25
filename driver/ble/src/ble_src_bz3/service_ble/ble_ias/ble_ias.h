@@ -31,84 +31,102 @@
     ble_ias.h
 
   Summary:
-    This file contains the BLE Immediate Alert Service functions for application user.
+    Interface for the BLE Immediate Alert Service, providing function prototypes
+    and definitions for use by application developers.
 
   Description:
-    This file contains the BLE Immediate Alert Service functions for application user.
+    This header file includes function prototypes and definitions for the
+    implementation of the BLE Immediate Alert Service, facilitating the development
+    of applications that require immediate alert notifications.
  *******************************************************************************/
 
-
-/**
- * @addtogroup BLE_IAS BLE IAS
- * @{
- * @brief Header file for the BLE Immediate Alert Service.
- * @note Definitions and prototypes for the BLE Immediate Alert Service stack layer application programming interface.
- */
 #ifndef BLE_IAS_H
 #define BLE_IAS_H
 
 // DOM-IGNORE-BEGIN
 #ifdef __cplusplus  // Provide C++ Compatibility
-
 extern "C" {
-
 #endif
 // DOM-IGNORE-END
+
+/**
+ * @addtogroup BLE_SERVICE BLE Service
+ * @{
+ */
+
+/**
+ * @addtogroup BLE_IAS BLE Immediate Alert Service
+ * @brief Provides an interface for the BLE Immediate Alert Service.
+ * @note This module contains the definitions and function prototypes necessary
+ *          to interface with the BLE Immediate Alert Service, enabling the
+ *          application to handle immediate alert notifications effectively.
+ * @{
+ */
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Macros
 // *****************************************************************************
 // *****************************************************************************
+/**
+ * @addtogroup BLE_IAS_DEFINES Defines
+ * @{
+ */
 
-/**@defgroup BLE_IAS_UUID_DEF BLE_IAS_UUID_DEF
- * @brief The definition of Immediate Alert Service UUID.
- * @{ */
-#define UUID_IMMEDIATE_ALERT_SERVICE                    (0x1802U)  /**< Immediate Alert Service UUID. */
+/**
+ * @defgroup BLE_IAS_UUID_DEF Immediate Alert Service UUID definitions
+ * @brief Bluetooth SIG-defined UUIDs for the Immediate Alert Service characteristics.
+ * @{
+ */
+#define UUID_IMMEDIATE_ALERT_SERVICE                    (0x1802U)                       /**< UUID for Immediate Alert Service. */
+#define UUID_ALERT_LEVEL                                (0x2A06U)                       /**< UUID for Alert Level characteristic. */
 /** @} */
 
-/**@defgroup BLE_ALERT_LEVEL_UUID_DEF BLE_ALERT_LEVEL_UUID_DEF
- * @brief The definition of Alert Level UUID.
- * @{ */
-#define UUID_ALERT_LEVEL                                (0x2A06U)  /**< Alert Level UUID. */
-/** @} */
+/**
+ * @defgroup BLE_IAS_ASSIGN_HANDLE IAS assigned handles
+ * @brief Handles associated with the BLE Immediate Alert Service attributes.
+ * @{
+ */
+#define IAS_START_HDL                                   (0x0FAU)                        /**< Start handle for the BLE Immediate Alert Service. */
 
-/**@defgroup BLE_IAS_ASSIGN_HANDLE BLE_IAS_ASSIGN_HANDLE
- * @brief Assigned attribute handles of BLE Immediate Alert Service.
- * @{ */
-#define IAS_START_HDL                                   (0x0FAU)  /**< The start attribute handle of transparent service. */
-/** @} */
-
-/**@brief Definition of BLE Immediate Alert Service attribute handle */
+/* Enumeration of attribute handles for the BLE Immediate Alert Service. */
 typedef enum BLE_IAS_AttributeHandle_T
 {
-    IAS_HDL_SVC = IAS_START_HDL,           /**< Handle of Primary Service of BLE Immediate Alert Service. */
-    IAS_HDL_CHAR_ALERT_LEVEL,               /**< Handle of Immediate Alert Level characteristic. */
-    IAS_HDL_CHARVAL_ALERT_LEVEL,            /**< Handle of Immediate Alert Level characteristic value. */
+    IAS_HDL_SVC = IAS_START_HDL,                                                        /**< Handle for the BLE Immediate Alert Service primary service. */
+    IAS_HDL_CHAR_ALERT_LEVEL,                                                           /**< Handle for the BLE Alert Level characteristic. */
+    IAS_HDL_CHARVAL_ALERT_LEVEL,                                                        /**< Handle for the BLE Alert Level characteristic value. */
 }BLE_IAS_AttributeHandle_T;
 
-/**@defgroup BLE_IAS_ASSIGN_HANDLE BLE_IAS_ASSIGN_HANDLE
- * @brief Assigned attribute handles of BLE Immediate Alert Service.
- * @{ */
-#define IAS_END_HDL                                 (IAS_HDL_CHARVAL_ALERT_LEVEL)         /**< The end attribute handle of Immediate Alert service. */
+#define IAS_END_HDL                                 (IAS_HDL_CHARVAL_ALERT_LEVEL)       /**< End handle for the BLE Immediate Alert Service. */
 /** @} */
 
-
+/** @} */ //BLE_IAS_DEFINES
 // *****************************************************************************
 // *****************************************************************************
 // Section: Function Prototypes
 // *****************************************************************************
 // *****************************************************************************
+/**
+ * @addtogroup BLE_IAS_FUNS Functions
+ * @{
+ */
 
 /**
- *@brief This API is used to register the BLE IAS Service to GATT server.
+ * @brief Adds the BLE Immediate Alert Service to the GATT server.
  *
- *
- *@retval MBA_RES_SUCCESS       Successfully registering the service
- *@retval MBA_RES_FAIL          Fail to register the service. The assigned attribute handles in the service conflict or \n
- *                              the start handle of the service is smaller than @ref GATTS_APP_SVC_START_HDL.
+ * This function adds the BLE Immediate Alert Service to the BLE stack's GATT server,
+ * enabling the service to be discovered and accessed by remote BLE devices.
+ * 
+ * @retval MBA_RES_SUCCESS                    The BLE Immediate Alert service was successfully added.
+ * @retval MBA_RES_NO_RESOURCE                Insufficient resource to add the BLE Immediate Alert service.
  */
 uint16_t BLE_IAS_Add(void);
+
+/** @} */ //BLE_IAS_FUNS
+
+/** @} */
+
+/** @} */
 
 //DOM-IGNORE-BEGIN
 #ifdef __cplusplus
@@ -116,8 +134,4 @@ uint16_t BLE_IAS_Add(void);
 #endif
 //DOM-IGNORE-END
 
-#endif
-
-/**
-  @}
- */
+#endif //BLE_IAS_H

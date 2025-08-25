@@ -31,19 +31,14 @@
     ble_otaps.h
 
   Summary:
-    This file contains the BLE OTA Profile Server functions for application user.
+    Interface for the BLE OTA (Over-The-Air) Profile Server used by applications.
 
   Description:
-    This file contains the BLE OTA Profile Server functions for application user.
+    The BLE OTA Profile Server module provides the necessary functions and
+    definitions for an application to implement the OTA firmware update
+    capability. It facilitates the transfer of firmware images from an OTA
+    client to the server hosting the BLE device.
  *******************************************************************************/
-
-
-/**
- * @addtogroup BLE_OTAPS
- * @{
- * @brief Header file for the BLE OTA Profile Server library.
- * @note Definitions and prototypes for the BLE OTA profile server stack layer application programming interface.
- */
 #ifndef BLE_OTAPS_H
 #define BLE_OTAPS_H
 
@@ -52,254 +47,307 @@
 // Section: Included Files
 // *****************************************************************************
 // *****************************************************************************
-
 #include <stdint.h>
 #include <stdbool.h>
 #include "stack_mgr.h"
 
-
 // DOM-IGNORE-BEGIN
 #ifdef __cplusplus  // Provide C++ Compatibility
-
 extern "C" {
-
 #endif
 // DOM-IGNORE-END
+
+/** 
+ * @addtogroup BLE_PROFILE BLE Profile
+ * @{
+ */
+
+/** 
+ * @addtogroup BLE_OTAP BLE OTA Profile
+ * @{
+ */
+
+/**
+ * @defgroup BLE_OTAPS BLE OTA Profile Server
+ * 
+ * @brief Interface for the BLE OTA (Over-The-Air) Profile Server used by applications.
+ * @note This section contains definitions and prototypes that form the API for
+ *          the BLE OTA profile server, facilitating the integration of OTA
+ *          firmware update capabilities into BLE-enabled applications.
+ * @{
+ */
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Macros
 // *****************************************************************************
 // *****************************************************************************
-/**@addtogroup BLE_OTAPS_DEFINES Defines
- * @{ */
+/**
+ * @addtogroup BLE_OTAPS_DEFINES Defines
+ * @{
+ */
 
-/**@defgroup BLE_OTAPS_IMG_TYPE_DEF OTAPS image type
- * @brief The definition of image type.
- * @{ */
+/**
+ * @defgroup BLE_OTAPS_IMG_TYPE_DEF OTAPS image type definitions
+ * @brief Defines OTAPS image types.
+ * @{
+ */
 #define BLE_OTAPS_IMG_TYPE_FW                    (1U << 0U)                              /**< Firmaware image type. */
 /** @} */
 
-/**@defgroup BLE_OTAPS_FW_FEATURE_DEF OTAPS firmware extended feature
- * @brief The definition of firmware extended feature.
- * @{ */
-#define BLE_OTAPS_FW_FEATURE_MASK1               (1U << 0U)                              /**< Supported feature mask 1. */
+
+/**
+ * @defgroup BLE_OTAPS_FW_FEATURE_DEF OTAPS firmware extended feature definitions
+ * @brief Defines extended firmware features in OTAPS.
+ * @{
+ */
+#define BLE_OTAPS_FW_FEATURE_MASK1               (1U << 0U)                              /**< Bitmask for supported feature set 1. */
 /** @} */
 
 
-/**@defgroup BLE_OTAPS_FEATURE_DEF OTAPS supported feature
- * @brief The definition of supported features.
- * @{ */
-#define BLE_OTAPS_FEATURE_SUPP_IMG_TYPE          (BLE_OTAPS_IMG_TYPE_FW)                 /**< The supported image type of BLE OTA profile. */
-#define BLE_OTAPS_FEATURE_FW_EXT_FEATURE         (BLE_OTAPS_FW_FEATURE_MASK1)            /**< The supported firmware extended feature of BLE OTA profile. */
+/**
+ * @defgroup BLE_OTAPS_FEATURE_DEF OTAPS supported features
+ * @brief Defines features supported by the BLE OTA Profile.
+ * @{
+ */
+#define BLE_OTAPS_FEATURE_SUPP_IMG_TYPE          (BLE_OTAPS_IMG_TYPE_FW)                 /**< Supported image type for BLE OTA Profile. */
+#define BLE_OTAPS_FEATURE_FW_EXT_FEATURE         (BLE_OTAPS_FW_FEATURE_MASK1)            /**< Supported extended firmware feature for BLE OTA Profile. */
 /** @} */
 
 
-/**@defgroup BLE_OTAPS_IMG_FILE_TYPE_DEF OTAPS image file type
- * @brief The definition of image file types.
- * @{ */
-#define BLE_OTAPS_IMG_FILE_TYPE_INT              (0x01U)                                 /**< The image is for internal flash. */
-#define BLE_OTAPS_IMG_FILE_TYPE_APP              (0x02U)                                 /**< Pass the image to application. */
-#define BLE_OTAPS_IMG_FILE_TYPE_EXT              (0x03U)                                 /**< The image is for external flash. */
-#define BLE_OTAPS_IMG_FILE_TYPE_UNKNOWN          (0xFFU)                                 /**< The image file type is unknown. */
+/**
+ * @defgroup BLE_OTAPS_IMG_FILE_TYPE_DEF OTAPS image file type definitions
+ * @brief Defines OTAPS image file types.
+ * @{
+ */
+#define BLE_OTAPS_IMG_FILE_TYPE_INT              (0x01U)                                 /**< Image designated for internal flash memory. */
+#define BLE_OTAPS_IMG_FILE_TYPE_APP              (0x02U)                                 /**< Image to be passed to the application layer. */
+#define BLE_OTAPS_IMG_FILE_TYPE_EXT              (0x03U)                                 /**< Image designated for external flash memory. */
+#define BLE_OTAPS_IMG_FILE_TYPE_UNKNOWN          (0xFFU)                                 /**< Unrecognized image file type. */
 /** @} */
 
 
-/**@} */ //BLE_OTAPS_DEFINES
+/** @} */ //BLE_OTAPS_DEFINES
 
 
-/**@addtogroup BLE_OTAPS_ENUMS Enumerations
- * @{ */
+/**
+ * @addtogroup BLE_OTAPS_ENUMS Enumerations
+ * @{
+ */
 
-/**@brief Enumeration type of BLE OTA profile callback events. */
-
+/** @brief Enumeration for BLE OTA (Over-The-Air) profile callback events. */
 typedef enum BLE_OTAPS_EventId_T
 {
-    BLE_OTAPS_EVT_UPDATE_REQ=0x0U,                          /**< Request to start update procedure. See @ref BLE_OTAPS_EvtUpdateReq_T for event details. */
-    BLE_OTAPS_EVT_START_IND,                                /**< Indication of starting one firmware image update. See @ref BLE_OTAPS_EvtStartInd_T for event details. */
-    BLE_OTAPS_EVT_UPDATING_IND,                             /**< Indication of fragmented firmware image update. See @ref BLE_OTAPS_EvtUpdatingInd_T for event details. */
-    BLE_OTAPS_EVT_UPDATING_REQ,                             /**< Request to update fragmented firmware image. Application must call @ref BLE_OTAPS_UpdatingResponse to update procedure. See @ref BLE_OTAPS_EvtUpdatingInd_T for event details. */
-    BLE_OTAPS_EVT_COMPLETE_IND,                             /**< Indication of firmware update completed. See @ref BLE_OTAPS_EvtCompleteInd_T for event details. */
-    BLE_OTAPS_EVT_RESET_IND,                                /**< Indication of device reset request received. OTA client role may ask OTA Server device to rest after firmware update procedure is completed. */
-    BLE_OTAPS_EVT_ERR_UNSPECIFIED_IND                       /**< Profile internal unspecified error occurs. */
+    BLE_OTAPS_EVT_UPDATE_REQ=0x0U,                          /**< Event indicating a request to initiate the update process. See @ref BLE_OTAPS_EvtUpdateReq_T for event details. */
+    BLE_OTAPS_EVT_START_IND,                                /**< Event indicating the start of a firmware image update. See @ref BLE_OTAPS_EvtStartInd_T for event details. */
+    BLE_OTAPS_EVT_UPDATING_IND,                             /**< Event indicating ongoing transmission of firmware image fragments. See @ref BLE_OTAPS_EvtUpdatingInd_T for event details. */
+    BLE_OTAPS_EVT_UPDATING_REQ,                             /**< Event requesting continuation of the firmware image update. The application should respond with @ref BLE_OTAPS_UpdatingResponse. 
+                                                                  See @ref BLE_OTAPS_EvtUpdatingInd_T for event details. */
+    BLE_OTAPS_EVT_COMPLETE_IND,                             /**< Event indicating the completion of the firmware update. See @ref BLE_OTAPS_EvtCompleteInd_T for event details. */
+    BLE_OTAPS_EVT_RESET_IND,                                /**< Event indicating a request for the device to reset, typically after a firmware update. */
+    BLE_OTAPS_EVT_ERR_UNSPECIFIED_IND                       /**< Event indicating an unspecified internal error within the profile. */
 }BLE_OTAPS_EventId_T;
 
-/**@} */ //BLE_OTAPS_ENUMS
+/** @} */ //BLE_OTAPS_ENUMS
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Data Types
 // *****************************************************************************
 // *****************************************************************************
-/**@addtogroup BLE_OTAPS_STRUCTS Structures
- * @{ */
+/**
+ * @addtogroup BLE_OTAPS_STRUCTS Structures
+ * @{
+ */
 
-/**@brief Data structure for @ref BLE_OTAPS_EVT_UPDATE_REQ event. */
+/** @brief Structure containing the current device's firmware information. */
+typedef struct BLE_OTAPS_DevInfo_T
+{
+    uint32_t      fwImageVer;                                    /**< Firmware image version of the current device.  */
+} BLE_OTAPS_DevInfo_T;
+
+
+/** @brief Structure for the @ref BLE_OTAPS_EVT_UPDATE_REQ event. */
 typedef struct BLE_OTAPS_EvtUpdateReq_T
 {
-    uint16_t 	connHandle;                                 /**< The connection handle to request firmware update. */
-    uint32_t 	fwImageSize;                                /**< The size of new firmware image. */
-    uint32_t 	fwImageId;                                  /**< The identity of new firmware image. */
-    uint32_t 	fwImageVer;                                 /**< The version of new firmware image. */
-    uint16_t 	fwImageChksum;                              /**< The checksum of new firmware image. */
-    uint16_t 	fwImageCrc16;                               /**< The CRC-16 value of new firmware image. */
-    uint8_t  	fwImageFileType;                            /**< The file type of new firmware image. See @ref BLE_OTAPS_IMG_FILE_TYPE. */
+    uint16_t      connHandle;                                 /**< Connection handle for the firmware update request. */
+    uint32_t      fwImageSize;                                /**< Size of the new firmware image in bytes. */
+    uint32_t      fwImageId;                                  /**< Identifier of the new firmware image. */
+    uint32_t      fwImageVer;                                 /**< Version of the new firmware image. */
+    uint16_t      fwImageChksum;                              /**< Checksum of the new firmware image for validation. */
+    uint16_t      fwImageCrc16;                               /**< CRC-16 checksum of the new firmware image for validation. */
+    uint8_t       fwImageFileType;                            /**< File type of the new firmware image. Refer to @ref BLE_OTAPS_IMG_FILE_TYPE for possible values. */
 } BLE_OTAPS_EvtUpdateReq_T;
 
 
-/**@brief Data structure for @ref BLE_OTAPS_EVT_START_IND event. */
+/** @brief Structure for the @ref BLE_OTAPS_EVT_START_IND event. */
 typedef struct BLE_OTAPS_EvtStartInd_T
 {
-    uint8_t  	imageType;                                  /**< The type of image to update, see @ref BLE_OTAPS_IMG_TYPE_DEF. */
+    uint8_t       imageType;                                  /**< Type of the image being updated. Refer to @ref BLE_OTAPS_IMG_TYPE_DEF for possible values. */
 } BLE_OTAPS_EvtStartInd_T;
 
 
-/**@brief Data structure for @ref BLE_OTAPS_EVT_UPDATING_IND event. */
+/** @brief Structure for the @ref BLE_OTAPS_EVT_UPDATING_IND event. */
 typedef struct BLE_OTAPS_EvtUpdatingInd_T
 {
-    uint16_t  	length;                                     /**< The length of image fragment be updated. */
-    uint8_t   	*p_fragment;                                /**< The image fragment need to be updated. If p_fragment is not NULL, Application must update fragment by ifself. */
+    uint16_t      length;                                     /**< Length of the current image fragment being updated. */
+    uint8_t       *p_fragment;                                /**< Pointer to the image fragment data. If not NULL, the application must handle the fragment update. */
 } BLE_OTAPS_EvtUpdatingInd_T;
 
 
-/**@brief Data structure for @ref BLE_OTAPS_EVT_COMPLETE_IND event. */
+/** @brief Structure for the @ref BLE_OTAPS_EVT_COMPLETE_IND event. */
 typedef struct BLE_OTAPS_EvtCompleteInd_T
 {
-    bool  		errStatus;                                  /**< The error status of the update procedure. If errStatus is false, Application must call @ref BLE_OTAPS_CompleteResponse to respond peer device the result. */
+    bool          errStatus;                                  /**< Error status of the update process. If false, the application must 
+                                                                  call @ref BLE_OTAPS_CompleteResponse to send the result to the peer device. */
 } BLE_OTAPS_EvtCompleteInd_T;
 
 
-/**@brief Union of BLE OTA profile callback event data types. */
+/** @brief Union of BLE OTA profile callback event data types. */
 typedef union
 {
-    BLE_OTAPS_EvtUpdateReq_T            evtUpdateReq;       /**< Handle @ref BLE_OTAPS_EVT_UPDATE_REQ. */
-    BLE_OTAPS_EvtStartInd_T             evtStartInd;        /**< Handle @ref BLE_OTAPS_EVT_START_IND. */    
-    BLE_OTAPS_EvtUpdatingInd_T          evtUpdatingInd;     /**< Handle @ref BLE_OTAPS_EVT_UPDATING_IND. */        
-    BLE_OTAPS_EvtCompleteInd_T          evtCompleteInd;     /**< Handle @ref BLE_OTAPS_EVT_COMPLETE_IND. */        
+    BLE_OTAPS_EvtUpdateReq_T            evtUpdateReq;         /**< Data for @ref BLE_OTAPS_EVT_UPDATE_REQ event. */
+    BLE_OTAPS_EvtStartInd_T             evtStartInd;          /**< Data for @ref BLE_OTAPS_EVT_START_IND event. */    
+    BLE_OTAPS_EvtUpdatingInd_T          evtUpdatingInd;       /**< Data for @ref BLE_OTAPS_EVT_UPDATING_IND event. */        
+    BLE_OTAPS_EvtCompleteInd_T          evtCompleteInd;       /**< Data for @ref BLE_OTAPS_EVT_COMPLETE_IND event. */        
 } BLE_OTAPS_EventField_T;
 
 
-/**@brief BLE OTA profile callback event.*/
+/** @brief BLE OTA profile callback event structure. */
 typedef struct  BLE_OTAPS_Event_T
 {
-    BLE_OTAPS_EventId_T                 eventId;            /**< Event ID. */
-    BLE_OTAPS_EventField_T              eventField;         /**< Event field. */
+    BLE_OTAPS_EventId_T                 eventId;              /**< Identifier for the event. See @ref BLE_OTAPS_EventId_T. */
+    BLE_OTAPS_EventField_T              eventField;           /**< Data associated with the event. See @ref BLE_OTAPS_EventField_T.*/
 } BLE_OTAPS_Event_T;
 
 
-/**@brief The structure contains current device information. \n
-* It should be used to response the event @ref BLE_OTAPS_EVT_UPDATE_REQ. */
-typedef struct BLE_OTAPS_DevInfo_T
-{
-    uint32_t  fwImageVer;                                    /**< The version of current firmware image. */
-} BLE_OTAPS_DevInfo_T;
-
-/**@brief BLE OTA profile callback type. This callback function sends BLE OTA profile events to the application.*/
+/** @brief Type definition for the BLE OTA profile event callback function.
+ * 
+ * @note This callback function is used to send BLE OTA profile events to the application.
+ * 
+ * @param p_event Pointer to the event structure containing event data.
+ */
 typedef void(*BLE_OTAPS_EventCb_T)(BLE_OTAPS_Event_T *p_event);
 
-/**@} */ //BLE_OTAPS_STRUCTS
+/** @} */ //BLE_OTAPS_STRUCTS
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Function Prototypes
 // *****************************************************************************
 // *****************************************************************************
-/**@addtogroup BLE_OTAPS_FUNS Functions
- * @{ */
+/**
+ * @addtogroup BLE_OTAPS_FUNS Functions
+ * @{
+ */
 
 /**
- *@brief Initialize BLE OTA profile and service.
+ * @brief Initializes the BLE Over-The-Air Programming Service (OTAPS) profile and service.
  *
- * @retval MBA_RES_SUCCESS          Success to initialize BLE OTA profile and service. 
+ * @retval MBA_RES_SUCCESS            Initialization successful.
  *
  */
 uint16_t BLE_OTAPS_Init(void);
 
+
 /**
- *@brief Register BLE OTA profile callback.\n
- *       Application must call this API before starting BLE OTA procedure. 
+ * @brief Registers a callback function for BLE OTA profile events.
  *
- *
- *@param[in] bleOtapsRoutine        Client callback function.
+ * @param[in] bleOtapsRoutine         Callback function to handle BLE OTA profile events.
  *
  */
 void BLE_OTAPS_EventRegister(BLE_OTAPS_EventCb_T bleOtapsRoutine);
 
+
 /**
- *@brief Stop BLE OTA procedure.
- *       Application could call this API to stop ongoing BLE OTA DFU procedure.
+ * @brief Stops the ongoing BLE OTA firmware update procedure.
  *
- *
- * @retval MBA_RES_SUCCESS          Successfully stop BLE OTA procedure.
+ * @retval MBA_RES_SUCCESS            OTA procedure successfully stopped.
  */
 uint16_t BLE_OTAPS_UpdateStop(void);
 
-/**
- *@brief Set IV value and encryption key of AES-CBC for OTA DFU new image decryption.\n
- *       Application must call this API before starting BLE OTA procedure if image is encrpyted. 
- *
- *@param[in] p_iv                   Pointer to the 16 bytes IV value.
- *@param[in] p_key                  Pointer to the 16 bytes encryption key.
- *
- * @retval MBA_RES_SUCCESS          Successfully set IV value and Key.
- * @retval MBA_RES_BAD_STATE        Failure because the BLE OTA is in progress.
- */
-uint16_t BLE_OTAPS_SetEncrytionInfo(uint8_t * p_iv, uint8_t * p_key);
 
 /**
- *@brief Respond peer device after receiving @ref BLE_OTAPS_EVT_UPDATE_REQ event. Application must determinate if allow to start BLE OTA update procedure.
+ * @brief Sets the Initialization Vector (IV) and encryption key for AES-CBC decryption of the new OTA DFU image.
  *
- *@param[in] connHandle             Handle of the connection to send response. 
- *@param[in] isAllow                Set true if application allows device firmware update procedure, otherwise set false.
- *@param[in] p_devInfo              Pointer to the current device information. See @ref BLE_OTAPS_DevInfo_T in detail. The information would be sent to peer device if isAllow is set to true. It would be ignored if isAllow is set to false.
+ * @note This function must be called before starting the BLE OTA procedure if the image is encrypted.
  *
- *@retval MBA_RES_SUCCESS           Successfully send response.
- *@retval MBA_RES_OOM               Memory not available to send response.
- *@retval MBA_RES_INVALID_PARA      Invalid parameters. Connection handle is not valid
- *@retval MBA_RES_BAD_STATE         Application should not call this API in current OTA progress.
+ * @param[in] p_iv                    Pointer to the 16-byte IV.
+ * @param[in] p_key                   Pointer to the 16-byte encryption key.
  *
+ * @retval MBA_RES_SUCCESS            IV and key set successfully.
+ * @retval MBA_RES_BAD_STATE          Operation failed because OTA is in progress.
  */
-uint16_t BLE_OTAPS_UpdateResponse(uint16_t connHandle, bool isAllow, BLE_OTAPS_DevInfo_T * p_devInfo);
+uint16_t BLE_OTAPS_SetEncrytionInfo(uint8_t *p_iv, uint8_t *p_key);
+
 
 /**
- *@brief Respond peer device after receiving the @ref BLE_OTAPS_EVT_UPDATING_REQ event.
- *       Application must update fragmented firmware image by ifself.
+ * @brief Responds to the peer device after receiving a @ref BLE_OTAPS_EVT_UPDATE_REQ event.
  *
- *@param[in] success                Set true if update is successful, otherwise set false.
+ * @note The application must decide whether to allow the start of the BLE OTA update procedure.
+ * 
+ * @param[in] connHandle             Handle of the connection to send the response.
+ * @param[in] isAllow                True to allow the firmware update, false to deny.
+ * @param[in] p_devInfo              Pointer to the device information to be sent if isAllow is true; ignored otherwise. 
+ *                                    See @ref BLE_OTAPS_DevInfo_T.
  *
- *@retval MBA_RES_SUCCESS           Successfully send response.
- *@retval MBA_RES_OOM               Memory not available to send response.
- *@retval MBA_RES_BAD_STATE         Application should not call this API in current progress.
+ * @retval MBA_RES_SUCCESS           Response sent successfully.
+ * @retval MBA_RES_OOM               Internal memory allocation failure.
+ * @retval MBA_RES_INVALID_PARA      The provided connection handle is not valid.
+ * @retval MBA_RES_BAD_STATE         Inappropriate OTA state to call this function.
+ *
+ */
+uint16_t BLE_OTAPS_UpdateResponse(uint16_t connHandle, bool isAllow, BLE_OTAPS_DevInfo_T *p_devInfo);
+
+
+/**
+ * @brief Responds to the peer device after receiving a @ref BLE_OTAPS_EVT_UPDATING_REQ event.
+ * 
+ * @note The application must handle the update of the fragmented firmware image.
+ * 
+ * @param[in] success                True if the update is successful, false otherwise.
+ *
+ * @retval MBA_RES_SUCCESS           Response sent successfully.
+ * @retval MBA_RES_OOM               Internal memory allocation failure.
+ * @retval MBA_RES_BAD_STATE         Inappropriate OTA state to call this function.
  *
  */
 uint16_t BLE_OTAPS_UpdatingResponse(bool success);
 
 
 /**
- *@brief Respond peer device after receiving the @ref BLE_OTAPS_EVT_COMPLETE_IND event if errStatus is false.
- *       Application must check if the device firmware update is successful or fail.
+ * @brief Responds to the peer device after receiving a @ref BLE_OTAPS_EVT_COMPLETE_IND event if errStatus is false.
+ * 
+ * @note The application must verify the success or failure of the device firmware update.
  *
- *@param[in] success                Set true if device firmware update is successful, otherwise set false.
+ * @param[in] success                True if the firmware update is successful, false otherwise.
  *
- *@retval MBA_RES_SUCCESS           Successfully send response.
- *@retval MBA_RES_OOM               Memory not available to send response.
- *@retval MBA_RES_BAD_STATE         Application should not call this API in current progress.
+ * @retval MBA_RES_SUCCESS           Response sent successfully.
+ * @retval MBA_RES_OOM               Internal memory allocation failure.
+ * @retval MBA_RES_BAD_STATE         Inappropriate OTA state to call this function.
  *
  */
 uint16_t BLE_OTAPS_CompleteResponse(bool success);
 
 
-/**@brief Handle BLE_Stack events.
- *       This API should be called in the application while caching BLE_Stack events
+/**
+ * @brief Handles BLE_Stack events.
  *
- * @param[in] p_stackEvent          Pointer to BLE_Stack events buffer.
+ * @note This function should be called by the application when BLE stack events occur.
+ *
+ * @param[in] p_stackEvent          Pointer to the BLE stack event data.
  *
 */
 void BLE_OTAPS_BleEventHandler(STACK_Event_T *p_stackEvent);
 
 
-/**@} */ //BLE_OTAPS_FUNS
+/** @} */ //BLE_OTAPS_FUNS
 
+/** @} */
+
+/** @} */
+
+/** @} */
 
 //DOM-IGNORE-BEGIN
 #ifdef __cplusplus
@@ -307,10 +355,4 @@ void BLE_OTAPS_BleEventHandler(STACK_Event_T *p_stackEvent);
 #endif
 //DOM-IGNORE-END
 
-#endif
-
-/**
-  @}
-*/
-
-
+#endif//BLE_OTAPS_H

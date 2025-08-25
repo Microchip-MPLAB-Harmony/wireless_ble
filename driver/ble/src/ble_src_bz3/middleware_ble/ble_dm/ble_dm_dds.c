@@ -31,12 +31,12 @@
     ble_dm_dds.c
 
   Summary:
-    This file contains the Device Data Storage functions for 
-    BLE Device Manager module internal use.
+    Implements the internal data storage mechanisms for the BLE Device Manager.
 
   Description:
-    This file contains the Device Data Storage functions for 
-    BLE Device Manager module internal use.
+    This source file provides the necessary functions to handle data storage
+    operations required by the BLE Device Manager. It is intended for internal
+    use within the BLE software stack and is not part of the public API.
  *******************************************************************************/
 
 
@@ -58,52 +58,56 @@
 // Section: Macros
 // *****************************************************************************
 // *****************************************************************************
+/* Enumeration of BLE PDS item IDs.*/
 typedef enum BLE_DM_PdsBleItem_T{
-    PDS_BLE_ITEM_ID_1 = (PDS_MODULE_BT_OFFSET),
-    PDS_BLE_ITEM_ID_2,
-    PDS_BLE_ITEM_ID_3,
-    PDS_BLE_ITEM_ID_4,
-    PDS_BLE_ITEM_ID_5,
-    PDS_BLE_ITEM_ID_6,
-    PDS_BLE_ITEM_ID_7,
-    PDS_BLE_ITEM_ID_8,
+    PDS_BLE_ITEM_ID_1 = (PDS_MODULE_BT_OFFSET),         // PDS item ID 1.
+    PDS_BLE_ITEM_ID_2,                                  // PDS item ID 2.
+    PDS_BLE_ITEM_ID_3,                                  // PDS item ID 3.
+    PDS_BLE_ITEM_ID_4,                                  // PDS item ID 4.
+    PDS_BLE_ITEM_ID_5,                                  // PDS item ID 5.
+    PDS_BLE_ITEM_ID_6,                                  // PDS item ID 6.
+    PDS_BLE_ITEM_ID_7,                                  // PDS item ID 7.
+    PDS_BLE_ITEM_ID_8,                                  // PDS item ID 8.
 
 
-    PDS_BLE_ITEM_EXT_ID_1,
-    PDS_BLE_ITEM_EXT_ID_2,
-    PDS_BLE_ITEM_EXT_ID_3,
-    PDS_BLE_ITEM_EXT_ID_4,
-    PDS_BLE_ITEM_EXT_ID_5,
-    PDS_BLE_ITEM_EXT_ID_6,
-    PDS_BLE_ITEM_EXT_ID_7,
-    PDS_BLE_ITEM_EXT_ID_8
+    PDS_BLE_ITEM_EXT_ID_1,                              // PDS extended item ID 1.
+    PDS_BLE_ITEM_EXT_ID_2,                              // PDS extended item ID 2.
+    PDS_BLE_ITEM_EXT_ID_3,                              // PDS extended item ID 3.
+    PDS_BLE_ITEM_EXT_ID_4,                              // PDS extended item ID 4.
+    PDS_BLE_ITEM_EXT_ID_5,                              // PDS extended item ID 5.
+    PDS_BLE_ITEM_EXT_ID_6,                              // PDS extended item ID 6.
+    PDS_BLE_ITEM_EXT_ID_7,                              // PDS extended item ID 7.
+    PDS_BLE_ITEM_EXT_ID_8                               // PDS extended item ID 8.
 }BLE_DM_PdsBleItem_T;
 
-#define BLE_DM_DDS_FILE_MAIN_ITEM_START       PDS_BLE_ITEM_ID_1
-#define BLE_DM_DDS_FILE_EXT_ITEM_START        PDS_BLE_ITEM_EXT_ID_1
+#define BLE_DM_DDS_FILE_MAIN_ITEM_START       PDS_BLE_ITEM_ID_1     // Start ID for main item in DDS.
+#define BLE_DM_DDS_FILE_EXT_ITEM_START        PDS_BLE_ITEM_EXT_ID_1 // Start ID for extended item in DDS.
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Data Types
 // *****************************************************************************
 // *****************************************************************************
+/* Structure to store main paired device information.*/
 typedef struct BLE_DM_MainPairedDevInfo_T
 {
-    BLE_GAP_Addr_T                  remoteAddr;                    /**< Paired device bluetooth address. */
-    uint8_t                         remoteIrk[16];                 /**< Paired device BLE identity resolving key. */
-    uint8_t                         rv[8];                         /**< Paired device BLE rand value */
-    uint8_t                         ediv[2];                       /**< Paired device BLE encrypted diversifier. */
-    uint8_t                         ltk[16];                       /**< Paired device BLE Link key. */
-    uint8_t                         lesc:1;                        /**< Paired device using LE secure connection. */
-    uint8_t                         auth:1;                        /**< Paired device using authenticated pairing method. */
-    uint8_t                         encryptKeySize:6;              /**< Paired device BLE encrpytion key size. */
+    BLE_GAP_Addr_T                  remoteAddr;                    // Paired device bluetooth address.
+    uint8_t                         remoteIrk[16];                 // Paired device BLE identity resolving key.
+    uint8_t                         rv[8];                         // Paired device BLE rand value
+    uint8_t                         ediv[2];                       // Paired device BLE encrypted diversifier.
+    uint8_t                         ltk[16];                       // Paired device BLE Link key.
+    uint8_t                         lesc:1;                        // Paired device using LE secure connection.
+    uint8_t                         auth:1;                        // Paired device using authenticated pairing method.
+    uint8_t                         encryptKeySize:6;              // Paired device BLE encrpytion key size.
 }BLE_DM_MainPairedDevInfo_T;
 
+
+/* Structure to store extended paired device information.*/
 typedef struct BLE_DM_ExtPairedDevInfo_T
 {
-    BLE_GAP_Addr_T                  localAddr;                     /**< Local device bluetooth address. */
-    uint8_t                         localIrk[16];                  /**< Local device BLE identity resolving key. */
-    uint8_t                         reserved[9];                   
+    BLE_GAP_Addr_T                  localAddr;                     // Local device bluetooth address.
+    uint8_t                         localIrk[16];                  // Local device BLE identity resolving key.
+    uint8_t                         reserved[9];                   // Reserved space for future use.
 }BLE_DM_ExtPairedDevInfo_T;
 
 // *****************************************************************************
@@ -112,8 +116,8 @@ typedef struct BLE_DM_ExtPairedDevInfo_T
 // *****************************************************************************
 // *****************************************************************************
 
-static BLE_DM_MainPairedDevInfo_T s_mainPairedInfo;
-static BLE_DM_ExtPairedDevInfo_T s_extPairedInfo;
+static BLE_DM_MainPairedDevInfo_T       s_mainPairedInfo;
+static BLE_DM_ExtPairedDevInfo_T        s_extPairedInfo;
 
 
 PDS_DECLARE_FILE(PDS_BLE_ITEM_ID_1, (uint16_t)sizeof(BLE_DM_MainPairedDevInfo_T), &s_mainPairedInfo,FILE_INTEGRITY_CONTROL_MARK);
@@ -142,7 +146,14 @@ static BLE_DM_DdsWriteCompleteCb_T s_dmDdsCb;
 // Section: Functions
 // *****************************************************************************
 // *****************************************************************************
-
+/**
+ * @brief Checks if the given address can be resolved using the provided IRK.
+ *
+ * @param[in] p_remoteIrk Pointer to the IRK used for resolving the address.
+ * @param[in] p_remoteAddr Pointer to the address to be resolved.
+ * 
+ * @retval true if the address can be resolved, false otherwise.
+ */
 static bool ble_dm_DdsCheckResolveAddress(uint8_t *p_remoteIrk, uint8_t *p_remoteAddr)
 {
     uint8_t data[16], temp[16];
@@ -183,7 +194,16 @@ static bool ble_dm_DdsCheckResolveAddress(uint8_t *p_remoteIrk, uint8_t *p_remot
     return (memcmp(temp + 13, data, 3) == 0);
 }
 
-
+/**
+ * @brief Retrieve paired device information.
+ * 
+ * @param[in] devId             Device ID of the paired device.
+ * @param[out] p_pairedDevInfo  Pointer to the structure where paired device information will be stored.
+ * 
+ * @retval MBA_RES_SUCCESS on success.
+ * @retval MBA_RES_INVALID_PARA if the device ID is invalid.
+ * @retval MBA_RES_FAIL on failure.
+ */
 uint16_t BLE_DM_DdsGetPairedDevice(uint8_t devId, BLE_DM_PairedDevInfo_T * p_pairedDevInfo)
 {
     if (devId >= BLE_DM_MAX_PAIRED_DEVICE_NUM
@@ -219,6 +239,16 @@ uint16_t BLE_DM_DdsGetPairedDevice(uint8_t devId, BLE_DM_PairedDevInfo_T * p_pai
     }
 }
 
+/**
+ * @brief Set paired device information.
+ * 
+ * @param[in] devId Device ID of the paired device.
+ * @param[in] p_pairedDevInfo Pointer to the structure containing the paired device information to be set.
+ * 
+ * @retval MBA_RES_SUCCESS on success.
+ * @retval MBA_RES_INVALID_PARA if the device ID is invalid.
+ * @retval MBA_RES_FAIL on failure.
+ */
 uint16_t BLE_DM_DdsSetPairedDevice(uint8_t devId, BLE_DM_PairedDevInfo_T *p_pairedDevInfo)
 {
     if (devId >= BLE_DM_MAX_PAIRED_DEVICE_NUM)
@@ -248,6 +278,12 @@ uint16_t BLE_DM_DdsSetPairedDevice(uint8_t devId, BLE_DM_PairedDevInfo_T *p_pair
     }
 }
 
+
+/**
+ * @brief Get the first free device ID.
+ * 
+ * @retval The first free device ID.
+ */
 uint8_t BLE_DM_DdsGetFreeDeviceId(void)
 {
     uint8_t devId;
@@ -263,6 +299,14 @@ uint8_t BLE_DM_DdsGetFreeDeviceId(void)
     return devId;
 }
 
+
+/**
+ * @brief Retrieve the device ID for a given Bluetooth address.
+ * 
+ * @param[in] p_bdAddr Pointer to the Bluetooth address structure.
+ * 
+ * @retval Device ID on success, or BLE_DM_MAX_PAIRED_DEVICE_NUM if the address is non-resolvable or on failure.
+ */
 uint8_t BLE_DM_DdsGetDeviceId(BLE_GAP_Addr_T *p_bdAddr)
 {
     uint8_t devId;
@@ -324,6 +368,16 @@ uint8_t BLE_DM_DdsGetDeviceId(BLE_GAP_Addr_T *p_bdAddr)
     return devId;
 }
 
+
+/**
+ * @brief Delete paired device information for a given device ID.
+ * 
+ * @param[in] devId Device ID of the paired device to be deleted.
+ * 
+ * @retval MBA_RES_SUCCESS on success.
+ * @retval MBA_RES_INVALID_PARA if the device ID is invalid.
+ * @retval MBA_RES_FAIL on failure.
+ */
 uint16_t BLE_DM_DdsDeletePairedDevice(uint8_t devId)
 {
     if (devId >= BLE_DM_MAX_PAIRED_DEVICE_NUM)
@@ -341,6 +395,13 @@ uint16_t BLE_DM_DdsDeletePairedDevice(uint8_t devId)
 	}
 }
 
+
+/**
+ * @brief Delete all paired device information.
+ * 
+ * @retval MBA_RES_SUCCESS on success.
+ * @retval MBA_RES_FAIL on failure.
+ */
 uint16_t BLE_DM_DdsDeleteAllPairedDevice(void)
 {
     uint8_t devId;
@@ -356,11 +417,25 @@ uint16_t BLE_DM_DdsDeleteAllPairedDevice(void)
     return MBA_RES_SUCCESS;
 }
 
+
+/**
+ * @brief Check if a device ID is valid and able to be restored.
+ * 
+ * @param[in] devId Device ID to be checked.
+ * 
+ * @retval true if the device ID is valid and able to be restored, false otherwise.
+ */
 bool BLE_DM_DdsChkDeviceId(uint8_t devId)
 {
     return PDS_IsAbleToRestore((uint16_t)BLE_DM_DDS_FILE_MAIN_ITEM_START + devId);
 }
 
+
+/**
+ * @brief Callback function for write complete event.
+ * 
+ * @param[in] memoryId Memory ID of the PDS item that was written.
+ */
 static void ble_dm_DdsWriteCompleteCallback(PDS_MemId_t memoryId)
 {
     if ((memoryId >= (uint16_t)PDS_BLE_ITEM_ID_1) && (memoryId <= (uint16_t)PDS_BLE_ITEM_ID_8))
@@ -372,6 +447,12 @@ static void ble_dm_DdsWriteCompleteCallback(PDS_MemId_t memoryId)
     }
 }
 
+
+/**
+ * @brief Initialize the Device Manager Device Data Storage submodule.
+ * 
+ * @param[in] cb Callback function to be called on write complete event.
+ */
 void BLE_DM_DdsInit(BLE_DM_DdsWriteCompleteCb_T cb)
 {
     s_dmDdsCb=cb;

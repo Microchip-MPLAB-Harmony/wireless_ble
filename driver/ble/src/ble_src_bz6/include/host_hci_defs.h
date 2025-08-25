@@ -220,6 +220,8 @@ extern "C" {
  * @brief Defines the command field for the Host Controller and Baseband group.
  * @{
  */
+#define HCI_READ_AFH_CHANNEL_ASSESS_MODE                    (0x48U)        /**< Read AFH Channel Assessment Mode Command. */
+#define HCI_WRITE_AFH_CHANNEL_ASSESS_MODE                   (0x49U)        /**< Write AFH Channel Assessment Mode Command. */
 #define HCI_READ_AUTHENTICATED_PAYLOAD_TIMEOUT              (0x7BU)        /**< Read Authenticated Payload Timeout Command. */
 #define HCI_WRITE_AUTHENTICATED_PAYLOAD_TIMEOUT             (0x7CU)        /**< Write Authenticated Payload Timeout Command. */
 /** @} */
@@ -369,6 +371,8 @@ extern "C" {
  * @{
  */
 #define HCI_CMD_SIZE_DISCONNECT                             (0x03U)        /**< Size for HCI Disconnect command. See @ref HCI_Disconnect_T. */
+#define HCI_CMD_SIZE_READ_AFH_CHAN_ASSESS_MODE              (0x00U)        /**< Size for HCI Read AFH Channel Assessment Mode command. No parameters required. */
+#define HCI_CMD_SIZE_WRITE_AFH_CHAN_ASSESS_MODE             (0x01U)        /**< Size for HCI Write AFH Channel Assessment Mode command. See @ref HCI_WriteAfhChannelAssessMode_T. */
 #define HCI_CMD_SIZE_READ_AUTH_PAYLOAD_TO                   (0x02U)        /**< Size for HCI Read Authenticated Payload Timeout command. See @ref HCI_ReadAuthenticatedPayloadTimeout_T. */
 #define HCI_CMD_SIZE_WRITE_AUTH_PAYLOAD_TO                  (0x04U)        /**< Size for HCI Write Authenticated Payload Timeout command. See @ref HCI_WriteAuthenticatedPayloadTimeout_T. */
 #define HCI_CMD_SIZE_READ_BD_ADDR                           (0x00U)        /**< Size for HCI Read BD_ADDR command. No parameters required. */
@@ -436,6 +440,7 @@ extern "C" {
 #define HCI_CMD_SIZE_SET_DEFAULT_SUBRATE                    (0x0AU)        /**< Size for HCI LE Set Default Subrate command. See @ref HCI_LE_SetDefaultSubrate_T. */
 #define HCI_CMD_SIZE_SUBRATE_REQUEST                        (0x0CU)        /**< Size for HCI LE Subrate Request command. See @ref HCI_LE_SubrateRequest_T. */
 #define HCI_CMD_SIZE_SET_HOST_FEATURE                       (0x02U)        /**< Size for HCI LE Subrate Request command. See @ref HCI_LE_SetHostFeature_T. */
+#define HCI_CMD_SIZE_SET_DATA_REL_ADDR_CHANGE               (0x02U)        /**< Size for HCI LE Set Data Related Address Changes command. See @ref HCI_LE_SetDataRelatedAddrChange_T. */
 /** @} */
 
 
@@ -488,6 +493,7 @@ extern "C" {
  * @{
  */
 #define HCI_CC_EVT_SIZE_STATUS                              (0x01U)        /**< Size of command complete event whose returned parameter containing only status parameter. */
+#define HCI_CC_EVT_SIZE_READ_AFH_CHAN_ASSESS_MODE           (0x02U)        /**< Size of the Read AFH Channel Assessment Mode command complete event. See @ref HCI_CC_ReadAfhChannelAssessMode_T. */
 #define HCI_CC_EVT_SIZE_READ_AUTH_PAYLOAD_TO                (0x05U)        /**< Size of the Read Authenticated Payload Timeout command complete event. See @ref HCI_CC_ReadAuthenticatedPayloadTimeout_T. */
 #define HCI_CC_EVT_SIZE_WRITE_AUTH_PAYLOAD_TO               (0x03U)        /**< Size of the Write Authenticated Payload Timeout command complete event. See @ref HCI_CC_WriteAuthenticatedPayloadTimeout_T. */
 #define HCI_CC_EVT_SIZE_READ_BD_ADDR                        (0x07U)        /**< Size of the Read BD_ADDR command complete event. See @ref HCI_CC_ReadBdAddr_T. */
@@ -528,6 +534,11 @@ typedef struct HCI_Disconnect_T
     uint8_t             reason;                                            /**< The reason code explaining why the disconnection occurred. */
 } HCI_Disconnect_T;
 
+/** @brief Structure for parameters of the "Write AFH Channel Assessment Mode" command. */
+typedef struct HCI_WriteAfhChannelAssessMode_T
+{
+    uint8_t             AfhChannelAssessMode;                              /**< AFH Channel Assessment Mode is enabled (1) or disabled (0). */
+} HCI_WriteAfhChannelAssessMode_T;
 
 /** @brief Structure for the HCI Read Authenticated Payload Timeout command parameters. */
 typedef struct HCI_ReadAuthenticatedPayloadTimeout_T
@@ -647,7 +658,7 @@ typedef struct HCI_LE_ConnectionUpdate_T
     uint16_t            connHandle;                                        /**< Handle identifying the connection to be updated. */
     uint16_t            intervalMin;                                       /**< Minimum value for the connection event interval. This shall be less than or equal to intervalMax. */
     uint16_t            intervalMax;                                       /**< Maximum value for the connection event interval. */
-    uint16_t            latency;                                           /**< Number of connection events the peripheral can skip (slave latency). */
+    uint16_t            latency;                                           /**< Number of connection events the peripheral can skip (peripheral latency). */
     uint16_t            supervisionTimeout;                                /**< Supervision timeout for the LE link. It shall be large enough to accommodate the latency * intervalMax * 2 formula. */
     uint16_t            minCeLength;                                       /**< Minimum length of connection event needed for this connection. */
     uint16_t            maxCeLength;                                       /**< Maximum length of connection event allowed for this connection. */
@@ -952,7 +963,7 @@ typedef struct HCI_LE_ExtCreateConnByPhy_T
     uint16_t            scanWindow;                                        /**< Duration of scan window in 0.625 ms units. */
     uint16_t            intervalMin;                                       /**< Minimum value for the connection event interval in 1.25 ms units. */
     uint16_t            intervalMax;                                       /**< Maximum value for the connection event interval in 1.25 ms units. */
-    uint16_t            latency;                                           /**< Slave latency for the connection in number of connection events. */
+    uint16_t            latency;                                           /**< Peripheral latency for the connection in number of connection events. */
     uint16_t            supervisionTimeout;                                /**< Supervision timeout for the connection in 10 ms units. */
     uint16_t            minCeLength;                                       /**< Minimum length of connection event in 0.625 ms units. */
     uint16_t            maxCeLength;                                       /**< Maximum length of connection event in 0.625 ms units. */
@@ -1107,12 +1118,25 @@ typedef struct HCI_LE_SetHostFeature_T
 } HCI_LE_SetHostFeature_T;
 
 
+/** @brief Structure for parameters of the "Set Data Related Address Changes" command. */
+typedef struct HCI_LE_SetDataRelatedAddrChange_T
+{
+    uint8_t             advHandle;                                         /**< Handle identifying the advertising set. */
+    uint8_t             changeReasons;                                     /**< Reasons for changing the address. */
+} HCI_LE_SetDataRelatedAddrChange_T;
+
 /** @brief Structure for the "Command Complete" event without additional parameters. */
 typedef struct HCI_CC_Status_T
 {
     uint8_t             status;                                            /**< Status returned for the completed command. */
 } HCI_CC_Status_T;
 
+/** @brief Structure for the "Read AFH Channel Assessment Mode" command complete event. */
+typedef struct HCI_CC_ReadAfhChannelAssessMode_T
+{
+    uint8_t             status;                                            /**< Status returned for the completed command. */
+    uint8_t             AfhChannelAssessMode;                              /**< AFH Channel Assessment Mode is enabled (1) or disabled (0). */
+} HCI_CC_ReadAfhChannelAssessMode_T;
 
 /** @brief Structure for the "Read Authenticated Payload Timeout" command complete event. */
 typedef struct HCI_CC_ReadAuthenticatedPayloadTimeout_T

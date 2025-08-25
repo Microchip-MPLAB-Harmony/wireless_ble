@@ -88,13 +88,22 @@ bool APP_BleDsadvIsEnable(void)
 
 void APP_BleDsadvStart(bool flag)
 {
+    uint16_t ret;
+
     if (flag == false)
     {
         //Enable DSADV and request controller to store adv. parameters into backup ram
-        BLE_GAP_EnableOneTimeAdv(BLE_GAP_ADV_OPTION_STORE_PARAMS);
+        <#if BOOL_GAP_EXT_ADV == false>
+        ret = BLE_GAP_EnableOneTimeAdv(BLE_GAP_ADV_OPTION_STORE_PARAMS);
+        <#else>
+        ret = BLE_GAP_EnableOneTimeExtAdv(BLE_GAP_ADV_OPTION_STORE_PARAMS, ${GAP_DSADV_ADV_HANDLE});
+        </#if>
 
-        //Request controller to unlock traffic
-        BLE_GAP_TrafficUnlock();
+        if (ret == MBA_RES_SUCCESS)
+        {
+            //Request controller to unlock traffic
+            BLE_GAP_TrafficUnlock();
+        }
     }
     else
     {
@@ -102,24 +111,40 @@ void APP_BleDsadvStart(bool flag)
         APP_BleStackInitBasic();
 
         //Step 2. Enable DSADV by loading adv parameters from backup ram
-        BLE_GAP_EnableOneTimeAdv(BLE_GAP_ADV_OPTION_LOAD_PARAMS);
+        <#if BOOL_GAP_EXT_ADV == false>
+        ret = BLE_GAP_EnableOneTimeAdv(BLE_GAP_ADV_OPTION_LOAD_PARAMS);
+        <#else>
+        ret = BLE_GAP_EnableOneTimeExtAdv(BLE_GAP_ADV_OPTION_LOAD_PARAMS, ${GAP_DSADV_ADV_HANDLE});
+        </#if>
 
-        //Step 3. Continue to initialize the advanced fucntion
-        APP_BleStackInitAdvance();
+        if (ret == MBA_RES_SUCCESS)
+        {
+            //Step 3. Continue to initialize the advanced fucntion
+            APP_BleStackInitAdvance();
 
-        //Step 4. Request controller to unlock traffic
-        BLE_GAP_TrafficUnlock();
+            //Step 4. Request controller to unlock traffic
+            BLE_GAP_TrafficUnlock();
+        }
     }
 }
 
 void APP_BleDsadvRestart(void)
 {
+    uint16_t ret;
+
     DEVICE_SetDeepSleepWakeUpSrc(DEVICE_DEEP_SLEEP_WAKE_NONE);   //Clear deep sleep wake up source
 
-    BLE_GAP_EnableOneTimeAdv(BLE_GAP_ADV_OPTION_LOAD_PARAMS);
+    <#if BOOL_GAP_EXT_ADV == false>
+    ret = BLE_GAP_EnableOneTimeAdv(BLE_GAP_ADV_OPTION_LOAD_PARAMS);
+    <#else>
+    ret = BLE_GAP_EnableOneTimeExtAdv(BLE_GAP_ADV_OPTION_LOAD_PARAMS, ${GAP_DSADV_ADV_HANDLE});
+    </#if>
 
-    //Request controller to unlock traffic
-    BLE_GAP_TrafficUnlock();
+    if (ret == MBA_RES_SUCCESS)
+    {
+        //Request controller to unlock traffic
+        BLE_GAP_TrafficUnlock();
+    }
 }
 
 void APP_BleDsadvCompl(void)

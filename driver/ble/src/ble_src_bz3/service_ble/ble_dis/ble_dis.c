@@ -31,10 +31,13 @@
     ble_dis.c
 
   Summary:
-    This file contains the BLE Device Information Service functions for application user.
+    Implements the functions for the BLE Device Information Service (DIS) used 
+    by the application.
 
   Description:
-    This file contains the BLE Device Information Service functions for application user.
+    This source file provides the interface and functionality required to interact
+    with the BLE Device Information Service, which allows an application to expose
+    manufacturer and device information to a connected BLE peer.
  *******************************************************************************/
 
 
@@ -55,6 +58,8 @@
 // Section: Macros
 // *****************************************************************************
 // *****************************************************************************
+#define BLE_DIS_MIN_KEY_SIZE                           0x10    // The minimum key size for attribute permissions (DIS).
+
 #define UUID_MANUFACTURER_NAME                         0x2A29  /**< Manufacturer Name. */
 #define UUID_MODEL_NUMBER                              0x2A24  /**< Model Numbr. */
 #define UUID_SERIAL_NUMBER                             0x2A25  /**< Serial Number. */
@@ -71,6 +76,7 @@
 // Section: Local Variables
 // *****************************************************************************
 // *****************************************************************************
+/* UUIDs for Device Information Service and its Characteristics */
 static const uint8_t s_svcUuidDis[ATT_UUID_LENGTH_2] =                 {UINT16_TO_BYTES(UUID_DEVICE_INFO_SERVICE)};
 
 #ifdef DIS_MANU_NAME_ENABLE
@@ -203,11 +209,13 @@ static uint8_t s_pnpIdVal[] = {DIS_PNP_ID};
 static uint16_t s_pnpIdValLen = (uint16_t)sizeof(s_pnpIdVal);
 #endif
 
-/* Attribute list for Generic Access service */
+/* Attribute list for Device Information service */
 static GATTS_Attribute_T s_disList[DIS_END_HDL-DIS_START_HDL+1];
 
-/* GAP Service structure */
+/* Device Information Service structure */
 static GATTS_Service_T s_svcDis;
+
+/* Index to keep track of the current attribute within the Device Information Service */
 static uint8_t s_disAttrIndex;
 
 // *****************************************************************************
@@ -215,7 +223,16 @@ static uint8_t s_disAttrIndex;
 // Section: Functions
 // *****************************************************************************
 // *****************************************************************************
-
+/**
+ * @brief Adds the BLE Device Information Service to the GATT server.
+ *
+ * This function adds the BLE Device Information Service to the BLE stack's GATT server,
+ * enabling the service to be discovered and accessed by remote BLE devices.
+ * 
+ * @retval MBA_RES_SUCCESS                    The BLE Device Information service was successfully added.
+ * @retval MBA_RES_NO_RESOURCE                Insufficient resource to add the BLE Device Information service.
+ *
+ */
 uint16_t BLE_DIS_Add(void)
 {
     uint16_t result;
@@ -412,4 +429,3 @@ uint16_t BLE_DIS_Add(void)
     result=GATTS_AddService(&s_svcDis, s_disAttrIndex);
     return result;
 }
-

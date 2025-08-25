@@ -31,20 +31,12 @@
     mw_dfu.h
 
   Summary:
-    This file contains the BLE Device Firmware Udpate functions for application user.
+    This header file provides the API for the BLE Device Firmware Update functionality.
 
   Description:
-    This file contains the BLE Device Firmware Udpate functions for application user.
+    This header file includes function declarations and necessary definitions for 
+    the application user to perform firmware updates.
  *******************************************************************************/
-
-
-/**
- * @addtogroup MW_DFU
- * @{
- * @brief Header file for the Middleware Device Firmware Update library.
- * @note Definitions and prototypes for the Middleware Device Firmware Update stack layer application programming interface.
- */
-
 #ifndef MW_DFU_H
 #define MW_DFU_H
 
@@ -53,17 +45,27 @@
 // Section: Included Files
 // *****************************************************************************
 // *****************************************************************************
-
 #include <stdint.h>
-
 
 // DOM-IGNORE-BEGIN
 #ifdef __cplusplus  // Provide C++ Compatibility
-
 extern "C" {
-
 #endif
 // DOM-IGNORE-END
+
+/**
+ * @addtogroup BLE_MW BLE Middleware
+ * @{
+ */
+
+/**
+ * @defgroup MW_DFU Device Firmware Update (DFU)
+ * 
+ * @brief Defines the API for the Device Firmware Update (DFU).
+ * @note This file contains the definitions and function prototypes necessary for
+ *       integrating the Device Firmware Update feature into BLE applications.
+ * @{
+ */
 
 // *****************************************************************************
 // *****************************************************************************
@@ -73,32 +75,42 @@ extern "C" {
 
 #define MW_DFU_EXTERNAL_FLASH_ENABLE
 
-/**@addtogroup MW_DFU_DEFINES Defines
- * @{ */
+/**
+ * @addtogroup MW_DFU_DEFINES Defines
+ * @{
+ */
 
-/**@defgroup MW_DFU_MAX_IMAGE_SIZE Maximum image size
- * @brief The definition of DFU maximum image size.
- * @{ */
-#define MW_DFU_MAX_SIZE_FW_IMAGE_INT          (262144UL)           /**< Maximum size of firmware image for internal flash in bytes. */
-#define MW_DFU_MAX_SIZE_FW_IMAGE_EXT          (524288UL)           /**< Maximum size of firmware image for external flash in bytes. */
+
+/**
+ * @defgroup MW_DFU_MAX_IMAGE_SIZE Maximum image size
+ * @brief Defines the maximum allowable size for a firmware image during Device Firmware Update (DFU).
+ * @{
+ */
+#define MW_DFU_MAX_SIZE_FW_IMAGE_INT          (262144UL)           /**< Maximum size of the firmware image for internal flash, in bytes. */
+#define MW_DFU_MAX_SIZE_FW_IMAGE_EXT          (524288UL)           /**< Maximum size of the firmware image for external flash, in bytes. */
 /** @} */
 
 
-/**@defgroup MW_DFU_MAX_BLOCK_LEN Maximum block len
- * @brief The definition of maximum block length.
- * @{ */
-#define MW_DFU_MAX_BLOCK_LEN                   (0x400U)           /**< Maximum block length. */
-/** @} */
-
-/**@defgroup MW_DFU_FLASH_TYPE Flash type
- * @brief The definition of DFU flash type.
- * @{ */
-#define MW_DFU_FLASH_INTERNAL                 (0x01U)            /**< DFU to internal flash. */
-#define MW_DFU_FLASH_EXTERNAL                 (0x03U)            /**< DFU to external flash. */
+/**
+ * @defgroup MW_DFU_MAX_BLOCK_LEN Maximum block length
+ * @brief Defines the maximum length of a data block during DFU.
+ * @{
+ */
+#define MW_DFU_MAX_BLOCK_LEN                   (0x400U)            /**< Maximum data block length in bytes. */
 /** @} */
 
 
-/**@} */ //MW_DFU_DEFINES
+/**
+ * @defgroup MW_DFU_FLASH_TYPE Flash types
+ * @brief Defines the type of flash memory used during DFU.
+ * @{
+ */
+#define MW_DFU_FLASH_INTERNAL                 (0x01U)              /**< Identifier for DFU operations on internal flash memory. */
+#define MW_DFU_FLASH_EXTERNAL                 (0x03U)              /**< Identifier for DFU operations on external flash memory */
+/** @} */
+
+
+/** @} */ //MW_DFU_DEFINES
 
 
 // *****************************************************************************
@@ -106,110 +118,130 @@ extern "C" {
 // Section: Data Types
 // *****************************************************************************
 // *****************************************************************************
-/**@addtogroup MW_DFU_STRUCTS Structures
- * @{ */
+/**
+ * @addtogroup MW_DFU_STRUCTS Structures
+ * @{
+ */
 
-/**@brief Structure of DFU info which is used to indicate the image information. */
+/**
+ * @brief Structure for DFU (Device Firmware Update) information. 
+ * 
+ * This structure is used to store information about the firmware image
+ * that is relevant for the DFU process, such as its size and the type
+ * of flash memory it is intended for. The image size is related to the
+ * maximum image size defined by @ref MW_DFU_MAX_IMAGE_SIZE.
+*/
 typedef struct MW_DFU_Info_T
 {
-    uint32_t fwImageSize;                                      /**< Firmware image size: @ref MW_DFU_MAX_IMAGE_SIZE. It must be 16-bytes aligned. */
-    uint8_t  fwFlashType;                                      /**< Firmware flash type: @ref MW_DFU_FLASH_TYPE */
+    uint32_t    fwImageSize;                                      /**< Size of the firmware image in bytes. Must be a multiple of 16 bytes for alignment purposes. 
+                                                                    See @ref MW_DFU_MAX_IMAGE_SIZE for the maximum allowable size. */
+    uint8_t     fwFlashType;                                      /**< Type of flash memory where the firmware is stored. Defined by numeration @ref MW_DFU_FLASH_TYPE. */
 } MW_DFU_Info_T;
 
-/**@} */ //MW_DFU_STRUCTS
+/** @} */ //MW_DFU_STRUCTS
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Function Prototypes
 // *****************************************************************************
 // *****************************************************************************
-/**@addtogroup MW_DFU_FUNS Functions
- * @{ */
+/**
+ * @addtogroup MW_DFU_FUNS Functions
+ * @{
+ */
 
 /**
- *@brief The API is used to configure the device information for DFU process.
+ * @brief Configures the device information for the Device Firmware Update (DFU) process.
  *
- *@param[in] p_dfuInfo            Pointer to the structure of the image information for DFU. Refer to @ref MW_DFU_Info_T for detail structure info.
+ * @param[in] p_dfuInfo            Pointer to the structure containing the DFU image size information. 
+ *                                  Refer to @ref MW_DFU_Info_T for the structure's detailed information.
  *
  *
- *@retval MBA_RES_SUCCESS         Configure successfully.
- *@retval MBA_RES_INVALID_PARA    Invalid parameters. One of the following reasons:\n
- *                                - The image size exceeds the maximum image size.\n
- *                                - The image size is not 16-bytes aligned.\n
- *                                - Invalid flash type. See @ref MW_DFU_FLASH_TYPE for valid values.\n
- *@retval MBA_RES_FAIL            Failed to access external flash.
+ * @retval MBA_RES_SUCCESS         Configuration successful.
+ * @retval MBA_RES_INVALID_PARA    Invalid parameters. The size exceeds the maximum allowable size, or the size is not aligned to a 16-byte boundary
+ *									or invalid flash type (refer to @ref MW_DFU_FLASH_TYPE).
+ * @retval MBA_RES_FAIL            External flash access failed.
  */
 uint16_t MW_DFU_Config(MW_DFU_Info_T *p_dfuInfo);
 
+
 /**
- *@brief The API is used to start or restart firmware image update procedure. 
- *       The state machine and parameters of this module would be reset after this API is called. 
+ * @brief Starts or restarts the firmware image update procedure.
+ * @note  Calling this API resets the state machine and parameters of the DFU module.
  *
  *
- *@retval MBA_RES_SUCCESS         Start or restart firmware image update procedure successfully.
- *@retval MBA_RES_BAD_STATE       This API cannot be executed in current DFU process state.
- *@retval MBA_RES_FAIL            Failed to access external flash.
+ * @retval MBA_RES_SUCCESS         Firmware image update procedure started or restarted successfully.
+ * @retval MBA_RES_BAD_STATE       The API cannot be executed in the current state of the DFU process.
+ * @retval MBA_RES_FAIL            External flash access failed.
  */
 uint16_t MW_DFU_FwImageStart(void);
 
+
 /**
- *@brief The API is used to update the fragment of firmware image to flash. 
- *       The API should be called multiple times to udpate all fragments of firmware image to flash.
+ * @brief Updates a fragment of the firmware image in flash memory.
+ * @note  This API should be called multiple times to update all fragments of the firmware image.
  *
- *@param[in] length               The length of image fragment to update, unit: byte. It must be 16-bytes aligned for internal flash.
- *                                For external flash, it must be 256-bytes aligned unless it is the last fragment.
- *@param[in] p_content            Pointer to the image fragment.
+ * @param[in] length               The length of the image fragment to update, in bytes. Must be aligned to 16 bytes for internal flash.
+ *                                  For external flash, it must be 256-byte aligned unless it is the last fragment.
+ * @param[in] p_content            Pointer to the image fragment data.
  *
  *
- *@retval MBA_RES_SUCCESS         Update the fragment of firmware image successfully.
- *@retval MBA_RES_INVALID_PARA    Invalid parameters. The length exceeds the image size or length exceeds @ref MW_DFU_MAX_BLOCK_LEN or length does not meet aligned requirement. 
- *@retval MBA_RES_BAD_STATE       This API cannot be executed in current DFU process state.
- *@retval MBA_RES_OOM             No available memory.
- *@retval MBA_RES_FAIL            Fail to update fragment to flash.
+ * @retval MBA_RES_SUCCESS         Fragment of firmware image updated successfully.
+ * @retval MBA_RES_INVALID_PARA    Invalid parameters. The length exceeds the image size, the maximum block length @ref MW_DFU_MAX_BLOCK_LEN, 
+ *                                  or does not meet alignment requirements.
+ * @retval MBA_RES_BAD_STATE       The API cannot be executed in the current state of the DFU process.
+ * @retval MBA_RES_OOM             Out of memory error.
+ * @retval MBA_RES_FAIL            Failed to update the fragment to flash memory.
  */
 uint16_t MW_DFU_FwImageUpdate(uint16_t length, uint8_t *p_content);
 
+
 /**
- *@brief The API is used to validate the udpated MCU image. Only supports CRC validation currently. 
+ * @brief Validates the updated MCU image using CRC for internal flash or checksum for external flash.
  *
- *@param[in] fwCfmValue           For internal flash, it should be firmware image crc value. For external flash, it should be firmware image checksum value.
+ * @param[in] fwCfmValue           CRC value for internal flash or checksum value for external flash.
  *
- *@return MBA_RES_SUCCESS         Validation successfully.
- *@return MBA_RES_FAIL            Validation failure.
+ * @retval MBA_RES_SUCCESS         Validation successful.
+ * @retval MBA_RES_FAIL            Validation failed.
  */
 uint16_t MW_DFU_FwImageValidate(uint16_t fwCfmValue);
 
 
 /**
- *@brief The API is used to activate the new firmware after system reboot.
+ * @brief Activates the new firmware after a system reboot.
  *
+ * @note  The system state after activation should be verified to ensure proper operation.
  *
- *@return MBA_RES_SUCCESS         Activation successfully.
- *@return MBA_RES_BAD_STATE       This API cannot be executed in current DFU process state.
- *@retval MBA_RES_OOM             No available memory.
- *@retval MBA_RES_FAIL            Failed to access flash.
+ * @retval MBA_RES_SUCCESS         Activation successful.
+ * @retval MBA_RES_BAD_STATE       API cannot be executed in the current DFU process state.
+ * @retval MBA_RES_OOM             Insufficient memory available.
+ * @retval MBA_RES_FAIL            Flash access failed.
  */
 uint16_t MW_DFU_FwImageActivate(void);
 
 
 /**
- *@brief The API is used to read the fragment of firmware image from flash. 
- *@note  Before the new firmware image is activated, the first 16 bytes image fragment read from flash is invalid.
+ * @brief Reads a fragment of the firmware image from flash memory.
+ * @note  The first 16 bytes of the image fragment read from flash are invalid until the full firmware image is activated.
  *
  *
- *@param[in] offset               The flash offset to start reading image fragment.
- *@param[in] length               The length of image fragment to read, unit: byte.
- *@param[in] p_content            Pointer to the image fragment buffer.
+ * @param[in] offset               The offset in flash memory from where to start reading the image fragment.
+ * @param[in] length               The length of the image fragment to read, in bytes.
+ * @param[in] p_content            Pointer to the buffer where the image fragment will be stored.
  *
  *
- *@retval MBA_RES_SUCCESS         Read the fragment of firmware image successfully.
- *@retval MBA_RES_INVALID_PARA    Invalid parameters. The offset + length exceed @ref MW_DFU_MAX_SIZE_FW_IMAGE or length exceed @ref MW_DFU_MAX_BLOCK_LEN. 
- *@retval MBA_RES_FAIL            Failed to access flash.
+ * @retval MBA_RES_SUCCESS         Fragment of firmware image read successfully.
+ * @retval MBA_RES_INVALID_PARA    Invalid parameters. The sum of offset and length exceeds the maximum firmware image size @ref MW_DFU_MAX_SIZE_FW_IMAGE, 
+ *                                  or the length exceeds the maximum block length @ref MW_DFU_MAX_BLOCK_LEN.
+ * @retval MBA_RES_FAIL            Flash access failed.
  */
 uint16_t MW_DFU_FwImageRead(uint32_t offset, uint16_t length, uint8_t *p_content);
 
+/** @} */ //MW_DFU_FUNS
 
-/**@} */ //MW_DFU_FUNS
+/** @} */
+
+/** @} */
 
 //DOM-IGNORE-BEGIN
 #ifdef __cplusplus
@@ -217,9 +249,4 @@ uint16_t MW_DFU_FwImageRead(uint32_t offset, uint16_t length, uint8_t *p_content
 #endif
 //DOM-IGNORE-END
 
-
-#endif
-/**
- @}
-*/
-
+#endif //MW_DFU_H

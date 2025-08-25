@@ -31,10 +31,13 @@
     ble_pxpm.c
 
   Summary:
-    This file contains the BLE Proximity Profile Server functions for application user.
+    Implements the server-side functionality of the BLE Proximity Profile.
 
   Description:
-    This file contains the BLE Proximity Profile Server functions for application user.
+    This source file provides the server-side functions necessary for the 
+    application to interface with the Bluetooth Low Energy (BLE) Proximity 
+    Profile. It facilitates communication and data exchange between a BLE 
+    peripheral device and a central device within a proximity threshold.
  *******************************************************************************/
 
 
@@ -51,108 +54,105 @@
 #include "ble_util/byte_stream.h"
 #include "ble_pxpm.h"
 
-
 // *****************************************************************************
 // *****************************************************************************
 // Section: Macros
 // *****************************************************************************
 // *****************************************************************************
-/**@defgroup BLE_PXPM_MAX_CONN_NBR Maximum connection number
- * @brief The definition of maximum connection number.
- * @{ */
-#define BLE_PXPM_MAX_CONN_NBR                  BLE_GAP_MAX_LINK_NBR    /**< Maximum allowing conncetion numbers for Proximity profile client role. */
-/** @} */
+#define BLE_PXPM_MAX_CONN_NBR                  BLE_GAP_MAX_LINK_NBR    // Maximum number of connections allowed for Proximity profile monitor.
+
+typedef enum BLE_PXPM_CharAlertLevelIndex_T
+{
+    PXPM_INDEX_CHARALERTLV = 0x00U,             // Index for Alert Level characteristic.
+    PXPM_CHARALERTLV_CHAR_NUM                   // Total number of Alert Level characteristic indexes.
+} BLE_PXPM_CharAlertLevelIndex_T;
+
+typedef enum BLE_PXPM_CharTxPowerLevelIndex_T
+{
+    PXPM_INDEX_CHARTXPWRLV = 0x00U,             // Index for TX Power Level characteristic.
+    PXPM_INDEX_CHARTXPWRLVCCCD,                 // Index for TX Power Level characteristic's CCCD.
+    PXPM_INDEX_CHARTXPWRLVCPFD,                 // Index for TX Power Level characteristic's CPFD.
+    PXPM_CHARTXPWRLV_CHAR_NUM                   // Total number of TX Power Level characteristic indexes.
+} BLE_PXPM_CharTxPowerLevelIndex_T;
+
+typedef enum BLE_PXPM_State_T
+{
+    BLE_PXPM_STATE_IDLE = 0x00U,                // State indicating the Proximity profile is idle.
+    BLE_PXPM_STATE_CONNECTED                    // State indicating the Proximity profile is connected.
+} BLE_PXPM_State_T;
+
+// *****************************************************************************
+// *****************************************************************************
+// Section: Data Types
+// *****************************************************************************
+// *****************************************************************************
+/* Structure to keep track of BLE connection list for Proximity Profile Monitor. */
+typedef struct BLE_PXPM_ConnList_T
+{
+    uint8_t                 connIndex;          // Index of the BLE connection.
+    BLE_PXPM_State_T        state;              // Current state of the BLE connection.
+    uint16_t                connHandle;         // Connection handle for the BLE connection
+} BLE_PXPM_ConnList_T;
+
+/* The Structure service database and discovery list for BLE PXPM. */
+typedef struct BLE_PXPM_PxpServiceDb_T
+{
+    BLE_DD_DiscChar_T pxpmAlertLvDiscCharList[PXPM_CHARALERTLV_CHAR_NUM];
+    BLE_DD_DiscChar_T *p_pxpmDiscAlertLvCharList[PXPM_CHARALERTLV_CHAR_NUM];
+
+    BLE_DD_CharList_T pxpmLlsCharList[BLE_PXPM_MAX_CONN_NBR];
+    BLE_DD_DiscInfo_T pxpmLlsDiscInfo[BLE_PXPM_MAX_CONN_NBR];
+    BLE_DD_CharInfo_T pxpmLlsCharInfoList[BLE_PXPM_MAX_CONN_NBR][PXPM_CHARALERTLV_CHAR_NUM];
+#ifdef BLE_PXPM_IAS_ENABLE
+    BLE_DD_CharList_T pxpmIasCharList[BLE_PXPM_MAX_CONN_NBR];
+    BLE_DD_DiscInfo_T pxpmIasDiscInfo[BLE_PXPM_MAX_CONN_NBR];
+    BLE_DD_CharInfo_T pxpmIasCharInfoList[BLE_PXPM_MAX_CONN_NBR][PXPM_CHARALERTLV_CHAR_NUM];
+#endif
+#ifdef BLE_PXPM_TPS_ENABLE
+    BLE_DD_DiscChar_T pxpmTxPwrLvDiscCharList[PXPM_CHARTXPWRLV_CHAR_NUM];
+    BLE_DD_DiscChar_T *p_pxpmDiscTxPwrLvCharList[PXPM_CHARTXPWRLV_CHAR_NUM];
+    BLE_DD_CharList_T pxpmTpsCharList[BLE_PXPM_MAX_CONN_NBR];
+    BLE_DD_DiscInfo_T pxpmTpsDiscInfo[BLE_PXPM_MAX_CONN_NBR];
+    BLE_DD_CharInfo_T pxpmTpsCharInfoList[BLE_PXPM_MAX_CONN_NBR][PXPM_CHARTXPWRLV_CHAR_NUM];
+#endif
+} BLE_PXPM_PxpServiceDb_T;
+
 // *****************************************************************************
 // *****************************************************************************
 // Section: Local Variables
 // *****************************************************************************
 // *****************************************************************************
-
-typedef enum BLE_PXPM_CharAlertLevelIndex_T
-{
-    PXPM_INDEX_CHARALERTLV = 0x00U,
-    PXPM_CHARALERTLV_CHAR_NUM
-} BLE_PXPM_CharAlertLevelIndex_T;
-
-typedef enum BLE_PXPM_CharTxPowerLevelIndex_T
-{
-    PXPM_INDEX_CHARTXPWRLV = 0x00U,
-    PXPM_INDEX_CHARTXPWRLVCCCD,
-    PXPM_INDEX_CHARTXPWRLVCPFD,
-    PXPM_CHARTXPWRLV_CHAR_NUM
-} BLE_PXPM_CharTxPowerLevelIndex_T;
-
-typedef enum BLE_PXPM_State_T
-{
-    BLE_PXPM_STATE_IDLE = 0x00U,
-    BLE_PXPM_STATE_CONNECTED
-} BLE_PXPM_State_T;
-
-typedef struct BLE_PXPM_ConnList_T
-{
-    uint8_t             connIndex;
-    BLE_PXPM_State_T    state;
-    uint16_t            connHandle;
-} BLE_PXPM_ConnList_T;
-
+// Callback routine for BLE Proximity Profile Module events.
 static BLE_PXPM_EventCb_T       sp_pxpmCbRoutine;
 
-static BLE_PXPM_ConnList_T      s_pxpmConnList[BLE_PXPM_MAX_CONN_NBR];
+// Connection list for BLE Proximity Profile Module.
+static BLE_PXPM_ConnList_T      *sp_pxpmConnList[BLE_PXPM_MAX_CONN_NBR];
 
-static BLE_DD_DiscInfo_T        s_pxpmLlsDiscInfo[BLE_PXPM_MAX_CONN_NBR];
+// List of pointers to the discovery information for Lls characteristics and descriptors.
+static BLE_PXPM_PxpServiceDb_T  *sp_pxpmPxpServiceDb;
 
-static BLE_DD_CharInfo_T        s_pxpmLlsCharInfoList[BLE_PXPM_MAX_CONN_NBR][PXPM_CHARALERTLV_CHAR_NUM];
-#ifdef BLE_PXPM_IAS_ENABLE
-static BLE_DD_DiscInfo_T        s_pxpmIasDiscInfo[BLE_PXPM_MAX_CONN_NBR];
-static BLE_DD_CharInfo_T        s_pxpmIasCharInfoList[BLE_PXPM_MAX_CONN_NBR][PXPM_CHARALERTLV_CHAR_NUM];
-#endif
-#ifdef BLE_PXPM_TPS_ENABLE
-static BLE_DD_DiscInfo_T        s_pxpmTpsDiscInfo[BLE_PXPM_MAX_CONN_NBR];
-static BLE_DD_CharInfo_T        s_pxpmTpsCharInfoList[BLE_PXPM_MAX_CONN_NBR][PXPM_CHARTXPWRLV_CHAR_NUM];
-#endif
-
+// UUID for Link Loss Service discovery.
 static const uint8_t            pxpmDiscLlsUuid[] =     { UINT16_TO_BYTES(BLE_PXPM_UUID_LINKLOSS_SVC) };
 #ifdef BLE_PXPM_IAS_ENABLE
+// UUID for Immediate Alert Service discovery.
 static const uint8_t            pxpmDiscIasUuid[] =     { UINT16_TO_BYTES(BLE_PXPM_UUID_IMMEDIATE_ALERT_SVC) };
 #endif
 #ifdef BLE_PXPM_TPS_ENABLE
+// UUID for TX Power Service discovery.
 static const uint8_t            pxpmDiscTpsUuid[] =     { UINT16_TO_BYTES(BLE_PXPM_UUID_TXPOWER_SVC) };
 #endif
 
+// UUID for TX Power Level characteristic discovery.
 static const ATT_Uuid_T         pxpmDiscCharAlertLv =       { { UINT16_TO_BYTES(BLE_PXPM_UUID_ALERT_LEVEL) }, ATT_UUID_LENGTH_2 };
 #ifdef BLE_PXPM_TPS_ENABLE
+// UUID for TX Power Level Client Characteristic Configuration Descriptor discovery.
 static const ATT_Uuid_T         pxpmDiscCharTxPwrLv =       { { UINT16_TO_BYTES(BLE_PXPM_UUID_TXPOWER_LEVEL) }, ATT_UUID_LENGTH_2 };
+
+// UUID for TX Power Level Characteristic Presentation Format Descriptor discovery.
 static const ATT_Uuid_T         pxpmDiscCharTxpwrLvCccd =   { { UINT16_TO_BYTES(UUID_DESCRIPTOR_CLIENT_CHAR_CONFIG) }, ATT_UUID_LENGTH_2 };
+
+// Discovery characteristic for Alert Level.
 static const ATT_Uuid_T         pxpmDiscCharTxpwrLvCpfd =   { { UINT16_TO_BYTES(UUID_DESCRIPTOR_CHAR_PRE_FORMAT) }, ATT_UUID_LENGTH_2 };
-#endif
-
-static BLE_DD_DiscChar_T        pxpmAlertLv =       { &pxpmDiscCharAlertLv, 0 };
-#ifdef BLE_PXPM_TPS_ENABLE
-static BLE_DD_DiscChar_T        pxpmTxPwrLv =       { &pxpmDiscCharTxPwrLv, 0 };
-static BLE_DD_DiscChar_T        pxpmTxpwrLvCccd =   { &pxpmDiscCharTxpwrLvCccd, CHAR_SET_DESCRIPTOR };
-static BLE_DD_DiscChar_T        pxpmTxpwrLvCpfd =   { &pxpmDiscCharTxpwrLvCpfd, CHAR_SET_DESCRIPTOR };
-#endif
-
-static BLE_DD_DiscChar_T        *pxpmDiscAlertLvCharList[] =
-{
-    &pxpmAlertLv,           /* Alert Level Characteristic */
-};
-
-#ifdef BLE_PXPM_TPS_ENABLE
-static BLE_DD_DiscChar_T        *pxpmDiscTxPwrLvCharList[] =
-{
-    &pxpmTxPwrLv,           /* TX Power Level Characteristic */
-    &pxpmTxpwrLvCccd,       /* TX Power Level Client Characteristic Configuration Descriptor */
-    &pxpmTxpwrLvCpfd,       /* TX Power Level Characteristic Presentation Format */
-};
-#endif
-
-static BLE_DD_CharList_T        s_pxpmLlsCharList[BLE_PXPM_MAX_CONN_NBR];
-#ifdef BLE_PXPM_IAS_ENABLE
-static BLE_DD_CharList_T        s_pxpmIasCharList[BLE_PXPM_MAX_CONN_NBR];
-#endif
-#ifdef BLE_PXPM_TPS_ENABLE
-static BLE_DD_CharList_T        s_pxpmTpsCharList[BLE_PXPM_MAX_CONN_NBR];
 #endif
 
 // *****************************************************************************
@@ -161,41 +161,69 @@ static BLE_DD_CharList_T        s_pxpmTpsCharList[BLE_PXPM_MAX_CONN_NBR];
 // *****************************************************************************
 // *****************************************************************************
 
-static void ble_pxpm_InitConnList(uint8_t connIndex)
-{
-    (void)memset((uint8_t *)&s_pxpmConnList[connIndex], 0, sizeof(BLE_PXPM_ConnList_T));
-}
-
+/**
+ * @brief Get the connection list entry by connection handle.
+ *
+ * This function searches the connection list for an entry with the given connection handle.
+ *
+ * @param connHandle The connection handle to search for.
+ * 
+ * @retval Pointer to the connection list entry, or NULL if not found.
+ */
 static BLE_PXPM_ConnList_T *ble_pxpm_GetConnListByHandle(uint16_t connHandle)
 {
+
     uint8_t i;
+    BLE_PXPM_ConnList_T *p_conn = NULL;
 
     for(i=0; i<BLE_PXPM_MAX_CONN_NBR; i++)
     {
-        if ((s_pxpmConnList[i].state == BLE_PXPM_STATE_CONNECTED) && (s_pxpmConnList[i].connHandle == connHandle))
+        if ((sp_pxpmConnList[i] != NULL) && (sp_pxpmConnList[i]->state == BLE_PXPM_STATE_CONNECTED) && (sp_pxpmConnList[i]->connHandle == connHandle))
         {
-            return &s_pxpmConnList[i];
+            p_conn = sp_pxpmConnList[i];
+            break;
         }
     }
-    return NULL;
+
+    return p_conn;
 }
 
+/**
+ * @brief Get a free connection list entry for the PXP.
+ *
+ * @retval Pointer to the PXPM connection list structure, or NULL if no free entry is available.
+ */
 static BLE_PXPM_ConnList_T *ble_pxpm_GetFreeConnList(void)
 {
     uint8_t i;
+    BLE_PXPM_ConnList_T *p_conn = NULL;
 
-    for(i=0; i<BLE_PXPM_MAX_CONN_NBR; i++)
+    for(i = 0; i < BLE_PXPM_MAX_CONN_NBR; i++)
     {
-        if (s_pxpmConnList[i].state == BLE_PXPM_STATE_IDLE)
+        if (sp_pxpmConnList[i] == NULL)
         {
-            s_pxpmConnList[i].state = BLE_PXPM_STATE_CONNECTED;
-            s_pxpmConnList[i].connIndex = i;
-            return &s_pxpmConnList[i];
+            sp_pxpmConnList[i] = OSAL_Malloc(sizeof(BLE_PXPM_ConnList_T));
+            p_conn = sp_pxpmConnList[i];
+            if (p_conn != NULL)
+            {
+                (void)memset(p_conn, 0, sizeof(BLE_PXPM_ConnList_T));
+                p_conn->state     = BLE_PXPM_STATE_CONNECTED;
+                p_conn->connIndex = i;
+            }
+            break;
         }
     }
-    return NULL;
+    return p_conn;
 }
 
+
+/**
+ * @brief Convey an event to the registered callback routine.
+ *
+ * @param eventId The identifier of the event.
+ * @param p_eventField Pointer to the event field data.
+ * @param eventFieldLen Length of the event field data.
+ */
 static void ble_pxpm_ConveyEvent(BLE_PXPM_EventId_T eventId, uint8_t *p_eventField, uint8_t eventFieldLen)
 {
     if(sp_pxpmCbRoutine != NULL)
@@ -208,72 +236,129 @@ static void ble_pxpm_ConveyEvent(BLE_PXPM_EventId_T eventId, uint8_t *p_eventFie
     }
 }
 
+
+/**
+ * @brief Initialize the Link Loss Service (LLS) characteristic list for a specific connection.
+ *
+ * @param connIndex Index of the connection in the LLS characteristic list.
+ */
 static void ble_pxpm_InitLlsCharList(uint8_t connIndex)
 {
-    (void)memset(&s_pxpmLlsDiscInfo[connIndex], 0x0, sizeof(BLE_DD_DiscInfo_T));
-    (void)memset((uint8_t *)&s_pxpmLlsCharList[connIndex], 0x0, sizeof(BLE_DD_CharList_T));
-    (void)memset((uint8_t *)s_pxpmLlsCharInfoList[connIndex], 0x0, sizeof(BLE_DD_CharInfo_T) * (uint8_t)PXPM_CHARALERTLV_CHAR_NUM);
-    s_pxpmLlsCharList[connIndex].p_charInfo = s_pxpmLlsCharInfoList[connIndex];
+    (void)memset(&sp_pxpmPxpServiceDb->pxpmLlsDiscInfo[connIndex], 0x0, sizeof(BLE_DD_DiscInfo_T));
+    (void)memset(&sp_pxpmPxpServiceDb->pxpmLlsCharList[connIndex], 0x0, sizeof(BLE_DD_CharList_T));
+    (void)memset(sp_pxpmPxpServiceDb->pxpmLlsCharInfoList[connIndex], 0x0, sizeof(BLE_DD_CharInfo_T)*PXPM_CHARALERTLV_CHAR_NUM);
+    sp_pxpmPxpServiceDb->pxpmLlsCharList[connIndex].p_charInfo = sp_pxpmPxpServiceDb->pxpmLlsCharInfoList[connIndex];
 }
 
 #ifdef BLE_PXPM_IAS_ENABLE
+/**
+ * @brief Initialize the Immediate Alert Service (IAS) characteristic list for a specific connection.
+ *
+ * @param connIndex Index of the connection in the IAS characteristic list.
+ */
 static void ble_pxpm_InitIasCharList(uint8_t connIndex)
 {
-    (void)memset(&s_pxpmIasDiscInfo[connIndex], 0x0, sizeof(BLE_DD_DiscInfo_T));
-    (void)memset((uint8_t *)&s_pxpmIasCharList[connIndex], 0x0, sizeof(BLE_DD_CharList_T));
-    (void)memset((uint8_t *)s_pxpmIasCharInfoList[connIndex], 0x0, sizeof(BLE_DD_CharInfo_T) * (uint8_t)PXPM_CHARALERTLV_CHAR_NUM);
-    s_pxpmIasCharList[connIndex].p_charInfo = s_pxpmIasCharInfoList[connIndex];
+    (void)memset(&sp_pxpmPxpServiceDb->pxpmIasDiscInfo[connIndex], 0x0, sizeof(BLE_DD_DiscInfo_T));
+    (void)memset(&sp_pxpmPxpServiceDb->pxpmIasCharList[connIndex], 0x0, sizeof(BLE_DD_CharList_T));
+    (void)memset(sp_pxpmPxpServiceDb->pxpmIasCharInfoList[connIndex], 0x0, sizeof(BLE_DD_CharInfo_T)*PXPM_CHARALERTLV_CHAR_NUM);
+    sp_pxpmPxpServiceDb->pxpmIasCharList[connIndex].p_charInfo = sp_pxpmPxpServiceDb->pxpmIasCharInfoList[connIndex];
 }
 #endif
 
 #ifdef BLE_PXPM_TPS_ENABLE
+/**
+ * @brief Initialize the Tx Power Service (TPS) characteristic list for a specific connection.
+ *
+ * @param connIndex Index of the connection in the TPS characteristic list.
+ */
 static void ble_pxpm_InitTpsCharList(uint8_t connIndex)
 {
-    (void)memset(&s_pxpmTpsDiscInfo[connIndex], 0x0, sizeof(BLE_DD_DiscInfo_T));
-    (void)memset((uint8_t *)&s_pxpmTpsCharList[connIndex], 0x0, sizeof(BLE_DD_CharList_T));
-    (void)memset(s_pxpmTpsCharInfoList[connIndex], 0x0, sizeof(BLE_DD_CharInfo_T) * (uint8_t)PXPM_CHARTXPWRLV_CHAR_NUM);
-    s_pxpmTpsCharList[connIndex].p_charInfo = s_pxpmTpsCharInfoList[connIndex];
+    (void)memset(&sp_pxpmPxpServiceDb->pxpmTpsDiscInfo[connIndex], 0x0, sizeof(BLE_DD_DiscInfo_T));
+    (void)memset(&sp_pxpmPxpServiceDb->pxpmTpsCharList[connIndex], 0x0, sizeof(BLE_DD_CharList_T));
+    (void)memset(sp_pxpmPxpServiceDb->pxpmTpsCharInfoList[connIndex], 0x0, sizeof(BLE_DD_CharInfo_T)*PXPM_CHARTXPWRLV_CHAR_NUM);
+    sp_pxpmPxpServiceDb->pxpmTpsCharList[connIndex].p_charInfo = sp_pxpmPxpServiceDb->pxpmTpsCharInfoList[connIndex];
 }
 #endif
 
+
+/**
+ * @brief Register the Alert Level Service discovery.
+ *
+ * @param p_uuid Pointer to the UUID of the service to discover.
+ * @param p_charList Pointer to the characteristic list where the discovered characteristics will be stored.
+ * @retval The result of the service discovery registration.
+ */
 static uint16_t ble_pxpm_InitAlertLvSvcDiscRegister(const uint8_t * p_uuid, BLE_DD_CharList_T * p_charList)
 {
+    uint8_t i;
     BLE_DD_DiscSvc_T pxpDisc;
 
+   if (sp_pxpmPxpServiceDb->pxpmAlertLvDiscCharList[PXPM_INDEX_CHARALERTLV].p_uuid == NULL) 
+   {
+        sp_pxpmPxpServiceDb->pxpmAlertLvDiscCharList[PXPM_INDEX_CHARALERTLV].p_uuid = &pxpmDiscCharAlertLv;
+        for(i = 0; i < PXPM_CHARALERTLV_CHAR_NUM; i++)
+        {
+            sp_pxpmPxpServiceDb->p_pxpmDiscAlertLvCharList[i] = &sp_pxpmPxpServiceDb->pxpmAlertLvDiscCharList[i];
+        }
+   }
     (void)memset(&pxpDisc, 0, sizeof(BLE_DD_DiscSvc_T));
     pxpDisc.svcUuid.uuidLength = ATT_UUID_LENGTH_2;
     (void)memcpy(pxpDisc.svcUuid.uuid, p_uuid, ATT_UUID_LENGTH_2);
+
     if (*(uint16_t *)pxpDisc.svcUuid.uuid == BLE_PXPM_UUID_LINKLOSS_SVC)
     {
-        pxpDisc.p_discInfo = s_pxpmLlsDiscInfo;
+        pxpDisc.p_discInfo = sp_pxpmPxpServiceDb->pxpmLlsDiscInfo;
     }
 #ifdef BLE_PXPM_IAS_ENABLE
     else
     {
-        pxpDisc.p_discInfo = s_pxpmIasDiscInfo;
+        pxpDisc.p_discInfo = sp_pxpmPxpServiceDb->pxpmIasDiscInfo;
     }
 #endif
-    pxpDisc.p_discChars = pxpmDiscAlertLvCharList;
+    pxpDisc.p_discChars = sp_pxpmPxpServiceDb->p_pxpmDiscAlertLvCharList;
     pxpDisc.p_charList = p_charList;
     pxpDisc.discCharsNum = (uint8_t)PXPM_CHARALERTLV_CHAR_NUM;
     return BLE_DD_ServiceDiscoveryRegister(&pxpDisc);
 }
 
 #ifdef BLE_PXPM_TPS_ENABLE
+/**
+ * @brief Initialize and register the TX Power Level Service for discovery.
+ *
+ * @param p_uuid Pointer to the UUID of the service to be discovered.
+ * @param p_charList Pointer to the characteristic list where discovered characteristics will be stored.
+ * @retval uint16_t Returns the status of the service discovery registration.
+ */
 static uint16_t ble_pxpm_InitTxPwrLvSvcDiscRegister(const uint8_t * p_uuid, BLE_DD_CharList_T * p_charList)
 {
+    uint8_t i;
     BLE_DD_DiscSvc_T pxpDisc;
 
+    sp_pxpmPxpServiceDb->pxpmTxPwrLvDiscCharList[PXPM_INDEX_CHARTXPWRLV].p_uuid = &pxpmDiscCharTxPwrLv;
+    sp_pxpmPxpServiceDb->pxpmTxPwrLvDiscCharList[PXPM_INDEX_CHARTXPWRLVCCCD].p_uuid = &pxpmDiscCharTxpwrLvCccd;
+    sp_pxpmPxpServiceDb->pxpmTxPwrLvDiscCharList[PXPM_INDEX_CHARTXPWRLVCCCD].settings = CHAR_SET_DESCRIPTOR;
+    sp_pxpmPxpServiceDb->pxpmTxPwrLvDiscCharList[PXPM_INDEX_CHARTXPWRLVCPFD].p_uuid = &pxpmDiscCharTxpwrLvCpfd;
+    sp_pxpmPxpServiceDb->pxpmTxPwrLvDiscCharList[PXPM_INDEX_CHARTXPWRLVCPFD].settings = CHAR_SET_DESCRIPTOR;
+    for(i = 0; i < PXPM_CHARTXPWRLV_CHAR_NUM; i++)
+    {
+        sp_pxpmPxpServiceDb->p_pxpmDiscTxPwrLvCharList[i] = &sp_pxpmPxpServiceDb->pxpmTxPwrLvDiscCharList[i];
+    }
     pxpDisc.svcUuid.uuidLength = ATT_UUID_LENGTH_2;
     (void)memcpy(pxpDisc.svcUuid.uuid, p_uuid, ATT_UUID_LENGTH_2);
-    pxpDisc.p_discInfo = s_pxpmTpsDiscInfo;
-    pxpDisc.p_discChars = pxpmDiscTxPwrLvCharList;
+    pxpDisc.p_discInfo = sp_pxpmPxpServiceDb->pxpmTpsDiscInfo;
+    pxpDisc.p_discChars = sp_pxpmPxpServiceDb->p_pxpmDiscTxPwrLvCharList;
     pxpDisc.p_charList = p_charList;
     pxpDisc.discCharsNum = PXPM_CHARTXPWRLV_CHAR_NUM;
     return BLE_DD_ServiceDiscoveryRegister(&pxpDisc);
 }
 #endif
 
+
+/**
+ * @brief Process the completion of service discovery.
+ *
+ * @param p_event Pointer to the BLE discovery event structure.
+ */
 static void ble_pxpm_ProcDiscComplete(BLE_DD_Event_T * p_event)
 {
     BLE_PXPM_EvtDiscComplete_T evtDiscCmlt;
@@ -283,25 +368,31 @@ static void ble_pxpm_ProcDiscComplete(BLE_DD_Event_T * p_event)
         ble_pxpm_ConveyEvent(BLE_PXPM_EVT_ERR_UNSPECIFIED_IND, NULL, 0);
         return;
     }
-    if (s_pxpmLlsCharList[p_conn->connIndex].p_charInfo[PXPM_INDEX_CHARALERTLV].charHandle == 0U)
+    if (sp_pxpmPxpServiceDb->pxpmLlsCharList[p_conn->connIndex].p_charInfo[PXPM_INDEX_CHARALERTLV].charHandle == 0U)
     {
         return;
     }
     evtDiscCmlt.connHandle = p_event->eventField.evtDiscResult.connHandle;
-    evtDiscCmlt.llsStartHandle = s_pxpmLlsDiscInfo[p_conn->connIndex].svcStartHandle;
-    evtDiscCmlt.llsEndHandle   = s_pxpmLlsDiscInfo[p_conn->connIndex].svcEndHandle;
+    evtDiscCmlt.llsStartHandle = sp_pxpmPxpServiceDb->pxpmLlsDiscInfo[p_conn->connIndex].svcStartHandle;
+    evtDiscCmlt.llsEndHandle   = sp_pxpmPxpServiceDb->pxpmLlsDiscInfo[p_conn->connIndex].svcEndHandle;
 
 #ifdef BLE_PXPM_IAS_ENABLE
-    evtDiscCmlt.iasStartHandle = s_pxpmIasDiscInfo[p_conn->connIndex].svcStartHandle;
-    evtDiscCmlt.iasEndHandle   = s_pxpmIasDiscInfo[p_conn->connIndex].svcEndHandle;
+    evtDiscCmlt.iasStartHandle = sp_pxpmPxpServiceDb->pxpmIasDiscInfo[p_conn->connIndex].svcStartHandle;
+    evtDiscCmlt.iasEndHandle   = sp_pxpmPxpServiceDb->pxpmIasDiscInfo[p_conn->connIndex].svcEndHandle;
 #endif
 #ifdef BLE_PXPM_TPS_ENABLE
-    evtDiscCmlt.tpsStartHandle = s_pxpmTpsDiscInfo[p_conn->connIndex].svcStartHandle;
-    evtDiscCmlt.tpsEndHandle   = s_pxpmTpsDiscInfo[p_conn->connIndex].svcEndHandle;
+    evtDiscCmlt.tpsStartHandle = sp_pxpmPxpServiceDb->pxpmTpsDiscInfo[p_conn->connIndex].svcStartHandle;
+    evtDiscCmlt.tpsEndHandle   = sp_pxpmPxpServiceDb->pxpmTpsDiscInfo[p_conn->connIndex].svcEndHandle;
 #endif
     ble_pxpm_ConveyEvent(BLE_PXPM_EVT_DISC_COMPLETE_IND, (uint8_t *) &evtDiscCmlt, (uint8_t)sizeof(BLE_PXPM_EvtDiscComplete_T));
 }
 
+
+/**
+ * @brief Process the read response event from GATT.
+ *
+ * @param p_event Pointer to the GATT event structure.
+ */
 static void ble_pxpm_ProcReadResponse(GATT_Event_T *p_event)
 {
     BLE_PXPM_ConnList_T *p_conn = ble_pxpm_GetConnListByHandle(p_event->eventField.onReadResp.connHandle);
@@ -312,7 +403,7 @@ static void ble_pxpm_ProcReadResponse(GATT_Event_T *p_event)
         return;
     }
 
-    if(p_event->eventField.onReadResp.charHandle == s_pxpmLlsCharList[p_conn->connIndex].p_charInfo[PXPM_INDEX_CHARALERTLV].charHandle)
+    if(p_event->eventField.onReadResp.charHandle == sp_pxpmPxpServiceDb->pxpmLlsCharList[p_conn->connIndex].p_charInfo[PXPM_INDEX_CHARALERTLV].charHandle)
     {
         uint8_t *p_value = p_event->eventField.onReadResp.readValue;
         BLE_PXPM_EvtLlsAlertLvInd_T evt;
@@ -324,7 +415,7 @@ static void ble_pxpm_ProcReadResponse(GATT_Event_T *p_event)
         ble_pxpm_ConveyEvent(BLE_PXPM_EVT_LLS_ALERT_LEVEL_IND, (uint8_t *) &evt, (uint8_t)sizeof(BLE_PXPM_EvtLlsAlertLvInd_T));
     }
     #ifdef BLE_PXPM_TPS_ENABLE
-    else if(p_event->eventField.onReadResp.charHandle == s_pxpmTpsCharList[p_conn->connIndex].p_charInfo[PXPM_INDEX_CHARTXPWRLV].charHandle)
+    else if(p_event->eventField.onReadResp.charHandle == sp_pxpmPxpServiceDb->pxpmTpsCharList[p_conn->connIndex].p_charInfo[PXPM_INDEX_CHARTXPWRLV].charHandle)
     {
         uint8_t *p_value = p_event->eventField.onReadResp.readValue;
         BLE_PXPM_EvtTpsTxPwrLvInd_T evt;
@@ -342,6 +433,12 @@ static void ble_pxpm_ProcReadResponse(GATT_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Process the write response event from GATT.
+ *
+ * @param p_event Pointer to the GATT event structure.
+ */
 static void ble_pxpm_ProcWriteResponse(GATT_Event_T *p_event)
 {
     BLE_PXPM_ConnList_T *p_conn = ble_pxpm_GetConnListByHandle(p_event->eventField.onWriteResp.connHandle);
@@ -352,7 +449,7 @@ static void ble_pxpm_ProcWriteResponse(GATT_Event_T *p_event)
         return;
     }
 
-    if(p_event->eventField.onWriteResp.charHandle == s_pxpmLlsCharList[p_conn->connIndex].p_charInfo[PXPM_INDEX_CHARALERTLV].charHandle)
+    if(p_event->eventField.onWriteResp.charHandle == sp_pxpmPxpServiceDb->pxpmLlsCharList[p_conn->connIndex].p_charInfo[PXPM_INDEX_CHARALERTLV].charHandle)
     {
         BLE_PXPM_EvtLlsAlertLvWriteRspInd_T evt;
         evt.connHandle = p_event->eventField.onWriteResp.connHandle;
@@ -361,6 +458,12 @@ static void ble_pxpm_ProcWriteResponse(GATT_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Process the error response event from GATT.
+ *
+ * @param p_event Pointer to the GATT event structure.
+ */
 static void ble_pxpm_ProcErrorResponse(GATT_Event_T *p_event)
 {
     BLE_PXPM_ConnList_T *p_conn = ble_pxpm_GetConnListByHandle(p_event->eventField.onError.connHandle);
@@ -371,7 +474,7 @@ static void ble_pxpm_ProcErrorResponse(GATT_Event_T *p_event)
         return;
     }
 
-    if(p_event->eventField.onError.attrHandle == s_pxpmLlsCharList[p_conn->connIndex].p_charInfo[PXPM_INDEX_CHARALERTLV].charHandle)
+    if(p_event->eventField.onError.attrHandle == sp_pxpmPxpServiceDb->pxpmLlsCharList[p_conn->connIndex].p_charInfo[PXPM_INDEX_CHARALERTLV].charHandle)
     {
         BLE_PXPM_EvtLlsAlertLvWriteRspInd_T evt;
 
@@ -381,6 +484,12 @@ static void ble_pxpm_ProcErrorResponse(GATT_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Process GATT events and dispatch them to the appropriate handler.
+ *
+ * @param p_event Pointer to the GATT event structure.
+ */
 static void ble_pxpm_GattEventProcess(GATT_Event_T *p_event)
 {
     switch (p_event->eventId)
@@ -410,10 +519,14 @@ static void ble_pxpm_GattEventProcess(GATT_Event_T *p_event)
     }
 }
 
-static void ble_pxpm_InitConnCharList(uint8_t connIndex)
-{
-    ble_pxpm_InitConnList(connIndex);
 
+/**
+ * @brief Initialize the characteristic list to zero.
+ *
+ * @param connIndex     Index of the connection in the PXP characteristic list.
+ */
+static void ble_pxpm_InitPxpCharList(uint8_t connIndex)
+{
     ble_pxpm_InitLlsCharList(connIndex);
     #ifdef BLE_PXPM_IAS_ENABLE
     ble_pxpm_InitIasCharList(connIndex);
@@ -423,6 +536,33 @@ static void ble_pxpm_InitConnCharList(uint8_t connIndex)
     #endif
 }
 
+
+/**
+ * @brief Free the connection list for the PXP service.
+ *
+ * @param p_conn        Pointer to the PXPM connection list structure to initialize.
+ * @param disconnect    Flag indicating whether to disconnect.
+ */
+static void ble_pxpm_FreeConnList(BLE_PXPM_ConnList_T *p_conn)
+{
+    uint8_t i;
+
+    for (i = 0; i < BLE_PXPM_MAX_CONN_NBR; i++)
+    {
+        if (sp_pxpmConnList[i] == p_conn)
+        {
+            OSAL_Free(sp_pxpmConnList[i]);
+            sp_pxpmConnList[i] = NULL;
+            break;
+        }
+    }
+}
+
+/**
+ * @brief Process GAP events and handle connection and disconnection events.
+ *
+ * @param p_event Pointer to the GAP event structure.
+ */
 static void ble_pxpm_GapEventProcess(BLE_GAP_Event_T *p_event)
 {
     BLE_PXPM_ConnList_T *p_conn = NULL;
@@ -447,7 +587,7 @@ static void ble_pxpm_GapEventProcess(BLE_GAP_Event_T *p_event)
             p_conn = ble_pxpm_GetConnListByHandle(p_event->eventField.evtDisconnect.connHandle);
             if (p_conn != NULL)
             {
-                ble_pxpm_InitConnCharList(p_conn->connIndex);
+                ble_pxpm_FreeConnList(p_conn);
             }
         }
         break;
@@ -460,47 +600,94 @@ static void ble_pxpm_GapEventProcess(BLE_GAP_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Initializes the BLE Proximity Profile Monitor.
+ *
+ * @retval MBA_RES_SUCCESS          Initialization successful.
+ * @retval MBA_RES_FAIL             Initialization failed.
+ *
+ */
 uint16_t BLE_PXPM_Init(void)
 {
     uint8_t i;
     sp_pxpmCbRoutine = NULL;
 
-    for(i = 0; i < BLE_PXPM_MAX_CONN_NBR; i++)
-    {
-        ble_pxpm_InitConnCharList(i);
-    }
-
-    if(ble_pxpm_InitAlertLvSvcDiscRegister(pxpmDiscLlsUuid, s_pxpmLlsCharList) != MBA_RES_SUCCESS)
+    if (sp_pxpmPxpServiceDb)
     {
         return MBA_RES_FAIL;
     }
-    #ifdef BLE_PXPM_IAS_ENABLE
-    if(ble_pxpm_InitAlertLvSvcDiscRegister(pxpmDiscIasUuid, s_pxpmIasCharList) != MBA_RES_SUCCESS)
+    sp_pxpmPxpServiceDb = (BLE_PXPM_PxpServiceDb_T*)OSAL_Malloc(sizeof(BLE_PXPM_PxpServiceDb_T));
+    if (sp_pxpmPxpServiceDb == NULL)
     {
+        return MBA_RES_OOM;
+    }
+
+    for(i = 0; i < BLE_PXPM_MAX_CONN_NBR; i++)
+    {
+        ble_pxpm_InitPxpCharList(i);
+    }
+
+    (void)memset(sp_pxpmPxpServiceDb->pxpmAlertLvDiscCharList, 0x00, sizeof(BLE_DD_DiscChar_T)*PXPM_CHARALERTLV_CHAR_NUM);
+
+
+    if(ble_pxpm_InitAlertLvSvcDiscRegister(pxpmDiscLlsUuid, sp_pxpmPxpServiceDb->pxpmLlsCharList) != MBA_RES_SUCCESS)
+    {
+        OSAL_Free(sp_pxpmPxpServiceDb);
+        sp_pxpmPxpServiceDb = NULL;
+        return MBA_RES_FAIL;
+    }
+    #ifdef BLE_PXPM_IAS_ENABLE
+    if(ble_pxpm_InitAlertLvSvcDiscRegister(pxpmDiscIasUuid, sp_pxpmPxpServiceDb->pxpmIasCharList) != MBA_RES_SUCCESS)
+    {
+        OSAL_Free(sp_pxpmPxpServiceDb);
+        sp_pxpmPxpServiceDb = NULL;
         return MBA_RES_FAIL;
     }
     #endif
     #ifdef BLE_PXPM_TPS_ENABLE
-    if(ble_pxpm_InitTxPwrLvSvcDiscRegister(pxpmDiscTpsUuid, s_pxpmTpsCharList) != MBA_RES_SUCCESS)
+
+    (void)memset(sp_pxpmPxpServiceDb->pxpmTxPwrLvDiscCharList, 0x00, sizeof(BLE_DD_DiscChar_T)*PXPM_CHARALERTLV_CHAR_NUM);
+    if(ble_pxpm_InitTxPwrLvSvcDiscRegister(pxpmDiscTpsUuid, sp_pxpmPxpServiceDb->pxpmTpsCharList) != MBA_RES_SUCCESS)
     {
+        OSAL_Free(sp_pxpmPxpServiceDb);
+        sp_pxpmPxpServiceDb = NULL;
         return MBA_RES_FAIL;
     }
     #endif
     return MBA_RES_SUCCESS;
 }
 
+
+/**
+ * @brief Registers a callback function for BLE Proximity Profile Monitor events.
+ *
+ * @param[in] routine               Callback function to handle BLE PXP Monitor events.
+ *
+ */
 void BLE_PXPM_EventRegister(BLE_PXPM_EventCb_T routine)
 {
     sp_pxpmCbRoutine = routine;
 }
 
+
+/**
+ * @brief Writes the Alert Level value to the Link Loss Service of a connected peer PXP Reporter device.
+ *
+ * @param[in] connHandle            Connection handle to set the alert level for.
+ * @param[in] level                 Alert level to be set.
+ *
+ * @retval MBA_RES_SUCCESS          Write operation successful.
+ * @retval MBA_RES_OOM              Internal memory allocation failure.
+ * @retval MBA_RES_INVALID_PARA     Invalid parameters.
+ */
 uint16_t BLE_PXPM_WriteLlsAlertLevel(uint16_t connHandle, BLE_PXPM_AlertLevel_T level)
 {
     BLE_PXPM_ConnList_T *p_conn = ble_pxpm_GetConnListByHandle(connHandle);
     uint16_t result;
     GATTC_WriteParams_T *p_writeParams;
 
-    if(p_conn == NULL || (s_pxpmLlsCharList[p_conn->connIndex].p_charInfo[PXPM_INDEX_CHARALERTLV].charHandle==0x0000U))
+    if(p_conn == NULL || (sp_pxpmPxpServiceDb->pxpmLlsCharList[p_conn->connIndex].p_charInfo[PXPM_INDEX_CHARALERTLV].charHandle==0x0000U))
     {
         return MBA_RES_INVALID_PARA;
     }
@@ -511,7 +698,7 @@ uint16_t BLE_PXPM_WriteLlsAlertLevel(uint16_t connHandle, BLE_PXPM_AlertLevel_T 
         return MBA_RES_OOM;
     }
 
-    p_writeParams->charHandle = s_pxpmLlsCharList[p_conn->connIndex].p_charInfo[PXPM_INDEX_CHARALERTLV].charHandle;
+    p_writeParams->charHandle = sp_pxpmPxpServiceDb->pxpmLlsCharList[p_conn->connIndex].p_charInfo[PXPM_INDEX_CHARALERTLV].charHandle;
     p_writeParams->charLength = 1;
     p_writeParams->charValue[0] = (uint8_t)level;
     p_writeParams->writeType = ATT_WRITE_REQ;
@@ -523,13 +710,23 @@ uint16_t BLE_PXPM_WriteLlsAlertLevel(uint16_t connHandle, BLE_PXPM_AlertLevel_T 
 }
 
 #ifdef BLE_PXPM_IAS_ENABLE
+/**
+ * @brief Writes the Alert Level value to the Immediate Alert Service of a connected peer PXP Reporter device.
+ *
+ * @param[in] connHandle            Connection handle to set the alert level for.
+ * @param[in] level                 Alert level to be set.
+ *
+ * @retval MBA_RES_SUCCESS          Write operation successful.
+ * @retval MBA_RES_OOM              Internal memory allocation failure.
+ * @retval MBA_RES_INVALID_PARA     Invalid parameters.
+ */
 uint16_t BLE_PXPM_WriteIasAlertLevel(uint16_t connHandle, BLE_PXPM_AlertLevel_T level)
 {
     BLE_PXPM_ConnList_T *p_conn = ble_pxpm_GetConnListByHandle(connHandle);
     uint16_t result;
     GATTC_WriteParams_T *p_writeParams;
 
-    if(p_conn == NULL || (s_pxpmIasCharList[p_conn->connIndex].p_charInfo[PXPM_INDEX_CHARALERTLV].charHandle==0x0000))
+    if(p_conn == NULL || (sp_pxpmPxpServiceDb->pxpmIasCharList[p_conn->connIndex].p_charInfo[PXPM_INDEX_CHARALERTLV].charHandle==0x0000))
     {
         return MBA_RES_INVALID_PARA;
     }
@@ -540,7 +737,7 @@ uint16_t BLE_PXPM_WriteIasAlertLevel(uint16_t connHandle, BLE_PXPM_AlertLevel_T 
         return MBA_RES_OOM;
     }
 
-    p_writeParams->charHandle = s_pxpmIasCharList[p_conn->connIndex].p_charInfo[PXPM_INDEX_CHARALERTLV].charHandle;
+    p_writeParams->charHandle = sp_pxpmPxpServiceDb->pxpmIasCharList[p_conn->connIndex].p_charInfo[PXPM_INDEX_CHARALERTLV].charHandle;
     p_writeParams->charLength = 1;
     p_writeParams->charValue[0] = level;
     p_writeParams->writeType = ATT_WRITE_CMD;
@@ -552,32 +749,65 @@ uint16_t BLE_PXPM_WriteIasAlertLevel(uint16_t connHandle, BLE_PXPM_AlertLevel_T 
 }
 #endif
 
+
+/**
+ * @brief Reads the Alert Level value from the Link Loss Service of a connected peer PXP Reporter device.
+ *
+ * @param[in] connHandle            Connection handle to read the alert level from.
+ *
+ * @retval MBA_RES_SUCCESS          Read operation successful.
+ * @retval MBA_RES_INVALID_PARA     Invalid parameters.
+ */
 uint16_t BLE_PXPM_ReadLlsAlertLevel(uint16_t connHandle)
 {
     BLE_PXPM_ConnList_T *p_conn = ble_pxpm_GetConnListByHandle(connHandle);
 
-    if(p_conn == NULL || (s_pxpmLlsCharList[p_conn->connIndex].p_charInfo[PXPM_INDEX_CHARALERTLV].charHandle==0x0000U))
+    if(p_conn == NULL || (sp_pxpmPxpServiceDb->pxpmLlsCharList[p_conn->connIndex].p_charInfo[PXPM_INDEX_CHARALERTLV].charHandle==0x0000U))
     {
         return MBA_RES_INVALID_PARA;
     }
     
-    return GATTC_Read(connHandle, s_pxpmLlsCharList[p_conn->connIndex].p_charInfo[PXPM_INDEX_CHARALERTLV].charHandle, 0);
+    return GATTC_Read(connHandle, sp_pxpmPxpServiceDb->pxpmLlsCharList[p_conn->connIndex].p_charInfo[PXPM_INDEX_CHARALERTLV].charHandle, 0);
 }
 
 #ifdef BLE_PXPM_TPS_ENABLE
+/**
+ * @brief Reads the Tx Power Level value from the Tx Power Service of a connected peer PXP Reporter device.
+ *
+ * @param[in] connHandle            Connection handle to read the Tx Power Level from.
+ *
+ * @retval MBA_RES_SUCCESS          Read operation successful.
+ * @retval MBA_RES_INVALID_PARA     Invalid parameters.
+ */
 uint16_t BLE_PXPM_ReadTpsTxPowerLevel(uint16_t connHandle)
 {
     BLE_PXPM_ConnList_T *p_conn = ble_pxpm_GetConnListByHandle(connHandle);
 
-    if(p_conn == NULL || (s_pxpmTpsCharList[p_conn->connIndex].p_charInfo[PXPM_INDEX_CHARTXPWRLV].charHandle==0x0000))
+    if(p_conn == NULL || (sp_pxpmPxpServiceDb->pxpmTpsCharList[p_conn->connIndex].p_charInfo[PXPM_INDEX_CHARTXPWRLV].charHandle==0x0000))
     {
         return MBA_RES_INVALID_PARA;
     }
 
-    return GATTC_Read(connHandle, s_pxpmTpsCharList[p_conn->connIndex].p_charInfo[PXPM_INDEX_CHARTXPWRLV].charHandle, 0);
+    return GATTC_Read(connHandle, sp_pxpmPxpServiceDb->pxpmTpsCharList[p_conn->connIndex].p_charInfo[PXPM_INDEX_CHARTXPWRLV].charHandle, 0);
 }
 #endif
 
+
+/**
+ * @brief Retrieves information about the characteristic UUID of the Proximity service that has been discovered.
+ * @note This API could be called only after @ref BLE_PXPM_EVT_DISC_COMPLETE_IND event is issued.
+ *
+ * @param[in]  connHandle           Connection handle.
+ * @param[in]  svcUuid              Service UUID (see @ref BLE_PXPM_SVC_UUID).
+ * @param[in]  charUuid             Characteristic UUID (see @ref BLE_PXPM_UUID).
+ * @param[out] p_charList           Pointer to store the characteristic information of the discovered service.
+ *
+ * @retval MBA_RES_SUCCESS          Successfully retrieved the characteristic list.
+ * @retval MBA_RES_INVALID_PARA     Invalid parameters, such as:\n
+ *                                  - Invalid connection handle.
+ *                                  - Invalid service UUID.
+ *                                  - Invalid characteristic UUID.
+ */
 uint16_t BLE_PXPM_GetCharList(uint16_t connHandle, uint16_t svcUuid, uint16_t charUuid, BLE_PXPM_CharList_T *p_charList)
 {
     uint8_t             idx;
@@ -601,13 +831,13 @@ uint16_t BLE_PXPM_GetCharList(uint16_t connHandle, uint16_t svcUuid, uint16_t ch
         {
             for (idx = 0; idx < PXPM_CHARALERTLV_CHAR_NUM; idx++)
             {
-                BUF_LE_TO_U16(&desUuid, pxpmDiscAlertLvCharList[idx]->p_uuid->uuid);
+                BUF_LE_TO_U16(&desUuid, sp_pxpmPxpServiceDb->p_pxpmDiscAlertLvCharList[idx]->p_uuid->uuid);
                 if ((desUuid == charUuid) &&
-                    ((pxpmDiscAlertLvCharList[idx]->settings & CHAR_SET_DESCRIPTOR) != CHAR_SET_DESCRIPTOR))
+                    ((sp_pxpmPxpServiceDb->p_pxpmDiscAlertLvCharList[idx]->settings & CHAR_SET_DESCRIPTOR) != CHAR_SET_DESCRIPTOR))
                 {
-                    p_charList->attrHandle = s_pxpmIasCharList[p_conn->connIndex].p_charInfo[idx].attrHandle;
-                    p_charList->property   = s_pxpmIasCharList[p_conn->connIndex].p_charInfo[idx].property;
-                    p_charList->charHandle = s_pxpmIasCharList[p_conn->connIndex].p_charInfo[idx].charHandle;
+                    p_charList->attrHandle = sp_pxpmPxpServiceDb->pxpmIasCharList[p_conn->connIndex].p_charInfo[idx].attrHandle;
+                    p_charList->property   = sp_pxpmPxpServiceDb->pxpmIasCharList[p_conn->connIndex].p_charInfo[idx].property;
+                    p_charList->charHandle = sp_pxpmPxpServiceDb->pxpmIasCharList[p_conn->connIndex].p_charInfo[idx].charHandle;
                     break;
                 }
             }
@@ -618,13 +848,13 @@ uint16_t BLE_PXPM_GetCharList(uint16_t connHandle, uint16_t svcUuid, uint16_t ch
         {
             for (idx = 0; idx < (uint8_t)PXPM_CHARALERTLV_CHAR_NUM; idx++)
             {
-                BUF_LE_TO_U16(&desUuid, pxpmDiscAlertLvCharList[idx]->p_uuid->uuid);
+                BUF_LE_TO_U16(&desUuid, sp_pxpmPxpServiceDb->p_pxpmDiscAlertLvCharList[idx]->p_uuid->uuid);
                 if ((desUuid == charUuid) &&
-                    ((pxpmDiscAlertLvCharList[idx]->settings & CHAR_SET_DESCRIPTOR) != CHAR_SET_DESCRIPTOR))
+                    ((sp_pxpmPxpServiceDb->p_pxpmDiscAlertLvCharList[idx]->settings & CHAR_SET_DESCRIPTOR) != CHAR_SET_DESCRIPTOR))
                 {
-                    p_charList->attrHandle = s_pxpmLlsCharList[p_conn->connIndex].p_charInfo[idx].attrHandle;
-                    p_charList->property   = s_pxpmLlsCharList[p_conn->connIndex].p_charInfo[idx].property;
-                    p_charList->charHandle = s_pxpmLlsCharList[p_conn->connIndex].p_charInfo[idx].charHandle;
+                    p_charList->attrHandle = sp_pxpmPxpServiceDb->pxpmLlsCharList[p_conn->connIndex].p_charInfo[idx].attrHandle;
+                    p_charList->property   = sp_pxpmPxpServiceDb->pxpmLlsCharList[p_conn->connIndex].p_charInfo[idx].property;
+                    p_charList->charHandle = sp_pxpmPxpServiceDb->pxpmLlsCharList[p_conn->connIndex].p_charInfo[idx].charHandle;
                     break;
                 }
             }
@@ -635,13 +865,13 @@ uint16_t BLE_PXPM_GetCharList(uint16_t connHandle, uint16_t svcUuid, uint16_t ch
         {
             for (idx = 0; idx < PXPM_CHARTXPWRLV_CHAR_NUM; idx++)
             {
-                BUF_LE_TO_U16(&desUuid, pxpmDiscTxPwrLvCharList[idx]->p_uuid->uuid);
+                BUF_LE_TO_U16(&desUuid, sp_pxpmPxpServiceDb->p_pxpmDiscTxPwrLvCharList[idx]->p_uuid->uuid);
                 if ((desUuid == charUuid) &&
-                    ((pxpmDiscTxPwrLvCharList[idx]->settings & CHAR_SET_DESCRIPTOR) != CHAR_SET_DESCRIPTOR))
+                    ((sp_pxpmPxpServiceDb->p_pxpmDiscTxPwrLvCharList[idx]->settings & CHAR_SET_DESCRIPTOR) != CHAR_SET_DESCRIPTOR))
                 {
-                    p_charList->attrHandle = s_pxpmTpsCharList[p_conn->connIndex].p_charInfo[idx].attrHandle;
-                    p_charList->property   = s_pxpmTpsCharList[p_conn->connIndex].p_charInfo[idx].property;
-                    p_charList->charHandle = s_pxpmTpsCharList[p_conn->connIndex].p_charInfo[idx].charHandle;
+                    p_charList->attrHandle = sp_pxpmPxpServiceDb->pxpmTpsCharList[p_conn->connIndex].p_charInfo[idx].attrHandle;
+                    p_charList->property   = sp_pxpmPxpServiceDb->pxpmTpsCharList[p_conn->connIndex].p_charInfo[idx].property;
+                    p_charList->charHandle = sp_pxpmPxpServiceDb->pxpmTpsCharList[p_conn->connIndex].p_charInfo[idx].charHandle;
                     break;
                 }
             }
@@ -657,6 +887,17 @@ uint16_t BLE_PXPM_GetCharList(uint16_t connHandle, uint16_t svcUuid, uint16_t ch
     return MBA_RES_SUCCESS;
 }
 
+
+/**
+ * @brief Retrieves information about the descriptor list of the Proximity Service that has been discovered.
+ * @note This API could be called only after @ref BLE_PXPM_EVT_DISC_COMPLETE_IND event is issued.
+ *
+ * @param[in]  connHandle           Connection handle.
+ * @param[out] p_descList           Pointer to store the descriptor information of the discovered service.
+ *
+ * @retval MBA_RES_SUCCESS          Successfully retrieved the descriptor list.
+ * @retval MBA_RES_INVALID_PARA     The provided connection handle is not valid.
+ */
 uint16_t BLE_PXPM_GetDescList(uint16_t connHandle, BLE_PXPM_DescList_T *p_descList)
 {
 #ifdef BLE_PXPM_TPS_ENABLE
@@ -673,10 +914,10 @@ uint16_t BLE_PXPM_GetDescList(uint16_t connHandle, BLE_PXPM_DescList_T *p_descLi
 #ifdef BLE_PXPM_TPS_ENABLE
     for (idx = 0; idx < PXPM_CHARTXPWRLV_CHAR_NUM; idx++)
     {
-        if ((pxpmDiscTxPwrLvCharList[idx]->settings & CHAR_SET_DESCRIPTOR) && (s_pxpmTpsCharList[p_conn->connIndex].p_charInfo[idx].charHandle != 0))
+        if ((sp_pxpmPxpServiceDb->p_pxpmDiscTxPwrLvCharList[idx]->settings & CHAR_SET_DESCRIPTOR) && (sp_pxpmPxpServiceDb->pxpmTpsCharList[p_conn->connIndex].p_charInfo[idx].charHandle != 0))
         {
-            p_descList->descInfo[descNum].attrHandle = s_pxpmTpsCharList[p_conn->connIndex].p_charInfo[idx].charHandle;
-            VARIABLE_COPY_TO_BUF(&p_descList->descInfo[descNum].uuid, pxpmDiscTxPwrLvCharList[idx]->p_uuid->uuid, pxpmDiscTxPwrLvCharList[idx]->p_uuid->uuidLength);
+            p_descList->descInfo[descNum].attrHandle = sp_pxpmPxpServiceDb->pxpmTpsCharList[p_conn->connIndex].p_charInfo[idx].charHandle;
+            VARIABLE_COPY_TO_BUF(&p_descList->descInfo[descNum].uuid, sp_pxpmPxpServiceDb->p_pxpmDiscTxPwrLvCharList[idx]->p_uuid->uuid, sp_pxpmPxpServiceDb->p_pxpmDiscTxPwrLvCharList[idx]->p_uuid->uuidLength);
             descNum++;
         }
     }
@@ -685,6 +926,15 @@ uint16_t BLE_PXPM_GetDescList(uint16_t connHandle, BLE_PXPM_DescList_T *p_descLi
     return MBA_RES_SUCCESS;
 }
 
+
+/**
+ * @brief Handles BLE_Stack related events.
+ * 
+ * @note This function should be called when BLE Stack events occur.
+ *
+ * @param[in] p_stackEvent          Pointer to the BLE Stack events buffer.
+ *
+*/
 void BLE_PXPM_BleDdEventHandler(BLE_DD_Event_T *p_event)
 {
     switch (p_event->eventId)
@@ -703,6 +953,15 @@ void BLE_PXPM_BleDdEventHandler(BLE_DD_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Handles BLE Database Discovery (BLE DD) events.
+ * 
+ * @note This function should be called when BLE DD events occur.
+ *
+ * @param[in] p_event               Pointer to the BLE DD events buffer.
+ *
+ */
 void BLE_PXPM_BleEventHandler(STACK_Event_T *p_stackEvent)
 {
     switch (p_stackEvent->groupId)

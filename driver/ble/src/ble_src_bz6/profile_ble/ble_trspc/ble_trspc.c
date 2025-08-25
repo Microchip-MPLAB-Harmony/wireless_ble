@@ -165,6 +165,15 @@ typedef struct BLE_TRSPC_ConnList_T
     BLE_TRSPC_State_T           state;                  // State of the BLE connection.
 } BLE_TRSPC_ConnList_T;
 
+/* The Structure service database and discovery list for BLE TRSPC. */
+typedef struct BLE_TRSPC_TrsServiceDb_T
+{
+    BLE_DD_CharList_T trspcCharList[BLE_TRSPC_MAX_CONN_NBR];
+    BLE_DD_CharInfo_T trspcCharInfoList[BLE_TRSPC_MAX_CONN_NBR][TRSPC_CHAR_NUM];
+    BLE_DD_DiscChar_T trspcDiscCharList[TRSPC_CHAR_NUM];
+    BLE_DD_DiscChar_T *p_trspcDiscCharList[TRSPC_CHAR_NUM];
+} BLE_TRSPC_TrsServiceDb_T;
+
 // *****************************************************************************
 // *****************************************************************************
 // Section: Local Variables
@@ -174,10 +183,10 @@ typedef struct BLE_TRSPC_ConnList_T
 static BLE_TRSPC_EventCb_T      bleTrspcProcess;
 
 // Connection list for BLE Transparent profile.
-static BLE_TRSPC_ConnList_T     s_trspcConnList[BLE_TRSPC_MAX_CONN_NBR];
+static BLE_TRSPC_ConnList_T     *sp_trspcConnList[BLE_TRSPC_MAX_CONN_NBR];
 
-// Characteristic information list for BLE Transparent profile
-static BLE_DD_CharInfo_T        s_trsCharInfoList[BLE_TRSPC_MAX_CONN_NBR][TRSPC_CHAR_NUM];
+// List of pointers to the discovery information for TRS characteristics and descriptors.
+static BLE_TRSPC_TrsServiceDb_T *sp_trspcServiceDb;
 
 // UUID for the Microchip Transparent Service.
 static const uint8_t            discSvcUuid[] =     {UUID_MCHP_TRANS_SVC};
@@ -197,33 +206,6 @@ static const ATT_Uuid_T         discCharTcp =       { {UUID_MCHP_CHAR_TCP}, ATT_
 // UUID for the Transparent Control Point Characteristic's Client Characteristic Configuration Descriptor (CCCD). 
 static const ATT_Uuid_T         discCharTcpCccd =   { {UINT16_TO_BYTES(UUID_DESCRIPTOR_CLIENT_CHAR_CONFIG)}, ATT_UUID_LENGTH_2 };
 
-// Discovery structure for the Transparent Uplink Data Characteristic. 
-static BLE_DD_DiscChar_T        trsTud =            { &discCharTud, 0 };
-
-// Discovery structure for the Transparent Uplink Data Characteristic CCCD.
-static BLE_DD_DiscChar_T        trsTudCccd =        { &discCharTudCccd, CHAR_SET_DESCRIPTOR };
-
-// Discovery structure for the Transparent Downlink Data Characteristic.
-static BLE_DD_DiscChar_T        trsTdd =            { &discCharTdd, 0 };
-
-// Discovery structure for the Transparent Control Point Characteristic.
-static BLE_DD_DiscChar_T        trsTcp =            { &discCharTcp, 0 };
-
-// Discovery structure for the Transparent Control Point Characteristic CCCD.
-static BLE_DD_DiscChar_T        trsTcpCccd =        { &discCharTcpCccd, CHAR_SET_DESCRIPTOR };
-
-static BLE_DD_DiscChar_T        *trsDiscCharList[] =
-{
-    &trsTud,                    // Transparent Uplink Data Characteristic.
-    &trsTudCccd,                // Transparent Uplink Data Characteristic CCCD.
-    &trsTdd,                    // Transparent Downlink Data Characteristic.
-    &trsTcp,                    // Transparent Control Point Characteristic.
-    &trsTcpCccd                 // Transparent Control Point Characteristic CCCD.
-};
-
-// Characteristic list for the BLE Transparent Service.
-static BLE_DD_CharList_T        s_trsCharList[BLE_TRSPC_MAX_CONN_NBR];
-
 // Assertion to ensure the buffer initialization matches the connection number and initial credits.
 MW_ASSERT((BLE_TRSPC_MAX_CONN_NBR*BLE_TRSPC_INIT_CREDIT)==BLE_TRSPC_MAX_BUF_IN);
 
@@ -236,15 +218,24 @@ MW_ASSERT((BLE_TRSPC_MAX_CONN_NBR*BLE_TRSPC_INIT_CREDIT)==BLE_TRSPC_MAX_BUF_IN);
 static void ble_trspc_ProcessQueuedTask(void);
 static void ble_trspc_OnLinkEncrypted(uint16_t connHandle);
 
-/** 
- * @brief Initialize a BLE Transparent Service Connection List.
+/**
+ * @brief Free the connection list for the TRSPC.
  *
- * @param p_conn Pointer to the BLE Transparent Service Connection List to initialize.
+ * @param p_conn        Pointer to the TRSPC connection list structure to initialize.
+ * @param disconnect    Flag indicating whether to disconnect.
  */
-static void ble_trspc_InitConnList(BLE_TRSPC_ConnList_T *p_conn)
+static void ble_trspc_FreeConnList(BLE_TRSPC_ConnList_T *p_conn)
 {
-    (void)memset((uint8_t *)p_conn, 0, sizeof(BLE_TRSPC_ConnList_T));
-    p_conn->attMtu= BLE_ATT_DEFAULT_MTU_LEN;
+    uint8_t i;
+    for (i = 0; i < BLE_TRSPC_MAX_CONN_NBR; i++)
+    {
+        if (sp_trspcConnList[i] == p_conn)
+        {
+            OSAL_Free(sp_trspcConnList[i]);
+            sp_trspcConnList[i] = NULL;
+            break;
+        }
+    }
 }
 
 
@@ -261,12 +252,11 @@ static BLE_TRSPC_ConnList_T *ble_trspc_GetConnListByHandle(uint16_t connHandle)
 
     for(i=0; i<BLE_TRSPC_MAX_CONN_NBR; i++)
     {
-        if ((s_trspcConnList[i].state == BLE_TRSPC_STATE_CONNECTED) && (s_trspcConnList[i].connHandle == connHandle))
+        if ((sp_trspcConnList[i] != NULL) && (sp_trspcConnList[i]->state == BLE_TRSPC_STATE_CONNECTED) && (sp_trspcConnList[i]->connHandle == connHandle))
         {
-            return &s_trspcConnList[i];
+            return sp_trspcConnList[i];
         }
     }
-
     return NULL;
 }
 
@@ -279,39 +269,37 @@ static BLE_TRSPC_ConnList_T *ble_trspc_GetConnListByHandle(uint16_t connHandle)
 static BLE_TRSPC_ConnList_T *ble_trspc_GetFreeConnList(void)
 {
     uint8_t i;
+    BLE_TRSPC_ConnList_T *p_conn = NULL;
 
-    for(i=0; i<BLE_TRSPC_MAX_CONN_NBR; i++)
+    for(i = 0; i < BLE_TRSPC_MAX_CONN_NBR; i++)
     {
-        if (s_trspcConnList[i].state == BLE_TRSPC_STATE_IDLE)
+        if (sp_trspcConnList[i] == NULL)
         {
-            s_trspcConnList[i].state = BLE_TRSPC_STATE_CONNECTED;
-            s_trspcConnList[i].connIndex = i;
-            return &s_trspcConnList[i];
+            sp_trspcConnList[i] = OSAL_Malloc(sizeof(BLE_TRSPC_ConnList_T));
+            p_conn = sp_trspcConnList[i];
+            if (p_conn != NULL)
+            {
+                (void)memset(p_conn, 0, sizeof(BLE_TRSPC_ConnList_T));
+                p_conn->attMtu    = BLE_ATT_DEFAULT_MTU_LEN;
+                p_conn->state     = BLE_TRSPC_STATE_CONNECTED;
+                p_conn->connIndex = i;
+            }
+            break;
         }
     }
-
-    return NULL;
+    return p_conn;
 }
 
-
 /**
- * @brief Initialize a list of BLE Device Discovery Characteristics.
- *
- * @param p_charList    Pointer to the characteristic list to initialize.
- * @param connIndex     Index of the connection for which the characteristic list is associated.
+ * @brief Initializes the Transparent profile Service (TRS) characteristic list to zero.
+ * 
+ * @param connIndex     Index of the connection in the TRS characteristic list.
  */
-static void ble_trspc_InitCharList(BLE_DD_CharList_T *p_charList, uint8_t connIndex)
+static void ble_trspc_InitTrsCharList(uint8_t connIndex)
 {
-    uint8_t i;
-
-    p_charList->connHandle = 0;
-    p_charList->p_charInfo = (BLE_DD_CharInfo_T *) &(s_trsCharInfoList[connIndex]);
-
-    for(i=0U; i<(uint8_t)TRSPC_CHAR_NUM; i++)
-    {
-        s_trsCharInfoList[connIndex][i].charHandle = 0;
-        s_trsCharInfoList[connIndex][i].property = 0;
-    }
+    (void)memset(&sp_trspcServiceDb->trspcCharList[connIndex], 0x0, sizeof(BLE_DD_CharList_T));
+    (void)memset(sp_trspcServiceDb->trspcCharInfoList[connIndex], 0x0, sizeof(BLE_DD_CharInfo_T)*TRSPC_CHAR_NUM);
+    sp_trspcServiceDb->trspcCharList[connIndex].p_charInfo = sp_trspcServiceDb->trspcCharInfoList[connIndex];
 }
 
 /**
@@ -327,7 +315,7 @@ static void ble_trspc_EnableControlPointCccd(BLE_TRSPC_ConnList_T *p_conn)
     p_writeParams = OSAL_Malloc(sizeof(GATTC_WriteParams_T));
     if (p_writeParams != NULL)
     {
-        p_writeParams->charHandle = s_trsCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTCPCCCD].charHandle;
+        p_writeParams->charHandle = sp_trspcServiceDb->trspcCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTCPCCCD].charHandle;
         p_writeParams->charLength = 0x02;
         U16_TO_BUF_LE(p_writeParams->charValue, BLE_TRSPC_CCCD_NOTIFY);
         p_writeParams->writeType = ATT_WRITE_REQ;
@@ -361,7 +349,7 @@ static void ble_trspc_EnableDownlinkCreditBaseFlowControl(BLE_TRSPC_ConnList_T *
     p_writeParams = OSAL_Malloc(sizeof(GATTC_WriteParams_T));
     if (p_writeParams != NULL)
     {
-        p_writeParams->charHandle = s_trsCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTCP].charHandle;
+        p_writeParams->charHandle = sp_trspcServiceDb->trspcCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTCP].charHandle;
         p_writeParams->charLength = 0x01;
         p_writeParams->charValue[0] = BLE_TRSPC_CBFC_OPCODE_DL_ENABLED;
         p_writeParams->writeType = ATT_WRITE_REQ;
@@ -395,7 +383,7 @@ static void ble_trspc_ClientReturnCredit(BLE_TRSPC_ConnList_T *p_conn)
     p_writeParams = OSAL_Malloc(sizeof(GATTC_WriteParams_T));
     if (p_writeParams != NULL)
     {
-        p_writeParams->charHandle = s_trsCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTCP].charHandle;
+        p_writeParams->charHandle = sp_trspcServiceDb->trspcCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTCP].charHandle;
         p_writeParams->charLength = 0x02;
         p_writeParams->charValue[0] = BLE_TRSPC_CBFC_OPCODE_UL_ENABLED;
         p_writeParams->charValue[1] = p_conn->peerCredit;
@@ -427,7 +415,7 @@ static void ble_trspc_ConfigureUplinkDataCccd(BLE_TRSPC_ConnList_T *p_conn, uint
     p_writeParams = OSAL_Malloc(sizeof(GATTC_WriteParams_T));
     if (p_writeParams != NULL)
     {
-        p_writeParams->charHandle = s_trsCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTUDCCCD].charHandle;
+        p_writeParams->charHandle = sp_trspcServiceDb->trspcCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTUDCCCD].charHandle;
         p_writeParams->charLength = (uint16_t)sizeof(cccdValue);
         U16_TO_BUF_LE(p_writeParams->charValue, cccdValue);
         p_writeParams->writeType = ATT_WRITE_REQ;
@@ -637,11 +625,11 @@ static void ble_trspc_ProcGattNotification(BLE_TRSPC_ConnList_T *p_conn, GATT_Ev
 
     (void)memset((uint8_t *) &evtPara, 0, sizeof(evtPara));
 
-    if (charHandle == s_trsCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTUD].charHandle)
+    if (charHandle == sp_trspcServiceDb->trspcCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTUD].charHandle)
     {
         ble_trspc_RcvData(p_conn, p_event->receivedLength, p_event->receivedValue);
     }
-    else if (charHandle == s_trsCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTCP].charHandle)
+    else if (charHandle == sp_trspcServiceDb->trspcCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTCP].charHandle)
     {
         /* Opcode: response */
         if (p_event->receivedValue[0] == BLE_TRSPC_CBFC_OPCODE_SUCCESS)
@@ -720,7 +708,7 @@ static void ble_trspc_GattEventProcess(GATT_Event_T *p_event)
                 if ((p_event->eventField.onError.reqOpcode == ATT_WRITE_REQ) &&
                     (p_event->eventField.onError.errCode == ATT_ERR_INSUF_AUTHN || 
                     p_event->eventField.onError.errCode == ATT_ERR_INSUF_ENC) &&
-                    (p_event->eventField.onError.attrHandle == s_trsCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTCPCCCD].charHandle))
+                    (p_event->eventField.onError.attrHandle == sp_trspcServiceDb->trspcCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTCPCCCD].charHandle))
                 {
                     p_conn->sessionReqAuth = 1;
                 }
@@ -733,11 +721,11 @@ static void ble_trspc_GattEventProcess(GATT_Event_T *p_event)
 
             if (p_conn != NULL)
             {
-                if (p_event->eventField.onWriteResp.charHandle != s_trsCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTUD].charHandle &&
-                    p_event->eventField.onWriteResp.charHandle != s_trsCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTUDCCCD].charHandle &&
-                    p_event->eventField.onWriteResp.charHandle != s_trsCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTDD].charHandle &&
-                    p_event->eventField.onWriteResp.charHandle != s_trsCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTCP].charHandle &&
-                    p_event->eventField.onWriteResp.charHandle != s_trsCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTCPCCCD].charHandle)
+                if (p_event->eventField.onWriteResp.charHandle != sp_trspcServiceDb->trspcCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTUD].charHandle &&
+                    p_event->eventField.onWriteResp.charHandle != sp_trspcServiceDb->trspcCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTUDCCCD].charHandle &&
+                    p_event->eventField.onWriteResp.charHandle != sp_trspcServiceDb->trspcCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTDD].charHandle &&
+                    p_event->eventField.onWriteResp.charHandle != sp_trspcServiceDb->trspcCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTCP].charHandle &&
+                    p_event->eventField.onWriteResp.charHandle != sp_trspcServiceDb->trspcCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTCPCCCD].charHandle)
                 {
                     break;
                 }
@@ -796,7 +784,7 @@ static bool ble_trspc_CheckQueuedTask(void)
 
     for (i = 0; i < BLE_TRSPC_MAX_CONN_NBR; i++)
     {
-        if ((s_trspcConnList[i].state == BLE_TRSPC_STATE_CONNECTED) && (s_trspcConnList[i].peerCredit >= BLE_TRSPC_MAX_RETURN_CREDIT))
+        if ((sp_trspcConnList[i] != NULL) && (sp_trspcConnList[i]->state == BLE_TRSPC_STATE_CONNECTED) && (sp_trspcConnList[i]->peerCredit >= BLE_TRSPC_MAX_RETURN_CREDIT))
         {
             return true;
         }
@@ -815,11 +803,14 @@ static void ble_trspc_ProcessQueuedTask(void)
 
     for(i = 0; i < BLE_TRSPC_MAX_CONN_NBR; i++)
     {
-        if (s_trspcConnList[i].state == BLE_TRSPC_STATE_CONNECTED)
+        if (sp_trspcConnList[i] != NULL)
         {
-            if (s_trspcConnList[i].peerCredit >= BLE_TRSPC_MAX_RETURN_CREDIT)
+            if (sp_trspcConnList[i]->state == BLE_TRSPC_STATE_CONNECTED)
             {
-                ble_trspc_ClientReturnCredit(&s_trspcConnList[i]);
+                if (sp_trspcConnList[i]->peerCredit >= BLE_TRSPC_MAX_RETURN_CREDIT)
+                {
+                    ble_trspc_ClientReturnCredit(sp_trspcConnList[i]);
+                }
             }
         }
     }
@@ -871,7 +862,7 @@ static void ble_trspc_GapEventProcess(BLE_GAP_Event_T *p_event)
 
                     p_conn->inputQueue.usedNum--;
                 }
-                ble_trspc_InitConnList(p_conn);
+                ble_trspc_FreeConnList(p_conn);
             }
         }
         break;
@@ -914,10 +905,10 @@ static void ble_trspc_OnLinkEncrypted(uint16_t connHandle)
     /* Check if TRS characteristics are found or not. */
     for (i=0; i<BLE_TRSPC_MAX_CONN_NBR; i++)
     {
-        if (s_trsCharList[i].connHandle == connHandle)
+        if (sp_trspcServiceDb->trspcCharList[i].connHandle == connHandle)
         {
             /* By checking the discovered handles exist or not. */
-            if (s_trsCharList[i].p_charInfo[TRSPC_INDEX_CHARTCP].charHandle != 0U)
+            if (sp_trspcServiceDb->trspcCharList[i].p_charInfo[TRSPC_INDEX_CHARTCP].charHandle != 0U)
             {
                 if (p_conn != NULL && p_conn->sessionReqAuth == 1U)
                 {
@@ -950,23 +941,52 @@ void BLE_TRSPC_EventRegister(BLE_TRSPC_EventCb_T bleTranCliHandler)
  */
 uint16_t BLE_TRSPC_Init(void)
 {
-    BLE_DD_DiscSvc_T trsDisc;
     uint8_t i;
+    uint16_t ret;
+    BLE_DD_DiscSvc_T trsDisc;
 
-    /* Reset connection information */
-    for (i = 0; i < BLE_TRSPC_MAX_CONN_NBR; i++)
+    if (sp_trspcServiceDb)
     {
-        ble_trspc_InitConnList(&s_trspcConnList[i]);
-        ble_trspc_InitCharList(&s_trsCharList[i], i);
+        return MBA_RES_FAIL;
+    }
+    sp_trspcServiceDb = (BLE_TRSPC_TrsServiceDb_T*)OSAL_Malloc(sizeof(BLE_TRSPC_TrsServiceDb_T));
+    if (sp_trspcServiceDb == NULL)
+    {
+        return MBA_RES_OOM;
     }
 
+    (void)memset(sp_trspcServiceDb->trspcDiscCharList, 0x00, sizeof(BLE_DD_DiscChar_T)*TRSPC_CHAR_NUM);
+    sp_trspcServiceDb->trspcDiscCharList[TRSPC_INDEX_CHARTUD].p_uuid     = &discCharTud;
+    sp_trspcServiceDb->trspcDiscCharList[TRSPC_INDEX_CHARTUDCCCD].p_uuid = &discCharTudCccd;
+    sp_trspcServiceDb->trspcDiscCharList[TRSPC_INDEX_CHARTUDCCCD].settings = CHAR_SET_DESCRIPTOR;
+    sp_trspcServiceDb->trspcDiscCharList[TRSPC_INDEX_CHARTDD].p_uuid     = &discCharTdd;
+    sp_trspcServiceDb->trspcDiscCharList[TRSPC_INDEX_CHARTCP].p_uuid     = &discCharTcp;
+    sp_trspcServiceDb->trspcDiscCharList[TRSPC_INDEX_CHARTCPCCCD].p_uuid = &discCharTcpCccd;
+    sp_trspcServiceDb->trspcDiscCharList[TRSPC_INDEX_CHARTCPCCCD].settings = CHAR_SET_DESCRIPTOR;
+
+    for(i = 0; i < TRSPC_CHAR_NUM; i++)
+    {
+        sp_trspcServiceDb->p_trspcDiscCharList[i] = &sp_trspcServiceDb->trspcDiscCharList[i];
+    }
+    for(i = 0; i < BLE_TRSPC_MAX_CONN_NBR; i++)
+    {
+        ble_trspc_InitTrsCharList(i);
+    }
     trsDisc.svcUuid.uuidLength = ATT_UUID_LENGTH_16;
     (void)memcpy(trsDisc.svcUuid.uuid, discSvcUuid, ATT_UUID_LENGTH_16);
     trsDisc.p_discInfo = NULL;
-    trsDisc.p_discChars = trsDiscCharList;
-    trsDisc.p_charList = s_trsCharList;
+    trsDisc.p_discChars = sp_trspcServiceDb->p_trspcDiscCharList;
+    trsDisc.p_charList = sp_trspcServiceDb->trspcCharList;
     trsDisc.discCharsNum = (uint8_t)TRSPC_CHAR_NUM;
-    return BLE_DD_ServiceDiscoveryRegister(&trsDisc);
+
+    ret = BLE_DD_ServiceDiscoveryRegister(&trsDisc);
+
+    if (ret != MBA_RES_SUCCESS)
+    {
+        OSAL_Free(sp_trspcServiceDb);
+        sp_trspcServiceDb = NULL;
+    }
+    return ret;
 }
 
 
@@ -1014,7 +1034,7 @@ uint16_t BLE_TRSPC_SendVendorCommand(uint16_t connHandle, uint8_t commandID, uin
     p_writeParams = OSAL_Malloc(sizeof(GATTC_WriteParams_T));
     if (p_writeParams != NULL)
     {
-        p_writeParams->charHandle = s_trsCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTCP].charHandle;
+        p_writeParams->charHandle = sp_trspcServiceDb->trspcCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTCP].charHandle;
         p_writeParams->charLength = ((uint16_t)commandLength+1U);
         p_writeParams->charValue[0] = commandID;
         (void)memcpy(&p_writeParams->charValue[1], p_commandPayload, commandLength);
@@ -1096,7 +1116,7 @@ uint16_t BLE_TRSPC_SendData(uint16_t connHandle, uint16_t len, uint8_t *p_data)
         return MBA_RES_BAD_STATE;
     }
 
-    p_writeParams->charHandle = s_trsCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTDD].charHandle;
+    p_writeParams->charHandle = sp_trspcServiceDb->trspcCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTDD].charHandle;
     p_writeParams->charLength = len;
     (void)memcpy(p_writeParams->charValue, p_data, len);
     p_writeParams->valueOffset = 0;
@@ -1256,10 +1276,10 @@ void BLE_TRSPC_BleDdEventHandler(BLE_DD_Event_T *p_event)
             /* Check if TRS characteristics are found or not. */
             for (i=0; i<BLE_TRSPC_MAX_CONN_NBR; i++)
             {
-                if (s_trsCharList[i].connHandle == p_event->eventField.evtDiscResult.connHandle)
+                if (sp_trspcServiceDb->trspcCharList[i].connHandle == p_event->eventField.evtDiscResult.connHandle)
                 {
                     /* By checking the discovered handles exist or not. */
-                    if (s_trsCharList[i].p_charInfo[TRSPC_INDEX_CHARTCP].charHandle != 0U)
+                    if (sp_trspcServiceDb->trspcCharList[i].p_charInfo[TRSPC_INDEX_CHARTCP].charHandle != 0U)
                     {
                         if (bleTrspcProcess != NULL)
                         {

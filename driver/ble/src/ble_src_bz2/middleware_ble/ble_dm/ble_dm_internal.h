@@ -31,21 +31,14 @@
     ble_dm_internal.h
 
   Summary:
-    This file contains the BLE Device Manager functions for 
-    BLE Device Manager module internal use.
+    Internal functions and definitions for the BLE Device Manager module.
 
   Description:
-    This file contains the BLE Device Manager functions for 
-    BLE Device Manager module internal use.
- *******************************************************************************/
-
-
-/**
- * @addtogroup BLE_DM_INTERNAL BLE DM INTERNAL
- * @{
- * @brief Header file for the BLE Device Manager (ble_dm_internal) internal module.
- */
- 
+    This header file is intended for internal use by the BLE Device Manager
+    module. It contains function prototypes and definitions necessary for
+    the implementation and maintenance of the module, not intended for
+    external use.
+ *******************************************************************************/ 
 #ifndef BLE_DM_INTERNAL_H
 #define BLE_DM_INTERNAL_H
 
@@ -57,14 +50,26 @@
 #include <stdint.h>
 #include "ble_dm.h"
 
+// DOM-IGNORE-BEGIN
+#ifdef __cplusplus  // Provide C++ Compatibility
+extern "C" {
+#endif
+// DOM-IGNORE-END
+
+/**
+ * @defgroup BLE_DM_INTERNAL BLE device manager internal 
+ * @brief Header file for the BLE Device Manager (ble_dm_internal) internal module.
+ * @{
+ */
+
 // *****************************************************************************
 // *****************************************************************************
 // Section: Data Types
 // *****************************************************************************
 // *****************************************************************************
 
-extern BLE_DM_EventCb_T        g_dmEventCb[BLE_DM_MAX_REGISTER_NUM];
-extern uint8_t                 g_dmCbNum;
+extern BLE_DM_EventCb_T        g_dmEventCb[BLE_DM_MAX_REGISTER_NUM];      /**< Aarray of callback functions for BLE DM events. */
+extern uint8_t                 g_dmCbNum;                                 /**< Counter for the number of registered DM callbacks. */
 
 
 // *****************************************************************************
@@ -72,10 +77,20 @@ extern uint8_t                 g_dmCbNum;
 // Section: Function Prototypes
 // *****************************************************************************
 // *****************************************************************************
-void BLE_DM_ConveyEvent(BLE_DM_Event_T *p_event);
-
-#endif
 
 /**
-  @}
-*/
+ * @brief Conveys a BLE Device Manager event to all registered callbacks.
+ * 
+ * @param[in] p_event Pointer to the BLE_DM_Event_T structure containing event data.
+ */
+void BLE_DM_ConveyEvent(BLE_DM_Event_T *p_event);
+
+/** @} */
+
+//DOM-IGNORE-BEGIN
+#ifdef __cplusplus
+}
+#endif
+//DOM-IGNORE-END
+
+#endif //BLE_DM_INTERNAL_H

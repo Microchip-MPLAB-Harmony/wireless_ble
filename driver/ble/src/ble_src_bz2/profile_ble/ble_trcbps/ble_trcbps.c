@@ -31,10 +31,14 @@
     ble_trcbps.c
 
   Summary:
-    This file contains the BLE Transparent Credit Based Server functions for application user.
+    Implements the server-side functionality of the BLE Transparent Credit-Based 
+    Profile, enabling the handling of credit-based data flow control.
 
   Description:
-    This file contains the BLE Transparent Credit Based Server functions for application user.
+    This source file provides the necessary functions to manage server operations
+    within the BLE Transparent Credit-Based Profile. It includes initializations,
+    event handling, and data transfer management to facilitate communication
+    between BLE devices using a credit-based flow control mechanism.
  *******************************************************************************/
 
 
@@ -61,74 +65,72 @@
 // Section: Macros
 // *****************************************************************************
 // *****************************************************************************
+#define BLE_TRCBPS_MAX_CHAN_NBR                 (0x01U)                         // Maximum number of channels per L2CAP CoC (Connection-oriented Channel) link.
 
-/**@defgroup BLE_TRCBPS_MAX_CHAN_NBR BLE_TRCBPS_MAX_CHAN_NBR
- * @brief The definition of maximum  channel number over each L2CAP CoC link.
- * @{ */
-#define BLE_TRCBPS_MAX_CHAN_NBR                             (0x01U)    /**< Maximum channel number over each L2CAP CoC link. */
-/** @} */
+// Maximum number of connections in the connection list, derived from the product of max connections and max channels.
+#define BLE_TRCBPS_MAX_CONNLIST_NBR             (BLE_TRCBPS_MAX_CONN_NBR * BLE_TRCBPS_MAX_CHAN_NBR)
 
+#define BLE_TRCB_CTRL_PSM                       (0x0080U)                       // PSM value for the control channel.
 
-/**@defgroup BLE_TRCBPS_MAX_CONNLIST_NBR BLE_TRCBPS_MAX_CONNLIST_NBR
- * @brief The definition of maximum number of BLE Transparent Credit Based Profile connection list. \n
- * @      The maximum number equals to maximum allowing Connection Numbers * maximum channel number over each L2CAP CoC link.
- * @{ */
-#define BLE_TRCBPS_MAX_CONNLIST_NBR                         (BLE_TRCBPS_MAX_CONN_NBR * BLE_TRCBPS_MAX_CHAN_NBR)   /**< Maximum connection list number */
-/** @} */
+#define BLE_TRCBPS_SET_FLAG(x, y)               ((x) |= (1U << (y)))            // Macro to set a flag 'y' in variable 'x'. 
+#define BLE_TRCBPS_CLR_FLAG(x, y)               ((x) &= ~(1U << (y)))           // Macro to clear a flag 'y' in variable 'x'.
+#define BLE_TRCBPS_CHK_FLAG(x, y)               ((x) & (1U << (y)))             // Macro to check the status of flag 'y' in variable 'x'.
 
-#define BLE_TRCB_CTRL_PSM                                   (0x0080U)  /**< PSM value of control channel. */
+#define BLE_TRCBPS_CCCD_DISABLE                 (0x0000U)                       // CCCD value to disable notifications and indications.
+#define BLE_TRCBPS_CCCD_NOTIFY                  NOTIFICATION                    // CCCD value to enable NOTIFY property for notifications.
 
-#define BLE_TRCBPS_SET_FLAG(x, y)    ((x) |= (1U << (y)))
-#define BLE_TRCBPS_CLR_FLAG(x, y)    ((x) &= ~(1U << (y)))
-#define BLE_TRCBPS_CHK_FLAG(x, y)    ((x) & (1U << (y)))
+#define BLE_TRCBPS_CTRL_MPS                     BLE_L2CAP_MAX_PDU_SIZE          // MPS size for the control channel.
+#define BLE_TRCBPS_DATA_MPS                     BLE_L2CAP_MAX_PDU_SIZE          // MPS size for the data channel.
 
-/**@defgroup BLE_TRCBPS_CCCD BLE_TRCBPS_CCCD
- * @brief The definition of Client Characteristic Configuration Descriptor
- * @{ */
-#define BLE_TRCBPS_CCCD_DISABLE                             (0x0000U)      /**< Definition of Client Characteristic Configuration Descriptor disable. */
-#define BLE_TRCBPS_CCCD_NOTIFY                              NOTIFICATION   /**< Definition of Client Characteristic Configuration Descriptor enable NOTIFY property. */
-/** @} */
+#define BLE_TRCBPS_CTRL_MAX_CREDITS             (0x0002U)                       // Maximum number of credits for flow control on the control channel.
+#define BLE_TRCBPS_CTRL_MAX_ACCU_CREDITS        (0x0001U)                       // Maximum accumulated credits that can be sent to the peer on the control channel.
+#define BLE_TRCBPS_DATA_MAX_CREDITS             (0x0008U)                       // Maximum number of credits for flow control on the data channel.
+#define BLE_TRCBPS_DATA_MAX_ACCU_CREDITS        (0x0005U)                       // Maximum accumulated credits that can be sent to the peer on the data channel. 
+#define BLE_TRCBPS_PERMISSION                   (0x00U)                         // Permission setting for the profile.
+
+#define BLE_TRCBPS_CTRL_MAX_BUF_IN              BLE_TRCBPS_CTRL_MAX_CREDITS     // Maximum number of incoming buffers for the control channel, based on max credits. 
+#define BLE_TRCBPS_DATA_MAX_BUF_IN              BLE_TRCBPS_DATA_MAX_CREDITS     // Maximum number of incoming buffers for the data channel, based on max credits.
+
 // *****************************************************************************
 // *****************************************************************************
 // Section: Data Types
 // *****************************************************************************
 // *****************************************************************************
-
-/**@brief The structure contains information about BLE Transparent Credit Based profile packetIn. */
+/* Structure for BLE Transparent Credit Based profile packet information. */
 typedef struct BLE_TRCBPS_PacketList_T
 {
-    uint8_t                             leL2capId;               /**< Instance of l2cap session. */
-    uint8_t                             frameNum;                /**< Number of frames reassembled for this SDU. */
-    uint16_t                            length;                  /**< Data length. */
-    uint8_t                             *p_packet;               /**< Pointer to the RX data buffer */
+    uint8_t                             leL2capId;                  // Identifier for the L2CAP session instance.
+    uint8_t                             frameNum;                   // Number of frames reassembled for this SDU.
+    uint16_t                            length;                     // Length of the data in bytes.
+    uint8_t                             *p_packet;                  // Pointer to the received data buffer.
 } BLE_TRCBPS_PacketList_T;
 
-/**@brief The structure contains information about packet input queue format of BLE Transparent Credit Based profile. */
+/* Structure for the input queue format of BLE Transparent Credit Based profile packets. */
 typedef struct BLE_TRCBPS_QueueIn_T
 {
-    uint8_t                             usedNum;                    /**< The number of data list of packetIn buffer. */
-    uint8_t                             writeIndex;                 /**< The Index of data, written in packet buffer. */
-    uint8_t                             readIndex;                  /**< The Index of data, read in packet buffer. */
-    BLE_TRCBPS_PacketList_T             packetList[BLE_TRCBPS_DATA_MAX_BUF_IN];  /**< Written in packet buffer. @ref BLE_TRCBPS_PacketList_T.*/
+    uint8_t                             usedNum;                    // Number of packets currently in the input buffer.
+    uint8_t                             writeIndex;                 // Index at which new data will be written to the packet buffer.
+    uint8_t                             readIndex;                  // Index at which data will be read from the packet buffer.
+    BLE_TRCBPS_PacketList_T             packetList[BLE_TRCBPS_DATA_MAX_BUF_IN];  // Array of packet buffers.
 } BLE_TRCBPS_QueueIn_T;
 
-/**@brief The structure contains information about BLE Transparent Credit Based profile connection parameters for recording connection information. */
+/* Structure for BLE Transparent Credit Based profile connection parameters. */
 typedef struct BLE_TRCBPS_ConnList_T
 {
-    uint16_t                            connHandle;                 /**< Connection handle. */
-    uint16_t                            spsm;                       /**< PSM of l2cap session. */
-    uint8_t                             leL2capId;                  /**< Instance of l2cap session. */
-    uint8_t                             state;                      /**< L2CAP CoC state. See @ref BLE_TRCBPS_STATUS. */
-    uint16_t                            localMtu;                   /**< MTU size of local device. */
-    uint16_t                            peerMtu;                    /**< MTU size of peer device. */
-    uint16_t                            localMps;                   /**< PDU size of local device. */
-    uint16_t                            peerMps;                    /**< PDU size of peer device. */
-    uint16_t                            localCredits;               /**< Credits of local device. */
-    uint16_t                            localAccuCredits;           /**< Accumulation Credits which will be sent to the peer device. */
-    uint16_t                            peerCredits;                /**< Credits of peer device. */
-    uint16_t                            attMtu;                     /**< Record the current connection ATT MTU size. */
-    BLE_TRCBPS_QueueIn_T                queueIn;                    /**< Data channel packet input queue. */
-    bool                                encStatus;                  /**< Encryption status. */
+    uint16_t                            connHandle;                 // Handle for the current connection.
+    uint16_t                            spsm;                       // Service Protocol/Service Multiplexer for the L2CAP session.
+    uint8_t                             leL2capId;                  // Identifier for the L2CAP session instance.
+    uint8_t                             state;                      // Current state of the L2CAP CoC.
+    uint16_t                            localMtu;                   // Maximum Transmission Unit size for the local device.
+    uint16_t                            peerMtu;                    // Maximum Transmission Unit size for the peer device.
+    uint16_t                            localMps;                   // Maximum PDU payload size for the local device.
+    uint16_t                            peerMps;                    // Maximum PDU payload size for the peer device.
+    uint16_t                            localCredits;               // Available credits for the local device.
+    uint16_t                            localAccuCredits;           // Accumulated credits to be sent to the peer device.
+    uint16_t                            peerCredits;                // Available credits for the peer device.
+    uint16_t                            attMtu;                     // Current ATT MTU size for the connection. 
+    BLE_TRCBPS_QueueIn_T                queueIn;                    // Input queue for data channel packets
+    bool                                encStatus;                  // Flag indicating the encryption status of the connection.
 } BLE_TRCBPS_ConnList_T;
 
 
@@ -137,14 +139,27 @@ typedef struct BLE_TRCBPS_ConnList_T
 // Section: Local Variables
 // *****************************************************************************
 // *****************************************************************************
-
+// Callback function for BLE TRCBP (Thermometer Characteristic-Based Protocol) events.
 static BLE_TRCBP_EventCb_T             s_bleTrcbpProcess;
+
+// Array to keep track of connection information for each TRCBP connection.
 static BLE_TRCBPS_ConnList_T           s_trcbpConnList[BLE_TRCBPS_MAX_CONNLIST_NBR];
+
+// Flag variable used to indicate the status of TRCBP-related operations or conditions.
 static uint8_t                         s_trcbpFlag;
+
+// Pointer to the structure containing parameters for sending a write response in GATT.
 static GATTS_SendWriteRespParams_T     *sp_trcbpsRespParams;
+
+// Pointer to the structure containing parameters for sending an error response in GATT.
 static GATTS_SendErrRespParams_T       *sp_trcbpsErrParams;
+
+// Connection handle used for sending responses or errors in the TRCBP service.
 static uint16_t                        s_trcbpsRespErrConnHandle;
 
+
+// Assert to ensure that the product of the maximum number of connections and channels equals the defined maximum connection list number.
+// This is a sanity check to ensure that the connection list array is properly sized.
 MW_ASSERT((BLE_TRCBPS_MAX_CONN_NBR * BLE_TRCBPS_MAX_CHAN_NBR) == BLE_TRCBPS_MAX_CONNLIST_NBR);
 
 // *****************************************************************************
@@ -152,7 +167,12 @@ MW_ASSERT((BLE_TRCBPS_MAX_CONN_NBR * BLE_TRCBPS_MAX_CHAN_NBR) == BLE_TRCBPS_MAX_
 // Section: Functions
 // *****************************************************************************
 // *****************************************************************************
-
+/**
+ * @brief Initialize a connection list entry and optionally clear its queue.
+ *
+ * @param p_conn        Pointer to the connection list entry to initialize.
+ * @param clearQueue    Boolean flag indicating whether to clear the queue.
+ */
 static void ble_trcbps_InitConnList(BLE_TRCBPS_ConnList_T *p_conn, bool clearQueue)
 {
     if ((clearQueue) && (p_conn != NULL))
@@ -188,6 +208,13 @@ static void ble_trcbps_InitConnList(BLE_TRCBPS_ConnList_T *p_conn, bool clearQue
 }
 
 
+/**
+ * @brief Get the Service Protocol/Service Multiplexer (SPSM) value based on the channel type.
+ *
+ * @param type The channel type (control or data).
+ * 
+ * @retval uint16_t The SPSM value for the specified channel type.
+ */
 static uint16_t ble_trcbps_GetSpsm(BLE_TRCBPS_ChanType_T type)
 {
     if (type == BLE_TRCBPS_CTRL_CHAN)
@@ -200,6 +227,14 @@ static uint16_t ble_trcbps_GetSpsm(BLE_TRCBPS_ChanType_T type)
     }
 }
 
+
+/**
+ * @brief Convert a Service Protocol/Service Multiplexer (SPSM) value to the corresponding channel type.
+ *
+ * @param spsm The SPSM value.
+ * 
+ * @retval BLE_TRCBPS_ChanType_T The channel type corresponding to the given SPSM value.
+ */
 static BLE_TRCBPS_ChanType_T ble_trcbps_CovertSpsmToType(uint16_t spsm)
 {
     if (spsm == BLE_TRCB_CTRL_PSM)
@@ -216,6 +251,14 @@ static BLE_TRCBPS_ChanType_T ble_trcbps_CovertSpsmToType(uint16_t spsm)
     }
 }
 
+
+/**
+ * @brief Retrieve a connection list entry by its connection handle.
+ *
+ * @param connHandle The connection handle.
+ * 
+ * @retval BLE_TRCBPS_ConnList_T* Pointer to the connection list entry, or NULL if not found.
+ */
 static BLE_TRCBPS_ConnList_T *ble_trcbps_GetConnListByHandle(uint16_t connHandle)
 {
     uint8_t i;
@@ -231,6 +274,14 @@ static BLE_TRCBPS_ConnList_T *ble_trcbps_GetConnListByHandle(uint16_t connHandle
     return NULL;
 }
 
+
+/**
+ * @brief Retrieve a connection list entry by its L2CAP ID.
+ *
+ * @param l2capId The L2CAP ID.
+ * 
+ * @retval BLE_TRCBPS_ConnList_T* Pointer to the connection list entry, or NULL if not found.
+ */
 static BLE_TRCBPS_ConnList_T *ble_trcbps_GetConnListByL2capId(uint8_t l2capId)
 {
     uint8_t i;
@@ -246,6 +297,15 @@ static BLE_TRCBPS_ConnList_T *ble_trcbps_GetConnListByL2capId(uint8_t l2capId)
     return NULL;
 }
 
+
+/**
+ * @brief Retrieve a connection list entry by its connection handle and channel type.
+ *
+ * @param connHandle    The connection handle.
+ * @param type          The channel type.
+ * 
+ * @retval BLE_TRCBPS_ConnList_T* Pointer to the connection list entry, or NULL if not found.
+ */
 static BLE_TRCBPS_ConnList_T *ble_trcbps_GetConnListByChanType(uint16_t connHandle, BLE_TRCBPS_ChanType_T type)
 {
     uint8_t i;
@@ -261,6 +321,12 @@ static BLE_TRCBPS_ConnList_T *ble_trcbps_GetConnListByChanType(uint16_t connHand
     return NULL;
 }
 
+
+/**
+ * @brief Retrieve a free connection list entry.
+ *
+ * @retval BLE_TRCBPS_ConnList_T* Pointer to the free connection list entry, or NULL if none are available.
+ */
 static BLE_TRCBPS_ConnList_T *ble_trcbps_GetFreeConnList(void)
 {
     uint8_t i;
@@ -277,6 +343,11 @@ static BLE_TRCBPS_ConnList_T *ble_trcbps_GetFreeConnList(void)
 }
 
 
+/**
+ * @brief Convey a connection status event to the registered callback.
+ *
+ * @param connStatusPara Pointer to the connection status event parameters.
+ */
 static void ble_trcbps_ConveyConnStatusEvt(BLE_TRCBPS_EvtConnStatus_T *connStatusPara)
 {
     BLE_TRCBPS_Event_T evtPara;
@@ -298,6 +369,12 @@ static void ble_trcbps_ConveyConnStatusEvt(BLE_TRCBPS_EvtConnStatus_T *connStatu
     }
 }
 
+
+/**
+ * @brief Convey a received data event to the registered callback.
+ *
+ * @param p_conn Pointer to the connection list entry that received data.
+ */
 static void ble_trcbp_ConveyRcvDataEvt(BLE_TRCBPS_ConnList_T *p_conn)
 {
     BLE_TRCBPS_Event_T evtPara;
@@ -313,6 +390,13 @@ static void ble_trcbp_ConveyRcvDataEvt(BLE_TRCBPS_ConnList_T *p_conn)
     }
 }
 
+
+/**
+ * @brief Handle received data, store it in the connection list entry's queue, and convey the event.
+ *
+ * @param p_conn Pointer to the connection list entry that received data.
+ * @param p_event Pointer to the L2CAP event containing the received data.
+ */
 static void ble_trcbps_RcvData(BLE_TRCBPS_ConnList_T *p_conn, BLE_L2CAP_Event_T *p_event)
 {
     uint8_t maxBufNum;
@@ -365,6 +449,12 @@ static void ble_trcbps_RcvData(BLE_TRCBPS_ConnList_T *p_conn, BLE_L2CAP_Event_T 
 
 }
 
+
+/**
+ * @brief Check if there is a queued task.
+ *
+ * @retval True if there is a queued task, false otherwise.
+ */
 static bool ble_trcbps_CheckQueuedTask(void)
 {
     if (s_trcbpFlag != 0U)
@@ -385,6 +475,10 @@ static bool ble_trcbps_CheckQueuedTask(void)
     return false;
 }
 
+
+/**
+ * @brief Process the queued task.
+ */
 static void ble_trcbps_ProcessQueuedTask(void)
 {
     uint8_t i;
@@ -446,11 +540,27 @@ static void ble_trcbps_ProcessQueuedTask(void)
     }
 }
 
+
+/**
+ *@brief Register a callback for BLE Transparent Credit Based profile events.
+ *
+ *@param[in] bleTrcbpHandler                 Client callback function to handle BLE TRCBP events.
+ *
+ */
 void BLE_TRCBPS_EventRegister(BLE_TRCBP_EventCb_T bleTrcbpHandler)
 {
     s_bleTrcbpProcess = bleTrcbpHandler;
 }
 
+
+/**
+ * @brief Initialize the BLE Transparent Credit Based Profile.
+ * 
+ * @retval MBA_RES_SUCCESS                   Successfully initialized the profile.
+ * @retval MBA_RES_INVALID_PARA              Invalid MTU parameter.
+ * @retval MBA_RES_FAIL                      Failed to register SPSM or the service.
+ *
+ */
 uint16_t BLE_TRCBPS_Init(void)
 {
     uint8_t i;
@@ -477,6 +587,15 @@ uint16_t BLE_TRCBPS_Init(void)
     return BLE_TRCBS_Add();
 }
 
+
+/**
+ * @brief Query the local L2CAP CoC PSM value for the TRCBP Data Channel.
+ * 
+ * @param[out] dataPsm                       Pointer to store the PSM of the data channel.
+ *
+ * @retval MBA_RES_SUCCESS                   Successfully retrieved the PSM value.
+ *
+ */
 uint16_t BLE_TRCBPS_QueryPsm(uint16_t *dataPsm)
 {
     *dataPsm = BLE_TRCB_DATA_PSM;
@@ -484,6 +603,18 @@ uint16_t BLE_TRCBPS_QueryPsm(uint16_t *dataPsm)
     return MBA_RES_SUCCESS;
 }
 
+
+/**
+ * @brief Issue an L2CAP CoC connection request to establish a TRCBP Data pipe.
+ * 
+ * @param[in] connHandle                     Connection handle.
+ *
+ * @retval MBA_RES_SUCCESS                   Successfully issued a connection request.
+ * @retval MBA_RES_OOM                       Internal memory allocation failure.
+ * @retval MBA_RES_INVALID_PARA              Invalid connection handle or SPSM.
+ * @retval MBA_RES_NO_RESOURCE               No transmit buffers available.
+ *
+ */
 uint16_t BLE_TRCBPS_ConnReq(uint16_t connHandle)
 {
     BLE_TRCBPS_ConnList_T *p_conn = NULL;
@@ -525,6 +656,19 @@ uint16_t BLE_TRCBPS_ConnReq(uint16_t connHandle)
     return ret;
 }
 
+
+/**
+ * @brief Issue an L2CAP CoC disconnect request for a TRCBP Data pipe.
+ * 
+ * @param[in] connHandle                     Connection handle.
+ *
+ * @retval MBA_RES_SUCCESS                   Successfully sent a disconnect request.
+ * @retval MBA_RES_OOM                       Internal memory allocation failure.
+ * @retval MBA_RES_INVALID_PARA              Invalid L2CAP link.
+ * @retval MBA_RES_NO_RESOURCE               No transmit buffers available.
+ * @retval MBA_RES_FAIL                      Failed due to incorrect handle or SPSM.
+ *
+ */
 uint16_t BLE_TRCBPS_DisconnectReq(uint16_t connHandle)
 {
     BLE_TRCBPS_ConnList_T *p_conn = NULL;
@@ -558,6 +702,21 @@ uint16_t BLE_TRCBPS_DisconnectReq(uint16_t connHandle)
     return ret;
 }
 
+
+/**
+ * @brief Send data through the BLE Transparent Credit Based Profile Data pipe.
+ *
+ * @param[in] connHandle                     Connection handle.
+ * @param[in] len                            Length of the data to be sent. Must not exceed BLE_TRCBPS_DATA_MTU.
+ * @param[in] p_data                         Pointer to the buffer containing the data to send.
+ *
+ * @retval MBA_RES_SUCCESS                   Successfully sent data.
+ * @retval MBA_RES_OOM                       Internal memory allocation failure.
+ * @retval MBA_RES_INVALID_PARA              Invalid L2CAP link or data length exceeds max MTU.
+ * @retval MBA_RES_NO_RESOURCE               Insufficient credit from the remote device.
+ * @retval MBA_RES_BAD_STATE                 Connection not established.
+ *
+ */
 uint16_t BLE_TRCBPS_SendData(uint16_t connHandle, uint16_t len, uint8_t *p_data)
 {
     BLE_TRCBPS_ConnList_T *p_conn = NULL;
@@ -644,6 +803,17 @@ uint16_t BLE_TRCBPS_SendVendorCommand(uint16_t connHandle, uint8_t cmdId, uint16
     }
 }
 
+
+/**
+ * @brief Get the length of queued data in the Data pipe for a given connection handle.
+ *
+ * @param[in] connHandle                     Connection handle.
+ * @param[out] p_dataLength                  Pointer to store the length of the queued data.
+ *
+ * @retval MBA_RES_SUCCESS                   Successfully retrieved the data length.
+ * @retval MBA_RES_INVALID_PARA              Connection not established.
+ *
+ */
 uint16_t BLE_TRCBPS_GetDataLength(uint16_t connHandle, uint16_t *p_dataLength)
 {
     BLE_TRCBPS_ConnList_T *p_conn = NULL;
@@ -664,6 +834,18 @@ uint16_t BLE_TRCBPS_GetDataLength(uint16_t connHandle, uint16_t *p_dataLength)
     return MBA_RES_SUCCESS;
 }
 
+
+/**
+ * @brief Retrieve queued data from the Data pipe for a given connection handle.
+ *
+ * @param[in] connHandle                     Connection handle.
+ * @param[out] p_data                        Pointer to the data buffer
+ *
+ * @retval MBA_RES_SUCCESS                   Get the data successfully.
+ * @retval MBA_RES_INVALID_PARA              Connection not established.
+ * @retval MBA_RES_FAIL                      Queue is empty or other failure.
+ *
+ */
 uint16_t BLE_TRCBPS_GetData(uint16_t connHandle, uint8_t *p_data)
 {
     BLE_TRCBPS_ConnList_T *p_conn = NULL;
@@ -736,6 +918,14 @@ uint16_t BLE_TRCBPS_GetData(uint16_t connHandle, uint8_t *p_data)
     }
 }
 
+
+/**
+ * @brief Process control pipe for a BLE connection.
+ * 
+ * @param p_conn    Pointer to the BLE connection list.
+ * @param length    Length of the value to be processed.
+ * @param p_value   Pointer to the value to be processed.
+ */
 static void ble_trcbps_CtrlValue(BLE_TRCBPS_ConnList_T *p_conn, uint16_t length, uint8_t *p_value)
 {
     BLE_TRCBPS_Event_T evtPara;
@@ -754,6 +944,14 @@ static void ble_trcbps_CtrlValue(BLE_TRCBPS_ConnList_T *p_conn, uint16_t length,
     }
 }
 
+
+/**
+ * @brief Process the CCCD control for a BLE connection.
+ * 
+ * @param p_conn    Pointer to the BLE connection list.
+ * @param p_value   Pointer to the value to be processed.
+ * @retval uint8_t  Returns 0 on success, ATT_ERR_APPLICATION_ERROR on failure.
+ */
 static uint8_t ble_trcbps_CtrlCccd(BLE_TRCBPS_ConnList_T *p_conn, uint8_t *p_value)
 {
     uint16_t cccd;
@@ -785,6 +983,12 @@ static uint8_t ble_trcbps_CtrlCccd(BLE_TRCBPS_ConnList_T *p_conn, uint8_t *p_val
     return 0;
 }
 
+
+/**
+ * @brief Process GATT write events.
+ * 
+ * @param p_event   Pointer to the GATT event structure.
+ */
 static void ble_trcbps_GattsWriteProcess(GATT_Event_T *p_event)
 {
     uint8_t error = 0;
@@ -886,6 +1090,12 @@ static void ble_trcbps_GattsWriteProcess(GATT_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Process GATT events.
+ * 
+ * @param p_event   Pointer to the GATT event structure.
+ */
 static void ble_trcbps_GattEventProcess(GATT_Event_T *p_event)
 {
     BLE_TRCBPS_ConnList_T *p_conn = NULL;
@@ -923,6 +1133,12 @@ static void ble_trcbps_GattEventProcess(GATT_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Process GAP events.
+ * 
+ * @param p_event   Pointer to the GAP event structure.
+ */
 static void ble_trcbps_GapEventProcess(BLE_GAP_Event_T *p_event)
 {
     switch(p_event->eventId)
@@ -978,7 +1194,11 @@ static void ble_trcbps_GapEventProcess(BLE_GAP_Event_T *p_event)
     
 }
 
-
+/**
+ * @brief Process L2CAP events.
+ * 
+ * @param p_event Pointer to the L2CAP event structure.
+ */
 static void ble_trcbps_L2capEventProcess(BLE_L2CAP_Event_T *p_event)
 {
     switch (p_event->eventId)
@@ -1100,6 +1320,14 @@ static void ble_trcbps_L2capEventProcess(BLE_L2CAP_Event_T *p_event)
 }
 
 
+/**
+ * @brief Handles BLE_Stack events.
+ * 
+ * @note This function should be called when BLE Stack events occur.
+ *
+ * @param[in] p_stackEvent                  Pointer to the BLE Stack event data structure.
+ *
+*/
 void BLE_TRCBPS_BleEventHandler(STACK_Event_T *p_stackEvent)
 {
     switch (p_stackEvent->groupId)

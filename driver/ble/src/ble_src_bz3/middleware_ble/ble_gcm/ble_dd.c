@@ -31,12 +31,12 @@
     ble_dd.c
 
   Summary:
-    This file contains the BLE Database Discovery functions and event for application user.
+    Implements BLE Database Discovery functions and handles related events for the application layer.
 
   Description:
-    This file contains the BLE Database Discovery functions and event for application user.
-    The "BLE_DD_Init" function shall be called in the "APP_Initialize" function to 
-    initialize the this modules in the system.
+    This source file provides the necessary functions to perform BLE Database Discovery
+    and manage associated events within the application context. The "BLE_DD_Init" function
+    must be invoked within the "APP_Initialize" function to properly set up this module.
  *******************************************************************************/
 
 
@@ -48,6 +48,7 @@
 #include <string.h>
 #include "osal/osal_freertos_extend.h"
 #include "mba_error_defs.h"
+#include "ble_gap.h"
 #include "gatt.h"
 #include "ble_util/byte_stream.h"
 #include "ble_dd.h"
@@ -58,14 +59,14 @@
 // Section: Macros
 // *****************************************************************************
 // *****************************************************************************
+#define DISC_CHAR_UUID2_RSP_LENGTH                  0x07        // Length for UUID of 2 bytes
+#define DISC_CHAR_UUID16_RSP_LENGTH                 0x15        // Length for UUID of 16 bytes
 
-#define DISC_CHAR_UUID2_RSP_LENGTH                  0x07    /**< Length of handle-value pair of Characteristic Declaration with UUID length is 2 bytes. */
-#define DISC_CHAR_UUID16_RSP_LENGTH                 0x15    /**< Length of handle-value pair of Characteristic Declaration with UUID length is 16 bytes. */
-
+/* BLE Device Discovery States. */
 typedef enum BLE_DD_State_T
 {
-    BLE_DD_STATE_IDLE = 0x00U,                               /**< Default state (Disconnected). */
-    BLE_DD_STATE_CONNECTED                                  /**< Connected. */
+    BLE_DD_STATE_IDLE = 0x00U,                                  // Device is not connected (idle state)
+    BLE_DD_STATE_CONNECTED                                      // Device is connected. */
 } BLE_DD_State_T;
 
 // *****************************************************************************
@@ -73,36 +74,38 @@ typedef enum BLE_DD_State_T
 // Section: Data Types
 // *****************************************************************************
 // *****************************************************************************
-/**@brief The structure of service discovery buffer. */
+/* Structure for representing a single service discovery instance. */
 typedef struct BLE_DD_DiscInstance_T
 {
-    uint16_t                svcStartHandle;                     /**< Internal used. Service start handle. */
-    uint16_t                svcEndHandle;                       /**< Internal used. Service end handle. */
-    bool                    isSvcFound;                         /**< Internal used. Service is found or not in primary service discovery step. */
-    uint8_t                 queuedReqByProtocol;                /**< Internal used. Queued request if ATT protocol is busy. */
-    uint8_t                 queuedReqBySecurity;                /**< Internal used. Queued request if ATT is blocked by security. */
+    uint16_t                svcStartHandle;                     // Start handle of the service being discovered.
+    uint16_t                svcEndHandle;                       // End handle of the service being discovered.
+    bool                    isSvcFound;                         // Flag indicating whether the service was found during discovery.
+    uint8_t                 queuedReqByProtocol;                // Number of queued requests due to ATT protocol being busy.
+    uint8_t                 queuedReqBySecurity;                // Number of queued requests due to ATT security requirements.
 } BLE_DD_DiscInstance_T;
 
-/**@brief The structure of connection instance of database discovery module. */
+
+/* Structure for representing a connection instance for the database discovery process. */
 typedef struct BLE_DD_Conn_T
 {
-    BLE_DD_DiscInstance_T   *p_discInstance;                    /**< Pointer to the discovery buffer. */
-    BLE_DD_CharInfo_T       *p_charInfoList;                    /**< Pointer to characteristic information list for the discovering service. */
-    uint16_t                connHandle;                         /**< Connection handle. */
-    uint8_t                 connIndex;                          /**< The index of this connection in connection database array */
-    uint8_t                 gapRole;                            /**< GAP role of the connection. */
-    uint8_t                 discSvcIndex;                       /**< The index of service that the discovery is ongoing. */
-    bool                    isDiscovering;                      /**< Internal used. Record if discovery is ongoing. */
-    bool                    disableDiscovery;                   /**< Disable discovery of the connection. Application caches characteristic handles and no need to discover again. */
-    BLE_DD_State_T          state;                              /**< Connection state. */
+    BLE_DD_DiscInstance_T   *p_discInstance;                    // Pointer to the service discovery instance.
+    BLE_DD_CharInfo_T       *p_charInfoList;                    // Pointer to the list of characteristic information for the service being discovered.
+    uint16_t                connHandle;                         // Handle identifying the connection.
+    uint8_t                 connIndex;                          // Index of this connection within the connection database.
+    uint8_t                 gapRole;                            // GAP role associated with this connection.
+    uint8_t                 discSvcIndex;                       // Index of the service currently being discovered.
+    bool                    isDiscovering;                      // Indicates if the discovery process is active for this connection.
+    bool                    disableDiscovery;                   // If true, discovery is disabled for this connection, assuming characteristics are already known.
+    BLE_DD_State_T          state;                              // Current state of the connection in the discovery process.
 } BLE_DD_Conn_T;
 
-/**@brief The database of database discovery module. */
+
+/* Database for the database discovery module, holding all active connections and services to be discovered. */
 typedef struct BLE_DD_Ctrl_T
 {
-    BLE_DD_Conn_T *         conn[BLE_GAP_MAX_LINK_NBR];         /**< Connection database for database discovery module. */
-    BLE_DD_DiscSvc_T        services[BLE_DD_MAX_DISC_SVC_NUM];  /**< Service information registered by profile/application to be discovered. */
-    uint8_t                 numOfService;                       /**< Number of registered service. Maximum @ref BLE_DD_MAX_DISC_SVC_NUM */
+    BLE_DD_Conn_T *         conn[BLE_GAP_MAX_LINK_NBR];         // Array of pointers to connection instances, indexed by connection handle. 
+    BLE_DD_DiscSvc_T        services[BLE_DD_MAX_DISC_SVC_NUM];  // Array of services that are registered for discovery.
+    uint8_t                 numOfService;                       // The total number of services registered for discovery.
 } BLE_DD_Ctrl_T;
 
 // *****************************************************************************
@@ -110,14 +113,22 @@ typedef struct BLE_DD_Ctrl_T
 // Section: Local Variables
 // *****************************************************************************
 // *****************************************************************************
-static BLE_DD_EventCb_T            s_ddEventCb;            /* Events callback function. */
-static BLE_DD_Ctrl_T *             sp_ddCtrl;              /* DD module database. */
+static BLE_DD_EventCb_T            s_ddEventCb;                 // Callback function for database discovery events.
+static BLE_DD_Ctrl_T *             sp_ddCtrl;                   // Pointer to the database discovery module's structure.
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Functions
 // *****************************************************************************
 // *****************************************************************************
+/**
+ * @brief Frees a BLE device discovery connection object.
+ *
+ * This function releases the resources associated with a BLE device discovery
+ * connection object, including the discovery instance and the connection entry.
+ *
+ * @param[in] p_conn Pointer to the BLE_DD_Conn_T structure to be freed.
+ */
 static void ble_dd_FreeConn(BLE_DD_Conn_T *p_conn)
 {
     uint8_t i;
@@ -139,6 +150,17 @@ static void ble_dd_FreeConn(BLE_DD_Conn_T *p_conn)
     }
 }
 
+
+/**
+ * @brief Retrieves a free connection object for device discovery.
+ *
+ * This function searches for an available connection object and initializes it
+ * if found. It allocates memory for the connection object and sets the connection
+ * index.
+ *
+ * @retval Pointer to the initialized BLE_DD_Conn_T structure, or NULL if no free
+ *         connection object is available.
+ */
 static BLE_DD_Conn_T *ble_dd_GetFreeConn(void)
 {
     uint8_t i;
@@ -159,6 +181,17 @@ static BLE_DD_Conn_T *ble_dd_GetFreeConn(void)
     return NULL;
 }
 
+
+/**
+ * @brief Finds a connection object by its handle.
+ *
+ * This function searches for a connection object that matches the given connection
+ * handle.
+ *
+ * @param[in] connHandle The handle of the connection to find.
+ * 
+ * @retval Pointer to the BLE_DD_Conn_T structure if found, or NULL otherwise.
+ */
 static BLE_DD_Conn_T *ble_dd_FindConnByHandle(uint16_t connHandle)
 {
     uint8_t i;
@@ -174,6 +207,15 @@ static BLE_DD_Conn_T *ble_dd_FindConnByHandle(uint16_t connHandle)
     return NULL;
 }
 
+
+/**
+ * @brief Sends a discovery complete event for a connection.
+ *
+ * This function notifies the application that service discovery is complete for
+ * the specified connection.
+ *
+ * @param[in] p_conn Pointer to the BLE_DD_Conn_T structure representing the connection.
+ */
 static void ble_dd_SendDiscCompleteEvent(BLE_DD_Conn_T *p_conn)
 {
     if (s_ddEventCb != NULL)
@@ -186,6 +228,15 @@ static void ble_dd_SendDiscCompleteEvent(BLE_DD_Conn_T *p_conn)
     }
 }
 
+
+/**
+ * @brief Starts service discovery on a connection.
+ *
+ * This function initiates service discovery for the specified connection by
+ * sending a GATT discover primary service by UUID request.
+ *
+ * @param[in] p_conn Pointer to the BLE_DD_Conn_T structure representing the connection.
+ */
 static void ble_dd_ServiceDiscovery(BLE_DD_Conn_T *p_conn)
 {
     GATTC_DiscoverPrimaryServiceParams_T discParams;
@@ -204,6 +255,15 @@ static void ble_dd_ServiceDiscovery(BLE_DD_Conn_T *p_conn)
     }
 }
 
+
+/**
+ * @brief Continues to the next service discovery on a connection.
+ *
+ * This function moves to the next service discovery if available, or completes
+ * the discovery process if all services have been discovered.
+ *
+ * @param[in] p_conn Pointer to the BLE_DD_Conn_T structure representing the connection.
+ */
 static void ble_dd_NextServiceDiscovery(BLE_DD_Conn_T *p_conn)
 {
     p_conn->discSvcIndex++;
@@ -218,6 +278,18 @@ static void ble_dd_NextServiceDiscovery(BLE_DD_Conn_T *p_conn)
     }
 }
 
+
+/**
+ * @brief Starts descriptor discovery for characteristics on a connection.
+ *
+ * This function initiates descriptor discovery for all characteristics of the
+ * current service being discovered on the connection.
+ *
+ * @param[in] p_conn Pointer to the BLE_DD_Conn_T structure representing the connection.
+ * 
+ * @retval MBA_RES_SUCCESS if descriptor discovery is not needed or initiated successfully.
+ * @retval MBA_RES_FAIL if descriptor discovery could not be started.
+ */
 static uint16_t ble_dd_DescriptorDiscovery(BLE_DD_Conn_T *p_conn)
 {
     BLE_DD_DiscChar_T   **p_discChar;
@@ -243,6 +315,16 @@ static uint16_t ble_dd_DescriptorDiscovery(BLE_DD_Conn_T *p_conn)
     return result;
 }
 
+
+/**
+ * @brief Processes the characteristic discovery response.
+ *
+ * This function processes the response received from a characteristic discovery
+ * request and updates the characteristic information list.
+ *
+ * @param[in] p_conn    Pointer to the BLE_DD_Conn_T structure representing the connection.
+ * @param[in] p_event   Pointer to the GATT_Event_T structure containing the discovery response.
+ */
 static void ble_dd_ProcCharDiscResp(BLE_DD_Conn_T *p_conn, GATT_Event_T *p_event)
 {
     BLE_DD_DiscChar_T   **p_discChar;
@@ -283,6 +365,16 @@ static void ble_dd_ProcCharDiscResp(BLE_DD_Conn_T *p_conn, GATT_Event_T *p_event
     }
 }
 
+
+/**
+ * @brief Processes the descriptor discovery response.
+ *
+ * This function processes the response received from a descriptor discovery
+ * request and updates the characteristic information list with descriptor handles.
+ *
+ * @param[in] p_conn    Pointer to the BLE_DD_Conn_T structure representing the connection.
+ * @param[in] p_event   Pointer to the GATT_Event_T structure containing the discovery response.
+ */
 static void ble_dd_ProcDescDiscResp(BLE_DD_Conn_T *p_conn, GATT_Event_T *p_event)
 {
     BLE_DD_DiscChar_T   **p_discChar;
@@ -315,6 +407,16 @@ static void ble_dd_ProcDescDiscResp(BLE_DD_Conn_T *p_conn, GATT_Event_T *p_event
     }
 }
 
+
+/**
+ * @brief Handles BLE GAP events for device discovery.
+ *
+ * This function processes BLE GAP events relevant to device discovery, such as
+ * connection and disconnection events, and initiates service discovery if appropriate.
+ *
+ * @param[in] p_config  Pointer to the BLE_DD_Config_T structure containing configuration options.
+ * @param[in] p_event   Pointer to the BLE_GAP_Event_T structure containing the GAP event.
+ */
 static void ble_dd_StackEvtBleGapHandler(BLE_DD_Config_T *p_config, BLE_GAP_Event_T *p_event)
 {
     switch (p_event->eventId)
@@ -454,6 +556,15 @@ static void ble_dd_StackEvtBleGapHandler(BLE_DD_Config_T *p_config, BLE_GAP_Even
     }
 }
 
+
+/**
+ * @brief Handles BLE GATT client events for device discovery.
+ *
+ * This function processes BLE GATT client events relevant to device discovery,
+ * such as service, characteristic, and descriptor discovery responses.
+ *
+ * @param[in] p_event Pointer to the GATT_Event_T structure containing the GATT client event.
+ */
 static void ble_dd_StackEvtBleGattcHandler(GATT_Event_T *p_event)
 {
     switch (p_event->eventId)
@@ -679,6 +790,15 @@ static void ble_dd_StackEvtBleGattcHandler(GATT_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Initializes the BLE device discovery module.
+ *
+ * This function allocates and initializes the structure for the BLE
+ * device discovery module.
+ *
+ * @retval true if initialization is successful, false otherwise.
+ */
 bool BLE_DD_Init(void)
 {
     uint8_t i;
@@ -709,11 +829,32 @@ bool BLE_DD_Init(void)
     return true;
 }
 
+
+/**
+ * @brief Registers an event callback for the BLE device discovery module.
+ *
+ * This function sets the event callback function that will be called when
+ * device discovery events occur.
+ *
+ * @param[in] eventCb The callback function to register.
+ */
 void BLE_DD_EventRegister(BLE_DD_EventCb_T eventCb)
 {
     s_ddEventCb = eventCb;
 }
 
+
+/**
+ * @brief Registers a service for discovery.
+ *
+ * This function adds a service to the list of services to be discovered on a
+ * BLE connection.
+ *
+ * @param[in] p_discSvc Pointer to the BLE_DD_DiscSvc_T structure representing the service to register.
+ * 
+ * @retval MBA_RES_SUCCESS if the service is registered successfully
+ * @retval MBA_RES_FAIL otherwise.
+ */
 uint16_t BLE_DD_ServiceDiscoveryRegister(BLE_DD_DiscSvc_T *p_discSvc)
 {
     if (sp_ddCtrl->numOfService < BLE_DD_MAX_DISC_SVC_NUM)
@@ -728,6 +869,16 @@ uint16_t BLE_DD_ServiceDiscoveryRegister(BLE_DD_DiscSvc_T *p_discSvc)
     }
 }
 
+
+/**
+ * @brief Handles BLE stack events for the device discovery module.
+ *
+ * This function processes stack events and dispatches them to the appropriate
+ * GAP or GATT handler functions.
+ *
+ * @param[in] p_config Pointer to the BLE_DD_Config_T structure containing configuration options.
+ * @param[in] p_stackEvent Pointer to the STACK_Event_T structure containing the stack event.
+ */
 void BLE_DD_BleEventHandler(BLE_DD_Config_T *p_config, STACK_Event_T *p_stackEvent)
 {
     switch (p_stackEvent->groupId)
@@ -755,6 +906,18 @@ void BLE_DD_BleEventHandler(BLE_DD_Config_T *p_config, STACK_Event_T *p_stackEve
     }
 }
 
+
+/**
+ * @brief Restarts service discovery for a specific connection.
+ *
+ * This function re-initiates service discovery for a given connection handle.
+ *
+ * @param[in] connHandle The handle of the connection for which to restart service discovery.
+ * 
+ * @retval MBA_RES_SUCCESS if service discovery is restarted successfully.
+ * @retval MBA_RES_OOM if memory allocation fails.
+ * @retval MBA_RES_INVALID_PARA if the connection handle is invalid.
+ */
 uint16_t BLE_DD_RestartServicesDiscovery(uint16_t connHandle)
 {
     BLE_DD_Conn_T *p_conn;

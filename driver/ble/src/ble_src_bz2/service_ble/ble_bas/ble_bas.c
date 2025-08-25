@@ -31,12 +31,14 @@
     ble_bas.c
 
   Summary:
-    This file contains the BLE Battery Service functions for application user.
+    Implements the BLE Battery Service, providing battery level information
+    over BLE to connected devices.
 
   Description:
-    This file contains the BLE Battery Service functions for application user.
+    This source file includes the necessary functions to manage the BLE Battery 
+    Service as part of a BLE application. It allows for reporting the battery 
+    status to a connected BLE device.
  *******************************************************************************/
-
 
 // *****************************************************************************
 // *****************************************************************************
@@ -56,15 +58,16 @@
 // *****************************************************************************
 // *****************************************************************************
 
-#define BLE_BAS_BATTERY_LEVEL_0         0x00U                    /**< Percentage 0. */
-#define BLE_BAS_BATTERY_LEVEL_100       0x64U                    /**< Percentage 100. */
+#define BLE_BAS_MIN_KEY_SIZE            0x10U                    // The minimum key size for attribute permissions (BAS).
+#define BLE_BAS_BATTERY_LEVEL_0         0x00U                    // The minimum battery level (0%) in the BLE Battery Service.
+#define BLE_BAS_BATTERY_LEVEL_100       0x64U                    // The maximum battery level (100%) in the BLE Battery Service.
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Local Variables
 // *****************************************************************************
 // *****************************************************************************
-
+/* UUIDs for Battery Device Service and its Characteristics */
 static const uint8_t s_svcUuidBas[ATT_UUID_LENGTH_2] =                 {UINT16_TO_BYTES(UUID_BATTERY_SERVICE)};
 static const uint8_t s_chUuidBatLevel[ATT_UUID_LENGTH_2] =             {UINT16_TO_BYTES(UUID_BATTERY_LEVEL)};
 
@@ -133,6 +136,7 @@ static GATTS_Attribute_T s_basList[] = {
 };
 
 #ifdef BAS_BAT_LEVEL_NOTIFY_ENABLE
+/* CCCD settings for the Battery Service characteristics. */
 static const GATTS_CccdSetting_T s_basCccdSetting[] =
 {
     {BAS_HDL_CCCD_BAT_LEVEL, (NOTIFICATION)}
@@ -163,12 +167,31 @@ static GATTS_Service_T s_svcBas =
 // Section: Functions
 // *****************************************************************************
 // *****************************************************************************
-
+/**
+ * @brief Adds the BLE Battery Service to the GATT server.
+ *
+ * This function adds the BLE Battery Service to the BLE stack's GATT server,
+ * enabling the service to be discovered and accessed by remote BLE devices.
+ * 
+ * @retval MBA_RES_SUCCESS                    The BLE Battery service was successfully added.
+ * @retval MBA_RES_NO_RESOURCE                Insufficient resource to add the BLE Battery service.
+ *
+ */
 uint16_t BLE_BAS_Add(void)
 {
     return GATTS_AddService(&s_svcBas, (uint8_t)((uint16_t)BAS_END_HDL - (uint16_t)BAS_START_HDL + 1U));
 }
 
+
+/**
+ * @brief Sets the battery level for the BLE Battery Service.
+ *
+ * @param[in] batteryLevel                   The new battery level to set (0-100%).
+ *
+ * @retval MBA_RES_SUCCESS                   The battery level was successfully set.
+ * @retval MBA_RES_INVALID_PARA              The provided batteryLevel is out of the expected range.
+ *
+ */
 uint16_t BLE_BAS_SetBatteryLevel(uint8_t batteryLevel)
 {
     if (batteryLevel <= BLE_BAS_BATTERY_LEVEL_100)
@@ -182,9 +205,17 @@ uint16_t BLE_BAS_SetBatteryLevel(uint8_t batteryLevel)
     }
 }
 
+
+/**
+ * @brief Retrieves the current battery level from the BLE Battery Service.
+ *
+ * @param[in] p_batteryLevel                 Pointer to a variable where the battery level will be stored.
+ *
+ * @retval MBA_RES_SUCCESS                   The battery level was successfully retrieved.
+ *
+ */
 uint16_t BLE_BAS_GetBatteryLevel(uint8_t *p_batteryLevel)
 {
     *p_batteryLevel = s_batLevelVal[0];
     return MBA_RES_SUCCESS;
 }
-

@@ -90,6 +90,23 @@ def bleDevNameCheckComment(symbol, event):
 def gapConfigVisibility(symbol, event):
     symbol.setVisible(event["value"])
 
+def gapConfigVisibilityFirstLayerUnderBtVer(symbol, event):
+    if (symbol.getID() == event["id"]):
+        btVerSymbol = symbol.getComponent().getSymbolByID("BLE_SYS_BT_VER_SUPP")
+        symbol.setVisible(btVerSymbol.getValue())
+    else:
+        symbol.setVisible(event["value"])
+
+def gapConfigEnableUnderBtVer(symbol, event):
+    btVer = symbol.getComponent().getSymbolByID("BLE_SYS_BT_VER_SUPP").getValue()
+    if (symbol.getID() == 'GAP_SVC_ENC_DATA_KEY_MATL_EN'):
+        enFeature = symbol.getComponent().getSymbolByID("GAP_SVC_ENC_DATA_KEY_MATL").getValue()
+    # if BT Version is 6.0
+    if (btVer > 0 ) and (enFeature == True):
+        symbol.setValue(True)
+    else:
+        symbol.setValue(False)
+
 def gapLegacyAdvVisibility(symbol, event):
     global gapExtAdvEn
     global gapAdvertising
@@ -98,18 +115,27 @@ def gapLegacyAdvVisibility(symbol, event):
 def gapLegacyAdvEncDataVisibility(symbol, event):
     global gapExtAdvEn
     global gapAdvertising
-    encDataEn = symbol.getComponent().getSymbolByID('GAP_SVC_ENC_DATA_KEY_MATL').getValue()
+    encDataEn = symbol.getComponent().getSymbolByID('GAP_SVC_ENC_DATA_KEY_MATL_EN').getValue()
     symbol.setVisible(not gapExtAdvEn.getValue() and gapAdvertising.getValue() and encDataEn)
 
 def gapExtAdvEvtPropVisibility(symbol, event):
     symbol.setVisible(not event["value"] < 3)
 
 def gapExtAdvPhyOptionVisibility(symbol, event):
+    bVisible = False
     symID = symbol.getID()
-    if (symID == "GAP_PRI_ADV_PHY_OPTION") or (symID == "GAP_PRI_ADV_PHY_OPTION_2"):
-        symbol.setVisible(event["value"] == 1)
-    else:
-        symbol.setVisible(event["value"] == 2)
+    btVer = symbol.getComponent().getSymbolByID('BLE_SYS_BT_VER_SUPP').getValue()
+    # if BT Version is 6.0
+    if (btVer > 0):
+        if (symID == "GAP_PRI_ADV_PHY_OPTION"):
+            bVisible = (symbol.getComponent().getSymbolByID('GAP_PRI_ADV_PHY').getValue() == 1)
+        elif (symID == "GAP_PRI_ADV_PHY_OPTION_2"):
+            bVisible = (symbol.getComponent().getSymbolByID('GAP_PRI_ADV_PHY_2').getValue() == 1)
+        elif (symID == "GAP_SEC_ADV_PHY_OPTION"):
+            bVisible = (symbol.getComponent().getSymbolByID('GAP_SEC_ADV_PHY').getValue() == 2)
+        elif (symID == "GAP_SEC_ADV_PHY_OPTION_2"):
+            bVisible = (symbol.getComponent().getSymbolByID('GAP_SEC_ADV_PHY_2').getValue() == 2)
+    symbol.setVisible(bVisible)
 
 def gapExtAdvTxPwr(symbol, event):
     if event["id"] == "GAP_EXT_ADV_ADV_SET_2":
@@ -175,7 +201,7 @@ def gapGenExtAdvData(symbol):
         advertisingDataValue = symbol.getComponent().getSymbolByID("GAP_EXT_ADV_DATA_VALUE_2")
         advertisingDataOrigLen = symbol.getComponent().getSymbolByID("GAP_EXT_ADV_DATA_ORIG_LEN_2")
 
-    encDataKeyMatl = symbol.getComponent().getSymbolByID("GAP_SVC_ENC_DATA_KEY_MATL")
+    encDataKeyMatl = symbol.getComponent().getSymbolByID("GAP_SVC_ENC_DATA_KEY_MATL_EN")
 
     advDataList = []        # array of formatted hex bytes
     advDataLength = 0       # total number of bytes of advDataList
@@ -324,7 +350,7 @@ def gapGenExtScanRspData(symbol):
         scanRspDataValue = symbol.getComponent().getSymbolByID("GAP_EXT_SCAN_RSP_DATA_VALUE_2")
         scanRspDataOrigLen = symbol.getComponent().getSymbolByID("GAP_EXT_SCAN_RSP_DATA_ORIG_LEN_2")
        
-    encDataKeyMatl = symbol.getComponent().getSymbolByID("GAP_SVC_ENC_DATA_KEY_MATL")
+    encDataKeyMatl = symbol.getComponent().getSymbolByID("GAP_SVC_ENC_DATA_KEY_MATL_EN")
        
     # build the GAP_SCAN_RSP_DATA string here
     ''' If a GAP data element is enabled, add the formatted hex data.
@@ -456,7 +482,7 @@ def gapGenAdvData(symbol):
     advertisingDataValue = symbol.getComponent().getSymbolByID("GAP_ADV_DATA_VALUE")
     advertisingDataOrigLen = symbol.getComponent().getSymbolByID("GAP_ADV_DATA_ORIG_LEN")
     
-    encDataKeyMatl = symbol.getComponent().getSymbolByID("GAP_SVC_ENC_DATA_KEY_MATL")
+    encDataKeyMatl = symbol.getComponent().getSymbolByID("GAP_SVC_ENC_DATA_KEY_MATL_EN")
     
     # build the GAP_ADV_DATA string here
     ''' If a GAP data element is enabled, add the formatted hex data.
@@ -595,7 +621,7 @@ def gapGenScanRspData(symbol):
     scanRspDataLen = symbol.getComponent().getSymbolByID("GAP_SCAN_RSP_DATA_LEN")
     scanRspDataOrigLen = symbol.getComponent().getSymbolByID("GAP_SCAN_RSP_DATA_ORIG_LEN")
 
-    encDataKeyMatl = symbol.getComponent().getSymbolByID("GAP_SVC_ENC_DATA_KEY_MATL")
+    encDataKeyMatl = symbol.getComponent().getSymbolByID("GAP_SVC_ENC_DATA_KEY_MATL_EN")
 
     # build the GAP_SCAN_RSP_DATA string here
     ''' If a GAP data element is enabled, add the formatted hex data.
@@ -725,6 +751,12 @@ def sendDeepSleepEnableMessage(dsEnable):
     Database.sendMessage(devSupp, "DEEP_SLEEP_ENABLE", {"target": devSupp,
                                                     "source": "BLE_STACK_LIB","isEnabled":dsEnable})
 
+global sendDeepSleepRetRamMessage
+def sendDeepSleepRetRamMessage():
+    stkRamSize = 1024
+
+    Database.sendMessage(devSupp, "BLE_DEEP_SLEEP_RET_RAM", {"target": devSupp,
+                                                    "source": "BLE_STACK_LIB","stkRamSize":stkRamSize})
 
 def deepSleepEnabledChange(symbol, event):
     global sysSleepEn
@@ -732,7 +764,7 @@ def deepSleepEnabledChange(symbol, event):
     global gapAdvertising
     dsadvEn = False
 
-    if gapExtAdvEn.getValue()==False and gapAdvertising.getValue()==True:
+    if gapAdvertising.getValue()==True:
         symbol.setVisible(True)
         if symbol.getValue()==True:
             dsadvEn = True
@@ -742,7 +774,16 @@ def deepSleepEnabledChange(symbol, event):
     if dsadvEn == True:
         sendDeepSleepEnableMessage(True)
     else:
-        sendDeepSleepEnableMessage(False)
+        sendDeepSleepEnableMessage(False)       
+
+
+def deepSleepAdvHdlVisible(symbol, event):
+    global gapExtAdvEn
+    global gapDsadvEn
+    
+    symbol.setVisible(gapExtAdvEn.getValue() and gapDsadvEn.getValue())
+    
+    sendDeepSleepRetRamMessage()
 
 global getValueLen
 def getValueLen(intValue):
@@ -917,11 +958,13 @@ gapSvcPeri.setDependencies(gapConfigVisibility, ["GAP_SVC_PERI_PRE_CP"])
 gapSvc = libBLEStackComponent.createBooleanSymbol('GAP_SVC_ENC_DATA_KEY_MATL', menuGAP)
 gapSvc.setLabel('Enable Encrypted Data Key Material')
 gapSvc.setDefaultValue(False)
-if devFamily == "pic32cx_bz6_family":
-    gapSvc.setVisible(True)
-else:
-    gapSvc.setVisible(False)
+gapSvc.setVisible(devDefaultBtSupp != "SUPP_BT_5_2")
+gapSvc.setDependencies(gapConfigVisibilityFirstLayerUnderBtVer, ["GAP_SVC_ENC_DATA_KEY_MATL", "BLE_SYS_BT_VER_SUPP"])
 
+gapSvcEncDataKeyMatlEn = libBLEStackComponent.createBooleanSymbol('GAP_SVC_ENC_DATA_KEY_MATL_EN', gapSvc)
+gapSvcEncDataKeyMatlEn.setDefaultValue(False)
+gapSvcEncDataKeyMatlEn.setVisible(False)
+gapSvcEncDataKeyMatlEn.setDependencies(gapConfigEnableUnderBtVer, ["GAP_SVC_ENC_DATA_KEY_MATL", "BLE_SYS_BT_VER_SUPP"])
 
 edkmC = libBLEStackComponent.createStringSymbol("GAP_SVC_EDKM_KEY_C",  gapSvc)
 edkmC.setVisible(False)
@@ -931,14 +974,14 @@ edkm = libBLEStackComponent.createStringSymbol("GAP_SVC_EDKM_KEY",  gapSvc)
 edkm.setLabel("Shared session key")
 edkm.setDefaultValue("196A0AD12A61201E136E2ED112DAA957")
 edkm.setVisible(False)
-edkm.setDependencies(gapConfigVisibility, ["GAP_SVC_ENC_DATA_KEY_MATL"])
+edkm.setDependencies(gapConfigVisibility, ["GAP_SVC_ENC_DATA_KEY_MATL_EN"])
 
 gapGenCChar(edkmC, edkm.getDefaultValue())
 
 edkm = libBLEStackComponent.createCommentSymbol("GAP_SVC_EDKM_KEY_CMNT", gapSvc)
 edkm.setLabel("**** Shared session key must be 16 bytes and should input in hexidecimal(LSB). ****")
 edkm.setVisible(False)
-edkm.setDependencies(gapConfigVisibility, ["GAP_SVC_ENC_DATA_KEY_MATL"])
+edkm.setDependencies(gapConfigVisibility, ["GAP_SVC_ENC_DATA_KEY_MATL_EN"])
 
 edkmC = libBLEStackComponent.createStringSymbol("GAP_SVC_EDKM_IV_C",  gapSvc)
 edkmC.setVisible(False)
@@ -948,23 +991,21 @@ edkm = libBLEStackComponent.createStringSymbol("GAP_SVC_EDKM_IV",  gapSvc)
 edkm.setLabel("Initialization vector")
 edkm.setDefaultValue("9E7A00EFB17AE746")
 edkm.setVisible(False)
-edkm.setDependencies(gapConfigVisibility, ["GAP_SVC_ENC_DATA_KEY_MATL"])
+edkm.setDependencies(gapConfigVisibility, ["GAP_SVC_ENC_DATA_KEY_MATL_EN"])
 
 gapGenCChar(edkmC, edkm.getDefaultValue())
 
 edkm = libBLEStackComponent.createCommentSymbol("GAP_SVC_EDKM_IV_CMNT", gapSvc)
 edkm.setLabel("**** Initialization vector must be 8 bytes and should input in hexidecimal(LSB). ****")
 edkm.setVisible(False)
-edkm.setDependencies(gapConfigVisibility, ["GAP_SVC_ENC_DATA_KEY_MATL"])
+edkm.setDependencies(gapConfigVisibility, ["GAP_SVC_ENC_DATA_KEY_MATL_EN"])
 
 # LE GATT Security Levels
 gapSvc = libBLEStackComponent.createBooleanSymbol('GAP_SVC_LE_GATT_SEC_LVLS', menuGAP)
 gapSvc.setLabel('Enable LE GATT Security Levels')
 gapSvc.setDefaultValue(False)
-if devFamily == "pic32cx_bz6_family":
-    gapSvc.setVisible(True)
-else:
-    gapSvc.setVisible(False)
+gapSvc.setVisible(devDefaultBtSupp != "SUPP_BT_5_2")
+gapSvc.setDependencies(gapConfigVisibilityFirstLayerUnderBtVer, ["GAP_SVC_LE_GATT_SEC_LVLS", "BLE_SYS_BT_VER_SUPP"])
 
 # Privacy
 gapPrivacy = libBLEStackComponent.createBooleanSymbol('BOOL_GAP_PRIVACY', menuGAP)
@@ -1088,6 +1129,15 @@ gapAdvFiltPolicy.setDefaultValue(0)
 gapAdvFiltPolicy.setOutputMode('Key')
 gapAdvFiltPolicy.setDisplayMode('Description')
 gapAdvFiltPolicy.setDependencies(gapLegacyAdvVisibility, ["BOOL_GAP_EXT_ADV","GAP_ADVERTISING"])
+
+
+# Periodic Advertising
+gapPeriodicAdv = libBLEStackComponent.createBooleanSymbol('BOOL_GAP_PERIODIC_ADV', gapExtAdvEn)
+gapPeriodicAdv.setLabel('Enable Periodic Advertising')
+gapPeriodicAdv.setDefaultValue(False)
+gapPeriodicAdv.setVisible(False)
+gapPeriodicAdv.setDescription("Enable Periodic Advertising")
+gapPeriodicAdv.setDependencies(gapConfigVisibility, ["BOOL_GAP_EXT_ADV"])
 
 
 # Advertising Set
@@ -1214,11 +1264,11 @@ gapExtPriAdvPhyOpt.addKey('BLE_GAP_CODED_PHY_HOST_REQUIRE_S8', '4', 'Require S=8
 gapExtPriAdvPhyOpt.setDefaultValue(0)
 gapExtPriAdvPhyOpt.setOutputMode('Key')
 gapExtPriAdvPhyOpt.setDisplayMode('Description')
-if devFamily == "pic32cx_bz6_family":
-    gapExtPriAdvPhyOpt.setVisible(gapExtPriAdvPhy.getDefaultValue() == 1)
-    gapExtPriAdvPhyOpt.setDependencies(gapExtAdvPhyOptionVisibility, ["GAP_PRI_ADV_PHY"])
-else:
+if devDefaultBtSupp == "SUPP_BT_5_2":
     gapExtPriAdvPhyOpt.setVisible(False)
+else:
+    gapExtPriAdvPhyOpt.setVisible(gapExtPriAdvPhy.getDefaultValue() == 1)  
+gapExtPriAdvPhyOpt.setDependencies(gapExtAdvPhyOptionVisibility, ["BLE_SYS_BT_VER_SUPP", "GAP_PRI_ADV_PHY"])
 
 
 # Secondary Advertising Max Skip
@@ -1251,11 +1301,11 @@ gapExtSecAdvPhyOpt.addKey('BLE_GAP_CODED_PHY_HOST_REQUIRE_S8', '4', 'Require S=8
 gapExtSecAdvPhyOpt.setDefaultValue(0)
 gapExtSecAdvPhyOpt.setOutputMode('Key')
 gapExtSecAdvPhyOpt.setDisplayMode('Description')
-if devFamily == "pic32cx_bz6_family":
-    gapExtSecAdvPhyOpt.setVisible(gapExtSecAdvPhy.getDefaultValue() == 2)
-    gapExtSecAdvPhyOpt.setDependencies(gapExtAdvPhyOptionVisibility, ["GAP_SEC_ADV_PHY"])
-else:
+if devDefaultBtSupp == "SUPP_BT_5_2":
     gapExtSecAdvPhyOpt.setVisible(False)
+else:
+    gapExtSecAdvPhyOpt.setVisible(gapExtSecAdvPhy.getDefaultValue() == 2)  
+gapExtSecAdvPhyOpt.setDependencies(gapExtAdvPhyOptionVisibility, ["BLE_SYS_BT_VER_SUPP", "GAP_SEC_ADV_PHY"])
 
 
 # Advertising SID
@@ -1414,7 +1464,7 @@ gapExtAdvDataEncDataEn = libBLEStackComponent.createBooleanSymbol('GAP_EXT_ADV_D
 gapExtAdvDataEncDataEn.setLabel('Encrypted Data')
 gapExtAdvDataEncDataEn.setDefaultValue(False)
 gapExtAdvDataEncDataEn.setVisible(False)
-gapExtAdvDataEncDataEn.setDependencies(gapConfigVisibility, ["GAP_SVC_ENC_DATA_KEY_MATL"])
+gapExtAdvDataEncDataEn.setDependencies(gapConfigVisibility, ["GAP_SVC_ENC_DATA_KEY_MATL_EN"])
 
 
 # Ext Advertising Encrypted Data
@@ -1449,7 +1499,7 @@ gapExtAdvertisingData.setDependencies(gapSetExtAdvData, ["GAP_EXT_ADV_DATA_FLAG_
                                                    "GAP_EXT_ADV_DATA_SERVICE_DATA",
                                                    "GAP_EXT_ADV_DATA_MSD_EN", "GAP_EXT_ADV_DATA_MSD", "GAP_EXT_ADV_DATA_MSD_CID",
                                                    "GAP_EXT_ADV_DATA_UDD_EN", "GAP_EXT_ADV_DATA_UDD",
-                                                   "GAP_SVC_ENC_DATA_KEY_MATL", "GAP_EXT_ADV_DATA_ED_EN", "GAP_EXT_ADV_DATA_ED"])
+                                                   "GAP_SVC_ENC_DATA_KEY_MATL_EN", "GAP_EXT_ADV_DATA_ED_EN", "GAP_EXT_ADV_DATA_ED"])
 
 
 # Ext Advertising Data Length
@@ -1594,7 +1644,7 @@ gapExtScanRspDataEncDataEn = libBLEStackComponent.createBooleanSymbol('GAP_EXT_S
 gapExtScanRspDataEncDataEn.setLabel('Encrypted Data')
 gapExtScanRspDataEncDataEn.setDefaultValue(False)
 gapExtScanRspDataEncDataEn.setVisible(False)
-gapExtScanRspDataEncDataEn.setDependencies(gapConfigVisibility, ["GAP_SVC_ENC_DATA_KEY_MATL"])
+gapExtScanRspDataEncDataEn.setDependencies(gapConfigVisibility, ["GAP_SVC_ENC_DATA_KEY_MATL_EN"])
 
 # Ext Scan Response Encrypted Data
 gapExtScanRspDataEncData = libBLEStackComponent.createStringSymbol("GAP_EXT_SCAN_RSP_DATA_ED", gapExtScanRspDataEncDataEn)
@@ -1627,7 +1677,7 @@ gapExtScanRspData.setDependencies(gapSetExtScanRspData, ["GAP_EXT_SCAN_RSP_DATA_
                                                    "GAP_EXT_SCAN_RSP_DATA_SERVICE_DATA",
                                                    "GAP_EXT_SCAN_RSP_DATA_MSD_EN", "GAP_EXT_SCAN_RSP_DATA_MSD", "GAP_EXT_SCAN_RSP_DATA_MSD_CID",
                                                    "GAP_EXT_SCAN_RSP_DATA_UDD_EN", "GAP_EXT_SCAN_RSP_DATA_UDD"
-                                                   "GAP_SVC_ENC_DATA_KEY_MATL","GAP_EXT_SCAN_RSP_DATA_ED_EN", "GAP_EXT_SCAN_RSP_DATA_ED"])
+                                                   "GAP_SVC_ENC_DATA_KEY_MATL_EN","GAP_EXT_SCAN_RSP_DATA_ED_EN", "GAP_EXT_SCAN_RSP_DATA_ED"])
 
 # Ext Scan Response Data Length
 gapExtScanRspDataLen = libBLEStackComponent.createIntegerSymbol("GAP_EXT_SCAN_RSP_DATA_LEN", gapExtAdvAdvSet)
@@ -1786,11 +1836,11 @@ gapExtPriAdvPhyOpt2.addKey('BLE_GAP_CODED_PHY_HOST_REQUIRE_S8', '4', 'Require S=
 gapExtPriAdvPhyOpt2.setDefaultValue(0)
 gapExtPriAdvPhyOpt2.setOutputMode('Key')
 gapExtPriAdvPhyOpt2.setDisplayMode('Description')
-if devFamily == "pic32cx_bz6_family":
-    gapExtPriAdvPhyOpt2.setVisible(gapExtPriAdvPhy2.getDefaultValue() == 1)
-    gapExtPriAdvPhyOpt2.setDependencies(gapExtAdvPhyOptionVisibility, ["GAP_PRI_ADV_PHY_2"])
-else:
+if devDefaultBtSupp == "SUPP_BT_5_2":
     gapExtPriAdvPhyOpt2.setVisible(False)
+else:
+    gapExtPriAdvPhyOpt2.setVisible(gapExtPriAdvPhy2.getDefaultValue() == 1)  
+gapExtPriAdvPhyOpt2.setDependencies(gapExtAdvPhyOptionVisibility, ["BLE_SYS_BT_VER_SUPP", "GAP_PRI_ADV_PHY_2"])
 
 
 # Secondary Advertising Max Skip
@@ -1827,11 +1877,11 @@ gapExtSecAdvPhyOpt2.addKey('BLE_GAP_CODED_PHY_HOST_REQUIRE_S8', '4', 'Require S=
 gapExtSecAdvPhyOpt2.setDefaultValue(0)
 gapExtSecAdvPhyOpt2.setOutputMode('Key')
 gapExtSecAdvPhyOpt2.setDisplayMode('Description')
-if devFamily == "pic32cx_bz6_family":
-    gapExtSecAdvPhyOpt2.setVisible(gapExtSecAdvPhy2.getDefaultValue() == 2)
-    gapExtSecAdvPhyOpt2.setDependencies(gapExtAdvPhyOptionVisibility, ["GAP_SEC_ADV_PHY_2"])
-else:
+if devDefaultBtSupp == "SUPP_BT_5_2":
     gapExtSecAdvPhyOpt2.setVisible(False)
+else:
+    gapExtSecAdvPhyOpt2.setVisible(gapExtSecAdvPhy2.getDefaultValue() == 2)  
+gapExtSecAdvPhyOpt2.setDependencies(gapExtAdvPhyOptionVisibility, ["BLE_SYS_BT_VER_SUPP", "GAP_SEC_ADV_PHY_2"])
 
 
 # Advertising SID
@@ -2008,7 +2058,7 @@ gapExtAdvDataEncDataEn = libBLEStackComponent.createBooleanSymbol('GAP_EXT_ADV_D
 gapExtAdvDataEncDataEn.setLabel('Encrypted Data')
 gapExtAdvDataEncDataEn.setDefaultValue(False)
 gapExtAdvDataEncDataEn.setVisible(False)
-gapExtAdvDataEncDataEn.setDependencies(gapConfigVisibility, ["GAP_SVC_ENC_DATA_KEY_MATL"])
+gapExtAdvDataEncDataEn.setDependencies(gapConfigVisibility, ["GAP_SVC_ENC_DATA_KEY_MATL_EN"])
 
 
 # Ext Advertising Encrypted Data
@@ -2044,7 +2094,7 @@ gapExtAdvertisingData.setDependencies(gapSetExtAdvData, ["GAP_EXT_ADV_DATA_FLAG_
                                                    "GAP_EXT_ADV_DATA_SERVICE_DATA_2",
                                                    "GAP_EXT_ADV_DATA_MSD_EN_2", "GAP_EXT_ADV_DATA_MSD_2", "GAP_EXT_ADV_DATA_MSD_CID_2",
                                                    "GAP_EXT_ADV_DATA_UDD_EN_2", "GAP_EXT_ADV_DATA_UDD_2",
-                                                   "GAP_SVC_ENC_DATA_KEY_MATL", "GAP_EXT_ADV_DATA_ED_EN_2", "GAP_EXT_ADV_DATA_ED_2"])
+                                                   "GAP_SVC_ENC_DATA_KEY_MATL_EN", "GAP_EXT_ADV_DATA_ED_EN_2", "GAP_EXT_ADV_DATA_ED_2"])
 
 # Ext Advertising Data Length
 gapExtAdvertisingDataLen = libBLEStackComponent.createIntegerSymbol("GAP_EXT_ADV_DATA_LEN_2", gapExtAdvAdvSet2)
@@ -2190,7 +2240,7 @@ gapExtScanRspDataEncDataEn = libBLEStackComponent.createBooleanSymbol('GAP_EXT_S
 gapExtScanRspDataEncDataEn.setLabel('Encrypted Data')
 gapExtScanRspDataEncDataEn.setDefaultValue(False)
 gapExtScanRspDataEncDataEn.setVisible(False)
-gapExtScanRspDataEncDataEn.setDependencies(gapConfigVisibility, ["GAP_SVC_ENC_DATA_KEY_MATL"])
+gapExtScanRspDataEncDataEn.setDependencies(gapConfigVisibility, ["GAP_SVC_ENC_DATA_KEY_MATL_EN"])
 
 # Ext Scan Response Encrypted Data
 gapExtScanRspDataEncData = libBLEStackComponent.createStringSymbol("GAP_EXT_SCAN_RSP_DATA_ED_2", gapExtScanRspDataEncDataEn)
@@ -2222,7 +2272,7 @@ gapExtScanRspData.setDependencies(gapSetExtScanRspData, ["GAP_EXT_SCAN_RSP_DATA_
                                                    "GAP_EXT_SCAN_RSP_DATA_SERVICE_DATA_2", 
                                                    "GAP_EXT_SCAN_RSP_DATA_MSD_EN_2", "GAP_EXT_SCAN_RSP_DATA_MSD_2", "GAP_EXT_SCAN_RSP_DATA_MSD_CID_2",
                                                    "GAP_EXT_SCAN_RSP_DATA_UDD_EN_2", "GAP_EXT_SCAN_RSP_DATA_UDD_2",
-                                                   "GAP_SVC_ENC_DATA_KEY_MATL","GAP_EXT_SCAN_RSP_DATA_ED_EN_2", "GAP_EXT_SCAN_RSP_DATA_ED_2"])
+                                                   "GAP_SVC_ENC_DATA_KEY_MATL_EN","GAP_EXT_SCAN_RSP_DATA_ED_EN_2", "GAP_EXT_SCAN_RSP_DATA_ED_2"])
 
 # Ext Advertising Data Length
 gapExtScanRspDataLen = libBLEStackComponent.createIntegerSymbol("GAP_EXT_SCAN_RSP_DATA_LEN_2", gapExtAdvAdvSet2)
@@ -2402,7 +2452,7 @@ gapAdvDataEncDataEn = libBLEStackComponent.createBooleanSymbol('GAP_ADV_DATA_ED_
 gapAdvDataEncDataEn.setLabel('Encrypted Data')
 gapAdvDataEncDataEn.setDefaultValue(False)
 gapAdvDataEncDataEn.setVisible(False)
-gapAdvDataEncDataEn.setDependencies(gapLegacyAdvEncDataVisibility, ["BOOL_GAP_EXT_ADV","GAP_ADVERTISING","GAP_SVC_ENC_DATA_KEY_MATL"])
+gapAdvDataEncDataEn.setDependencies(gapLegacyAdvEncDataVisibility, ["BOOL_GAP_EXT_ADV","GAP_ADVERTISING","GAP_SVC_ENC_DATA_KEY_MATL_EN"])
 
 
 # Advertising Encrypted Data
@@ -2438,7 +2488,7 @@ gapAdvertisingData.setDependencies(gapSetAdvData, ["GAP_ADV_DATA_FLAG_EN", "GAP_
                                                    "GAP_ADV_DATA_SERVICE_DATA",
                                                    "GAP_ADV_DATA_MSD_EN", "GAP_ADV_DATA_MSD", "GAP_ADV_DATA_MSD_CID",
                                                    "GAP_ADV_DATA_UDD_EN", "GAP_ADV_DATA_UDD",
-                                                   "GAP_SVC_ENC_DATA_KEY_MATL", "GAP_ADV_DATA_ED_EN", "GAP_ADV_DATA_ED"])
+                                                   "GAP_SVC_ENC_DATA_KEY_MATL_EN", "GAP_ADV_DATA_ED_EN", "GAP_ADV_DATA_ED"])
 
 # Advertising Data length
 gapAdvertisingDataLen = libBLEStackComponent.createIntegerSymbol("GAP_ADV_DATA_LEN", gapAdvertising)
@@ -2592,7 +2642,7 @@ gapScanRspDataEncDataEn = libBLEStackComponent.createBooleanSymbol('GAP_SCAN_RSP
 gapScanRspDataEncDataEn.setLabel('Encrypted Data')
 gapScanRspDataEncDataEn.setDefaultValue(False)
 gapScanRspDataEncDataEn.setVisible(False)
-gapScanRspDataEncDataEn.setDependencies(gapLegacyAdvEncDataVisibility, ["BOOL_GAP_EXT_ADV","GAP_ADVERTISING","GAP_SVC_ENC_DATA_KEY_MATL"])
+gapScanRspDataEncDataEn.setDependencies(gapLegacyAdvEncDataVisibility, ["BOOL_GAP_EXT_ADV","GAP_ADVERTISING","GAP_SVC_ENC_DATA_KEY_MATL_EN"])
 
 # Scan Response Encrypted Data
 gapScanRspDataEncData = libBLEStackComponent.createStringSymbol("GAP_SCAN_RSP_DATA_ED", gapScanRspDataEncDataEn)
@@ -2626,7 +2676,7 @@ gapScanRspData.setDependencies(gapSetScanRspData, ["GAP_SCAN_RSP_DATA_LOCAL_NAME
                                                    "GAP_SCAN_RSP_DATA_SERVICE_DATA",
                                                    "GAP_SCAN_RSP_DATA_MSD_EN", "GAP_SCAN_RSP_DATA_MSD", "GAP_SCAN_RSP_DATA_MSD_CID",
                                                    "GAP_SCAN_RSP_DATA_UDD_EN", "GAP_SCAN_RSP_DATA_UDD",
-                                                   "GAP_SVC_ENC_DATA_KEY_MATL","GAP_SCAN_RSP_DATA_ED_EN", "GAP_SCAN_RSP_DATA_ED"])
+                                                   "GAP_SVC_ENC_DATA_KEY_MATL_EN","GAP_SCAN_RSP_DATA_ED_EN", "GAP_SCAN_RSP_DATA_ED"])
 
 # Scan Response Data length
 gapScanRspDataLen = libBLEStackComponent.createIntegerSymbol("GAP_SCAN_RSP_DATA_LEN", gapAdvertising)
@@ -2652,8 +2702,16 @@ gapDsadvEn.setLabel('Enable Deep Sleep Advertising')
 gapDsadvEn.setDescription('Enable Deep Sleep Advertising')
 gapDsadvEn.setDefaultValue(False)
 gapDsadvEn.setVisible(True)
-gapDsadvEn.setDependencies(deepSleepEnabledChange, ["GAP_DSADV_EN","BOOL_GAP_EXT_ADV","GAP_ADVERTISING"])
+gapDsadvEn.setDependencies(deepSleepEnabledChange, ["GAP_DSADV_EN", "GAP_ADVERTISING"])
 
+# Advertising Handle
+gapExtAdvAdvHandle = libBLEStackComponent.createIntegerSymbol("GAP_DSADV_ADV_HANDLE", gapDsadvEn)
+gapExtAdvAdvHandle.setLabel("Advertising Handle")
+gapExtAdvAdvHandle.setDefaultValue(0x00)
+gapExtAdvAdvHandle.setMin(0x00)
+gapExtAdvAdvHandle.setMax(0xEF)
+gapExtAdvAdvHandle.setVisible(False)
+gapExtAdvAdvHandle.setDependencies(deepSleepAdvHdlVisible, ["GAP_DSADV_EN","BOOL_GAP_EXT_ADV"])
 
 # Scan setting
 global gapScan
@@ -2904,6 +2962,13 @@ gapExtCentralRole.setDefaultValue(False)
 gapExtCentralRole.setVisible(False)
 gapExtCentralRole.setDescription("Enable Extended Central")
 gapExtCentralRole.setDependencies(gapConfigVisibility, ["GAP_CENTRAL"])
+
+# Synchronization
+gapSync = libBLEStackComponent.createBooleanSymbol('BOOL_GAP_SYNC', menuGAP)
+gapSync.setLabel('Enable Synchronization')
+gapSync.setDefaultValue(False)
+gapSync.setVisible(True)
+gapSync.setDescription("Enable Synchronization")
 
 # Direct Test Mode
 gapDirectTestMode = libBLEStackComponent.createBooleanSymbol('GAP_DIRECT_TEST_MODE', menuGAP)

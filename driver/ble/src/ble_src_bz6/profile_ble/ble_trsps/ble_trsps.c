@@ -138,7 +138,7 @@ typedef struct BLE_TRSPS_ConnList_T
 // *****************************************************************************
 
 static BLE_TRSPS_EventCb_T      bleTrspsProcess;                // Callback function type for BLE Transparent Service events processing.
-static BLE_TRSPS_ConnList_T     s_trsConnList[BLE_TRSPS_MAX_CONN_NBR];// An array to keep track of the connection list for BLE Transparent Service.
+static BLE_TRSPS_ConnList_T     *sp_trsConnList[BLE_TRSPS_MAX_CONN_NBR];// An array to keep track of the connection list for BLE Transparent Service.
 
 
 // Assert to ensure that the total initial credits multiplied by the maximum number of connections
@@ -151,17 +151,6 @@ MW_ASSERT((BLE_TRSPS_MAX_CONN_NBR*BLE_TRSPS_INIT_CREDIT)==BLE_TRSPS_MAX_BUF_IN);
 // Section: Functions
 // *****************************************************************************
 // *****************************************************************************
-/**
- * @brief Initialize a BLE Transparent Service connection list.
- *
- * @param p_conn Pointer to the BLE Transparent Service connection list to initialize.
- */
-static void ble_trsps_InitConnList(BLE_TRSPS_ConnList_T *p_conn)
-{
-    (void)memset((uint8_t *)p_conn, 0, sizeof(BLE_TRSPS_ConnList_T));
-    p_conn->attMtu= BLE_ATT_DEFAULT_MTU_LEN;
-}
-
 
 /**
  * @brief Retrieve a connection list entry by connection handle.
@@ -174,14 +163,13 @@ static BLE_TRSPS_ConnList_T * ble_trsps_GetConnListByHandle(uint16_t connHandle)
 {
     uint8_t i;
 
-    for(i=0; i<BLE_TRSPS_MAX_CONN_NBR;i++)
+    for(i=0; i<BLE_TRSPS_MAX_CONN_NBR; i++)
     {
-        if ((s_trsConnList[i].state == BLE_TRSPS_STATE_CONNECTED) && (s_trsConnList[i].connHandle == connHandle))
+        if ((sp_trsConnList[i] != NULL) && (sp_trsConnList[i]->state == BLE_TRSPS_STATE_CONNECTED) && (sp_trsConnList[i]->connHandle == connHandle))
         {
-            return &s_trsConnList[i];
+            return sp_trsConnList[i];
         }
     }
-
     return NULL;
 }
 
@@ -194,19 +182,44 @@ static BLE_TRSPS_ConnList_T * ble_trsps_GetConnListByHandle(uint16_t connHandle)
 static BLE_TRSPS_ConnList_T *ble_trsps_GetFreeConnList(void)
 {
     uint8_t i;
+    BLE_TRSPS_ConnList_T *p_conn = NULL;
 
-    for(i=0; i<BLE_TRSPS_MAX_CONN_NBR;i++)
+    for(i = 0; i < BLE_TRSPS_MAX_CONN_NBR; i++)
     {
-        if (s_trsConnList[i].state == BLE_TRSPS_STATE_IDLE)
+        if (sp_trsConnList[i] == NULL)
         {
-            s_trsConnList[i].state = BLE_TRSPS_STATE_CONNECTED;
-            return &s_trsConnList[i];
+            sp_trsConnList[i] = OSAL_Malloc(sizeof(BLE_TRSPS_ConnList_T));
+            p_conn = sp_trsConnList[i];
+            if (p_conn != NULL)
+            {
+                (void)memset(p_conn, 0, sizeof(BLE_TRSPS_ConnList_T));
+                p_conn->attMtu    = BLE_ATT_DEFAULT_MTU_LEN;
+                p_conn->state     = BLE_TRSPS_STATE_CONNECTED;
+            }
+            break;
         }
     }
-
-    return NULL;
+    return p_conn;
 }
 
+/**
+ * @brief Free the connection list for the TRSPS.
+ *
+ * @param p_conn        Pointer to the TRSPS connection list structure to initialize.
+ */
+static void ble_trsps_FreeConnList(BLE_TRSPS_ConnList_T *p_conn)
+{
+    uint8_t i;
+    for (i = 0; i < BLE_TRSPS_MAX_CONN_NBR; i++)
+    {
+        if (sp_trsConnList[i] == p_conn)
+        {
+            OSAL_Free(sp_trsConnList[i]);
+            sp_trsConnList[i] = NULL;
+            break;
+        }
+    }
+}
 
 /**
  * @brief Return credit to the peer device for a given connection.
@@ -319,13 +332,16 @@ static bool ble_trsps_CheckQueuedTask(void)
     
     for(i=0; i < BLE_TRSPS_MAX_CONN_NBR; i++)
     {
-        if ((s_trsConnList[i].state == BLE_TRSPS_STATE_CONNECTED) && (s_trsConnList[i].peerCredit >= BLE_TRSPS_MAX_RETURN_CREDIT))
+        if (sp_trsConnList[i] != NULL)
         {
-            return true;
-        }
-        if (s_trsConnList[i].p_retryData != NULL)
-        {
-            return true;
+            if ((sp_trsConnList[i]->state == BLE_TRSPS_STATE_CONNECTED) && (sp_trsConnList[i]->peerCredit >= BLE_TRSPS_MAX_RETURN_CREDIT))
+            {
+                return true;
+            }
+            if (sp_trsConnList[i]->p_retryData != NULL)
+            {
+                return true;
+            }
         }
     }
 
@@ -410,13 +426,6 @@ void BLE_TRSPS_EventRegister(BLE_TRSPS_EventCb_T bleTranServHandler)
  */
 uint16_t BLE_TRSPS_Init(void)
 {
-    uint8_t i;
-
-    for (i = 0; i < BLE_TRSPS_MAX_CONN_NBR; i++)
-    {
-        ble_trsps_InitConnList(&s_trsConnList[i]);
-    }
-
     return BLE_TRS_Add();
 }
 
@@ -1011,7 +1020,7 @@ static void ble_trsps_GapEventProcess(BLE_GAP_Event_T *p_event)
                 {
                     ble_trsps_FreeRetryData(p_conn);
                 }
-                ble_trsps_InitConnList(p_conn);
+                ble_trsps_FreeConnList(p_conn);
             }
         }
         break;

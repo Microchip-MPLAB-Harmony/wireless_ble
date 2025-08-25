@@ -31,10 +31,12 @@
     ble_log.c
 
   Summary:
-    This file contains the BLE Log functions for this project.
+    Implements logging functionality for Bluetooth Low Energy (BLE) events.
 
   Description:
-    This file contains the BLE Log functions for this project.
+    Provides an interface for logging and debugging BLE events within the
+    application. Functions include initializing the log system, writing log
+    messages, and setting log levels.
  *******************************************************************************/
 
 
@@ -53,32 +55,35 @@
 // Section: Macros
 // *****************************************************************************
 // *****************************************************************************
-/**@defgroup LOG_PAYLOAD_PARAMS_SIZE Size of parameters in log payload of the log packet.
- * @brief The size of parameters in the log payload of log packets.
- * @{ */
-#define HCI_COMMAND_OPCODE_SIZE             0x02U                                            /**< Size of opcode parameter in HCI command packet. */
-#define HCI_COMMAND_PARAMETER_LENGTH_SIZE   0x01U                                            /**< Size of length parameter in HCI command packet. */
+#define HCI_COMMAND_OPCODE_SIZE             0x02U               // Size in bytes of the opcode parameter in an HCI command packet.
+#define HCI_COMMAND_PARAMETER_LENGTH_SIZE   0x01U               // Size in bytes of the length parameter in an HCI command packet.
 
-#define HCI_EVENT_CODE_SIZE                 0x01U                                            /**< Size of event code parameter in HCI event packet. */
-#define HCI_EVENT_PARAMETER_LENGTH_SIZE     0x01U                                            /**< Size of length parameter in the HCI event packet. */
-#define HCI_EVENT_CC_PARAMETER_NUMBER_SIZE  0x01U                                            /**< Size of number of HCI commands parameter in HCI command complete event. */
-#define HCI_EVENT_CC_PARAMETER_OPCODE_SIZE  0x02U                                            /**< Size of opcode parameter in HCI command complete event. */
-#define HCI_EVENT_CC_PARAMETER_STATUS_SIZE  0x01U                                            /**< Size of status parameter in HCI command complete event. */
-#define HCI_EVENT_CS_PARAMETER_NUMBER_SIZE  0x01U                                            /**< Size of number of HCI commands parameter in HCI command status event. */
-#define HCI_EVENT_CS_PARAMETER_OPCODE_SIZE  0x02U                                            /**< Size of opcode parameter in HCI command status event. */
-#define HCI_EVENT_CS_PARAMETER_STATUS_SIZE  0x01U                                            /**< Size of status parameter in HCI command status event. */
-#define HCI_EVENT_LE_PARAMETER_SUBCODE_SIZE 0x01U                                            /**< Size of sub-event code parameter in HCI LE meta event. */
+#define HCI_EVENT_CODE_SIZE                 0x01U               // Size in bytes of the event code parameter in an HCI event packet.
+#define HCI_EVENT_PARAMETER_LENGTH_SIZE     0x01U               // Size in bytes of the length parameter in an HCI event packet.
+#define HCI_EVENT_CC_PARAMETER_NUMBER_SIZE  0x01U               // Size in bytes of the number of HCI command parameters in a command complete event.
+#define HCI_EVENT_CC_PARAMETER_OPCODE_SIZE  0x02U               // Size in bytes of the opcode parameter in a command complete event.
+#define HCI_EVENT_CC_PARAMETER_STATUS_SIZE  0x01U               // Size in bytes of the status parameter in a command complete event.
+#define HCI_EVENT_CS_PARAMETER_NUMBER_SIZE  0x01U               // Size in bytes of the number of HCI command parameters in a command status event.
+#define HCI_EVENT_CS_PARAMETER_OPCODE_SIZE  0x02U               // Size in bytes of the opcode parameter in a command status event.
+#define HCI_EVENT_CS_PARAMETER_STATUS_SIZE  0x01U               // Size in bytes of the status parameter in a command status event.
+#define HCI_EVENT_LE_PARAMETER_SUBCODE_SIZE 0x01U               // Size in bytes of the sub-event code parameter in an HCI LE meta event.
 
-#define HCI_ACL_HEADER_SIZE                 0x02U                                            /**< Size of the parameters in header (BC:2, PB: 2, Handle:10) in HCI ACL packet. */
-#define HCI_ACL_PKT_PARAMETER_LENGTH_SIZE   0x02U                                            /**< Size of length parameter in HCI ACL packet. */
-/** @} */
+#define HCI_ACL_HEADER_SIZE                 0x02U               // Size in bytes of the header parameters (BC:2, PB: 2, Handle:10) in an HCI ACL packet.
+#define HCI_ACL_PKT_PARAMETER_LENGTH_SIZE   0x02U               // Size in bytes of the length parameter in an HCI ACL packet. */
+
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Data Types
 // *****************************************************************************
 // *****************************************************************************
-
+/**
+ * @brief Type definition for a function pointer to a BLE log function.
+ * 
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet data.
+ * @param logLength     The length of the log packet.
+ */
 typedef void (*_BLE_LOG_FunTbl_T)(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLentgh);
 
 // *****************************************************************************
@@ -87,6 +92,8 @@ typedef void (*_BLE_LOG_FunTbl_T)(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket
 // *****************************************************************************
 // *****************************************************************************
 static void ble_log_PackDisconnect(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
+static void ble_log_PackReadAfhChannelAssessmentMode(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
+static void ble_log_PackWriteAfhChannelAssessmentMode(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
 static void ble_log_PackReadAuthenticatedPayloadTimeout(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
 static void ble_log_PackWriteAuthenticatedPayloadTimeout(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
 static void ble_log_PackReadBdAddr(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
@@ -148,6 +155,12 @@ static void ble_log_PackSetTransmitPowerReportingEnable(BT_SYS_LogEvent_T *p_log
 static void ble_log_PackTransmitterTestV4(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
 static void ble_log_PackSetPathLossParams(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
 static void ble_log_PackSetPathLossEnable(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
+static void ble_log_PackSetHostFeature(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
+static void ble_log_PackSetDefaultSubrate(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
+static void ble_log_PackSubrateRequest(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
+static void ble_log_PackSetDataRelatedAddrChange(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
+
+
 
 static void ble_log_PackDiscComplete(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
 static void ble_log_PackEncryptionChange(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
@@ -173,6 +186,7 @@ static void ble_log_PackScanRequestReceived(BT_SYS_LogEvent_T *p_log, uint8_t *p
 static void ble_log_PackChannelSelectAlgorithm(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
 static void ble_log_PackTransmitPowerReporting(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
 static void ble_log_PackPathLossThreshold(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
+static void ble_log_PackSubrateChange(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
 static void ble_log_PackAuthenticatedPayloadTimeoutExpired(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength);
 
 // *****************************************************************************
@@ -300,14 +314,17 @@ static const _BLE_LOG_FunTbl_T  s_hciCmdFun[] =
     NULL,   // (0x71)
     NULL,   // (0x72)
     NULL,   // (0x73)
-    NULL,   // (0x74)
+    ble_log_PackSetHostFeature,                         // HCI_LE_SET_HOST_FEATURE (0x74)
     NULL,   // (0x75)
     ble_log_PackEnhancedReadTransmitPowerLevel,         // HCI_LE_ENHANCED_READ_TRANSMIT_POWER_LEVEL (0x76)
     ble_log_PackReadRemoteTransmitPowerLevel,           // HCI_LE_READ_REMOTE_TRANSMIT_POWER_LEVEL (0x77)
     ble_log_PackSetPathLossParams,                      // HCI_LE_SET_PLR_PARAMS (0x78)
     ble_log_PackSetPathLossEnable,                      // HCI_LE_SET_PLR_ENABLE (0x79)
     ble_log_PackSetTransmitPowerReportingEnable,        // HCI_LE_SET_TRANSMIT_POWER_REPORTING_ENABLE (0x7A)
-    ble_log_PackTransmitterTestV4                       // HCI_LE_TRANSMITTER_TEST_V4 (0x7B)
+    ble_log_PackTransmitterTestV4,                      // HCI_LE_TRANSMITTER_TEST_V4 (0x7B)
+    ble_log_PackSetDataRelatedAddrChange,               // HCI_LE_SET_DATA_REL_ADDR_CHG (0x7C)
+    ble_log_PackSetDefaultSubrate,                      // HCI_LE_SET_DEFAULT_SUBRATE (0x7D)
+    ble_log_PackSubrateRequest                          // HCI_LE_SUBRATE_REQUEST (0x7E)
 };
 
 static const _BLE_LOG_FunTbl_T  s_hciLeMetaEvtFun[] =
@@ -345,7 +362,36 @@ static const _BLE_LOG_FunTbl_T  s_hciLeMetaEvtFun[] =
     NULL,   // (0x1E)
     NULL,   // (0x1F)
     ble_log_PackPathLossThreshold,                      // HCI_LE_PATH_LOSS_THRESHOLD (0x20)
-    ble_log_PackTransmitPowerReporting                  // HCI_LE_TRANSMIT_POWER_REPORTING (0x21)
+    ble_log_PackTransmitPowerReporting,                 // HCI_LE_TRANSMIT_POWER_REPORTING (0x21)
+    NULL,   // (0x22)
+    NULL,   // (0x23)
+    NULL,   // (0x24)
+    NULL,   // (0x25)
+    NULL,   // (0x26)
+    NULL,   // (0x27)
+    NULL,   // (0x28)
+    NULL,   // (0x29)
+    NULL,   // (0x2A)
+    NULL,   // (0x2B)
+    NULL,   // (0x2C)
+    NULL,   // (0x2D)
+    NULL,   // (0x2E)
+    NULL,   // (0x2F)
+    NULL,   // (0x30)
+    NULL,   // (0x31)
+    NULL,   // (0x32)
+    NULL,   // (0x33)
+    NULL,   // (0x34)
+    NULL,   // (0x35)
+    NULL,   // (0x36)
+    NULL,   // (0x37)
+    NULL,   // (0x38)
+    NULL,   // (0x39)
+    NULL,   // (0x3A)
+    NULL,   // (0x3B)
+    NULL,   // (0x3C)
+    NULL,   // (0x3D)
+    ble_log_PackSubrateChange                           // HCI_LE_SUBRATE_CHANGE (0x3E)
 };
 
 static const uint8_t s_hciCmdPktSize[] =
@@ -380,9 +426,9 @@ static const uint8_t s_hciCmdPktSize[] =
     HCI_CMD_SIZE_LTK_REQ_NEG_REPLY,                  // HCI_LE_LONG_TERM_KEY_REQ_NEGATIVE_REPLY (0x1B)
     0x00, // (0x1C)
     HCI_CMD_SIZE_RECEIVER_TEST_V1,                   // HCI_LE_RECEIVER_TEST_V1 (0x1D)
-    HCI_CMD_SIZE_TX_TEST_V1,                		 // HCI_LE_TRANSMITTER_TEST_V1 (0x1E)
+    HCI_CMD_SIZE_TX_TEST_V1,                         // HCI_LE_TRANSMITTER_TEST_V1 (0x1E)
     HCI_CMD_SIZE_TEST_END,                           // HCI_LE_TEST_END (0x1F)
-    HCI_CMD_SIZE_REMOTE_CP_REQ_REPLY,       		 // HCI_LE_REMOTE_CONN_PARAM_REQ_REPLY (0x20)
+    HCI_CMD_SIZE_REMOTE_CP_REQ_REPLY,                // HCI_LE_REMOTE_CONN_PARAM_REQ_REPLY (0x20)
     HCI_CMD_SIZE_REMOTE_CP_REQ_NEG_REPLY,            // HCI_LE_REMOTE_CONN_PARAM_REQ_NEGATIVE_REPLY (0x21)
     HCI_CMD_SIZE_SET_DATA_LENGTH,                    // HCI_LE_SET_DATA_LENGTH (0x22)
     0x00, // (0x23)
@@ -418,9 +464,9 @@ static const uint8_t s_hciCmdPktSize[] =
     HCI_CMD_SIZE_SET_EXT_SCAN_PARAMS,                // HCI_LE_SET_EXTENDED_SCAN_PARAM (0x41)
     HCI_CMD_SIZE_SET_EXT_SCAN_ENABLE,                // HCI_LE_SET_EXTENDED_SCAN_ENABLE (0x42)
     HCI_CMD_SIZE_EXT_CREATE_CONN,                    // HCI_LE_EXTENDED_CREATE_CONNECTION (0x43)
-    HCI_CMD_SIZE_PA_CREATE_SYNC,           			 // HCI_LE_PA_CREATE_SYNC (0x44)
-    HCI_CMD_SIZE_PA_CREATE_SYNC_CANCEL,    		     // HCI_LE_PA_CREATE_SYNC_CANCEL (0x45)
-    HCI_CMD_SIZE_PA_TERMINATE_SYNC,        			 // HCI_LE_PA_TERMINATE_SYNC (0x46)
+    HCI_CMD_SIZE_PA_CREATE_SYNC,                     // HCI_LE_PA_CREATE_SYNC (0x44)
+    HCI_CMD_SIZE_PA_CREATE_SYNC_CANCEL,              // HCI_LE_PA_CREATE_SYNC_CANCEL (0x45)
+    HCI_CMD_SIZE_PA_TERMINATE_SYNC,                  // HCI_LE_PA_TERMINATE_SYNC (0x46)
     HCI_CMD_SIZE_ADD_DEV_TO_PERIODIC_ADV_LIST,       // HCI_LE_ADD_DEV_TO_PERIODIC_ADVERTISER_LIST (0x47)
     0x00, // (0x48)
     HCI_CMD_SIZE_CLEAR_PERIODIC_ADV_LIST,            // HCI_LE_CLEAR_PERIODIC_ADVERTISER_LIST (0x49)
@@ -466,14 +512,18 @@ static const uint8_t s_hciCmdPktSize[] =
     0x00, // (0x71)
     0x00, // (0x72)
     0x00, // (0x73)
-    0x00, // (0x74)
+    HCI_CMD_SIZE_SET_HOST_FEATURE,                   // HCI_LE_SET_HOST_FEATURE (0x74)
     0x00, // (0x75)
     HCI_CMD_SIZE_ENHANCED_READ_TRANSMIT_POWER_LEVEL, // HCI_LE_ENHANCED_READ_TRANSMIT_POWER_LEVEL (0x76)
     HCI_CMD_SIZE_READ_REMOTE_TRANSMIT_POWER_LEVEL,   // HCI_LE_READ_REMOTE_TRANSMIT_POWER_LEVEL (0x77)
     HCI_CMD_SIZE_SET_PATH_LOSS_PARAMS,               // HCI_LE_SET_PLR_PARAMS (0x78)
     HCI_CMD_SIZE_SET_PATH_LOSS_ENABLE,               // HCI_LE_SET_PLR_ENABLE (0x79)
     HCI_CMD_SIZE_SET_TRANSMIT_POWER_REPORTING_ENABLE,// HCI_LE_SET_TRANSMIT_POWER_REPORTING_ENABLE (0x7A)
-    HCI_CMD_SIZE_TX_TEST_V4                 // HCI_LE_TRANSMITTER_TEST_V4 (0x7B)
+    HCI_CMD_SIZE_TX_TEST_V4,                         // HCI_LE_TRANSMITTER_TEST_V4 (0x7B)
+    HCI_CMD_SIZE_SET_DATA_REL_ADDR_CHANGE,           // HCI_LE_SET_DATA_REL_ADDR_CHG (0x7C)
+    HCI_CMD_SIZE_SET_DEFAULT_SUBRATE,                // HCI_LE_SET_DEFAULT_SUBRATE (0X7D)
+    HCI_CMD_SIZE_SUBRATE_REQUEST                     // HCI_LE_SUBRATE_REQUEST (0X7E)
+
 };
 
 static const uint8_t s_hciLeMetaEvtSize[] =
@@ -492,9 +542,9 @@ static const uint8_t s_hciLeMetaEvtSize[] =
     HCI_EVT_SIZE_DIRECT_ADV_REPORT,                  // HCI_LE_DIRECT_ADVERTISING_REPORT (0x0B)
     HCI_EVT_SIZE_PHY_UPDATE_COMPLETE,                // HCI_LE_PHY_UPDATE_COMPLETE (0x0C)
     HCI_EVT_SIZE_EXTENDED_ADV_REPORT,                // HCI_LE_EXTENDED_ADVERTISING_REPORT (0x0D)
-    HCI_EVT_SIZE_PA_SYNC_ESTABLISHED,      			 // HCI_LE_PA_SYNC_ESTABLISHED (0x0E)
-    HCI_EVT_SIZE_PA_REPORT,                			 // HCI_LE_PA_REPORT (0x0F)
-    HCI_EVT_SIZE_PA_SYNC_LOST,             			 // HCI_LE_PA_SYNC_LOST (0x10)
+    HCI_EVT_SIZE_PA_SYNC_ESTABLISHED,                // HCI_LE_PA_SYNC_ESTABLISHED (0x0E)
+    HCI_EVT_SIZE_PA_REPORT,                          // HCI_LE_PA_REPORT (0x0F)
+    HCI_EVT_SIZE_PA_SYNC_LOST,                       // HCI_LE_PA_SYNC_LOST (0x10)
     HCI_EVT_SIZE_SCAN_TIMEOUT,                       // HCI_LE_SCAN_TIMEOUT (0x11)
     HCI_EVT_SIZE_ADV_SET_TERMINATED,                 // HCI_LE_ADVERTISING_SET_TERMINATED (0x12)
     HCI_EVT_SIZE_SCAN_REQUEST_RECEIVED,              // HCI_LE_SCAN_REQUEST_RECEIVED (0x13)
@@ -511,7 +561,36 @@ static const uint8_t s_hciLeMetaEvtSize[] =
     0x00,   // (0x1E)
     0x00,   // (0x1F)
     HCI_EVT_SIZE_PATH_LOSS_THRESHOLD,               // HCI_LE_PATH_LOSS_THRESHOLD (0x20)
-    HCI_EVT_SIZE_TX_POWER_REPORTING                 // HCI_LE_TRANSMIT_POWER_REPORTING (0x21)
+    HCI_EVT_SIZE_TX_POWER_REPORTING,                // HCI_LE_TRANSMIT_POWER_REPORTING (0x21)
+    0x00,   // (0x22)
+    0x00,   // (0x23)
+    0x00,   // (0x24)
+    0x00,   // (0x25)
+    0x00,   // (0x26)
+    0x00,   // (0x27)
+    0x00,   // (0x28)
+    0x00,   // (0x29)
+    0x00,   // (0x2A)
+    0x00,   // (0x2B)
+    0x00,   // (0x2C)
+    0x00,   // (0x2D)
+    0x00,   // (0x2E)
+    0x00,   // (0x2F)
+    0x00,   // (0x30)
+    0x00,   // (0x31)
+    0x00,   // (0x32)
+    0x00,   // (0x33)
+    0x00,   // (0x34)
+    0x00,   // (0x35)
+    0x00,   // (0x36)
+    0x00,   // (0x37)
+    0x00,   // (0x38)
+    0x00,   // (0x39)
+    0x00,   // (0x3A)
+    0x00,   // (0x3B)
+    0x00,   // (0x3C)
+    0x00,   // (0x3D)
+    HCI_EVT_SIZE_SUBRATE_CHANGE                     // HCI_LE_SUBRATE_CHANGE (0x3E)
 };
 
 // *****************************************************************************
@@ -520,6 +599,13 @@ static const uint8_t s_hciLeMetaEvtSize[] =
 // *****************************************************************************
 // *****************************************************************************
 
+/**
+ * @brief Prints a BLE log packet if a log event callback is set.
+ *
+ * @param logType       The type of log to print.
+ * @param logLength     The length of the log packet.
+ * @param p_logPacket   Pointer to the log packet data.
+ */
 static void ble_log_Print(uint8_t logType, uint16_t logLength, uint8_t *p_logPacket)
 {
     if (s_logEventCb != NULL)
@@ -528,6 +614,15 @@ static void ble_log_Print(uint8_t logType, uint16_t logLength, uint8_t *p_logPac
     }
 }
 
+
+/**
+ * @brief Generates an HCI command complete event and prints it using ble_log_Print.
+ *
+ * @param logId         The ID of the log, which contains the OGF and OCF.
+ * @param result        The result to be included in the command complete event.
+ * @param paramsLength  The length of the return parameters.
+ * @param p_returnParams Pointer to the return parameters data.
+ */
 static void ble_log_GenerateHciCommandComplete(uint16_t logId, uint8_t result, uint16_t paramsLength, uint8_t *p_returnParams)
 {
     uint8_t *p_logPacket;
@@ -624,7 +719,11 @@ static void ble_log_GenerateHciCommandComplete(uint16_t logId, uint8_t result, u
     }
     else if (ogf == HCI_HC)
     {
-        if (ocf == HCI_READ_AUTHENTICATED_PAYLOAD_TIMEOUT)
+        if (ocf == HCI_READ_AFH_CHANNEL_ASSESS_MODE)
+        {
+            VARIABLE_COPY_TO_STREAM(&p_buf, (p_returnParams+HCI_EVENT_CC_PARAMETER_STATUS_SIZE), (HCI_CC_EVT_SIZE_READ_AFH_CHAN_ASSESS_MODE-HCI_EVENT_CC_PARAMETER_STATUS_SIZE));
+        }
+        else if (ocf == HCI_READ_AUTHENTICATED_PAYLOAD_TIMEOUT)
         {
             VARIABLE_COPY_TO_STREAM(&p_buf, (p_returnParams+HCI_EVENT_CC_PARAMETER_STATUS_SIZE), (HCI_CC_EVT_SIZE_READ_AUTH_PAYLOAD_TO-HCI_EVENT_CC_PARAMETER_STATUS_SIZE));
         }
@@ -654,6 +753,13 @@ static void ble_log_GenerateHciCommandComplete(uint16_t logId, uint8_t result, u
     OSAL_Free(p_logPacket);
 }
 
+
+/**
+ * @brief Generates an HCI command status event and prints it using ble_log_Print.
+ *
+ * @param logId     The ID of the log, which contains the OGF and OCF.
+ * @param result    The result to be included in the command status event.
+ */
 static void ble_log_GenerateHciCommandStatus(uint16_t logId, uint8_t result)
 {
     uint8_t *p_logPacket;
@@ -684,6 +790,14 @@ static void ble_log_GenerateHciCommandStatus(uint16_t logId, uint8_t result)
     OSAL_Free(p_logPacket);
 }
 
+
+/**
+ * @brief Packs the disconnect log event into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackDisconnect(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -694,6 +808,45 @@ static void ble_log_PackDisconnect(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacke
     ble_log_GenerateHciCommandStatus(p_log->logId, *(uint8_t *)p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the read AFH channel assessment mode event into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
+static void ble_log_PackReadAfhChannelAssessmentMode(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
+{
+    ble_log_Print(BLE_LOG_TYPE_HCI_COMMAND, logLength, p_logPacket);
+    ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
+}
+
+
+/**
+ * @brief Packs the write AFH channel assessment mode event into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
+static void ble_log_PackWriteAfhChannelAssessmentMode(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
+{
+    uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
+
+    U8_TO_STREAM(&p_buf, ((HCI_WriteAfhChannelAssessMode_T *)p_log->p_logPayload)->AfhChannelAssessMode);
+    ble_log_Print(BLE_LOG_TYPE_HCI_COMMAND, logLength, p_logPacket);
+    ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
+}
+
+
+/**
+ * @brief Packs the read authenticated payload timeout event into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackReadAuthenticatedPayloadTimeout(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -703,6 +856,14 @@ static void ble_log_PackReadAuthenticatedPayloadTimeout(BT_SYS_LogEvent_T *p_log
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the write authenticated payload timeout event into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackWriteAuthenticatedPayloadTimeout(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -713,12 +874,28 @@ static void ble_log_PackWriteAuthenticatedPayloadTimeout(BT_SYS_LogEvent_T *p_lo
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the read BD_ADDR event into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackReadBdAddr(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     ble_log_Print(BLE_LOG_TYPE_HCI_COMMAND, logLength, p_logPacket);
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the read RSSI event into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackReadRssi(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -728,6 +905,14 @@ static void ble_log_PackReadRssi(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket,
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the set random address event into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackSetRandomAddr(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -737,6 +922,14 @@ static void ble_log_PackSetRandomAddr(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPa
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the set advertising parameters event into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackSetAdvParams(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -753,6 +946,13 @@ static void ble_log_PackSetAdvParams(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPac
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+/**
+ * @brief Packs the set advertising data into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackSetAdvData(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -763,6 +963,14 @@ static void ble_log_PackSetAdvData(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacke
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the set scan response data into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackSetScanRspData(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -773,6 +981,14 @@ static void ble_log_PackSetScanRspData(BT_SYS_LogEvent_T *p_log, uint8_t *p_logP
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the set advertising enable command into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackSetAdvEnable(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -782,6 +998,13 @@ static void ble_log_PackSetAdvEnable(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPac
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**@brief Packs the set scan parameters command into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackSetScanParams(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -795,6 +1018,14 @@ static void ble_log_PackSetScanParams(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPa
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the set scan enable command into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackSetScanEnable(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -805,6 +1036,14 @@ static void ble_log_PackSetScanEnable(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPa
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the create connection command into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackCreateConn(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -825,18 +1064,42 @@ static void ble_log_PackCreateConn(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacke
     ble_log_GenerateHciCommandStatus(p_log->logId, *(uint8_t *)p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the create connection cancel command into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackCreateConnCancel(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     ble_log_Print(BLE_LOG_TYPE_HCI_COMMAND, logLength, p_logPacket);
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the clear filter accept list command into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackClearFilterAcceptList(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     ble_log_Print(BLE_LOG_TYPE_HCI_COMMAND, logLength, p_logPacket);
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the add device to filter accept list command into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackAddDevToFilterAcceptList(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -847,6 +1110,14 @@ static void ble_log_PackAddDevToFilterAcceptList(BT_SYS_LogEvent_T *p_log, uint8
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the connection update command into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackConnectionUpdate(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -862,6 +1133,14 @@ static void ble_log_PackConnectionUpdate(BT_SYS_LogEvent_T *p_log, uint8_t *p_lo
     ble_log_GenerateHciCommandStatus(p_log->logId, *(uint8_t *)p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the Set Host Channel Classification command data into the log packet.
+ * 
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log data.
+ */
 static void ble_log_PackSetHostChannelClassification(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -871,6 +1150,14 @@ static void ble_log_PackSetHostChannelClassification(BT_SYS_LogEvent_T *p_log, u
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the Read Channel Map command data into the log packet.
+ * 
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log data.
+ */
 static void ble_log_PackReadChannelMap(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -880,6 +1167,14 @@ static void ble_log_PackReadChannelMap(BT_SYS_LogEvent_T *p_log, uint8_t *p_logP
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the Read Remote Feature command data into the log packet.
+ * 
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log data.
+ */
 static void ble_log_PackReadRemoteFeature(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -889,6 +1184,14 @@ static void ble_log_PackReadRemoteFeature(BT_SYS_LogEvent_T *p_log, uint8_t *p_l
     ble_log_GenerateHciCommandStatus(p_log->logId, *(uint8_t *)p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the Enable Encryption command data into the log packet.
+ * 
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log data.
+ */
 static void ble_log_PackEnableEncryption(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -901,6 +1204,14 @@ static void ble_log_PackEnableEncryption(BT_SYS_LogEvent_T *p_log, uint8_t *p_lo
     ble_log_GenerateHciCommandStatus(p_log->logId, *(uint8_t *)p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the Long Term Key Request Reply command data into the log packet.
+ * 
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log data.
+ */
 static void ble_log_PackLtkReqReply(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -911,6 +1222,14 @@ static void ble_log_PackLtkReqReply(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPack
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the Long Term Key Request Negative Reply command data into the log packet.
+ * 
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log data.
+ */
 static void ble_log_PackLtkReqNegReply(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -920,12 +1239,28 @@ static void ble_log_PackLtkReqNegReply(BT_SYS_LogEvent_T *p_log, uint8_t *p_logP
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the End Test command data into the log packet.
+ * 
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log data.
+ */
 static void ble_log_PackEndTest(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     ble_log_Print(BLE_LOG_TYPE_HCI_COMMAND, logLength, p_logPacket);
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the Remote Connection Parameter Request Reply command data into the log packet.
+ * 
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log data.
+ */
 static void ble_log_PackRemoteConnParamReqReply(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -941,6 +1276,14 @@ static void ble_log_PackRemoteConnParamReqReply(BT_SYS_LogEvent_T *p_log, uint8_
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the Remote Connection Parameter Request Negative Reply command data into the log packet.
+ * 
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log data.
+ */
 static void ble_log_PackRemoteConnParamReqNegReply(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -951,6 +1294,14 @@ static void ble_log_PackRemoteConnParamReqNegReply(BT_SYS_LogEvent_T *p_log, uin
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the Set Data Length command data into the log packet.
+ * 
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log data.
+ */
 static void ble_log_PackSetDataLength(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -962,6 +1313,14 @@ static void ble_log_PackSetDataLength(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPa
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the Add Device To Resolving List command data into the log packet.
+ * 
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log data.
+ */
 static void ble_log_PackAddDevToResolvingList(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -974,12 +1333,28 @@ static void ble_log_PackAddDevToResolvingList(BT_SYS_LogEvent_T *p_log, uint8_t 
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the Clear Resolving List command data into the log packet.
+ * 
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log data.
+ */
 static void ble_log_PackClearResolvingList(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     ble_log_Print(BLE_LOG_TYPE_HCI_COMMAND, logLength, p_logPacket);
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the Set Address Resolution Enable command into the log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackSetAddrResolutionEnable(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -989,6 +1364,14 @@ static void ble_log_PackSetAddrResolutionEnable(BT_SYS_LogEvent_T *p_log, uint8_
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the Set RPA Timeout command into the log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_packSetRpaTimeout(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -998,6 +1381,14 @@ static void ble_log_packSetRpaTimeout(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPa
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the Read PHY command into the log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackReadPhy(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -1007,6 +1398,14 @@ static void ble_log_PackReadPhy(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, 
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the Set Default PHY command into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackSetDefaultPhy(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -1018,6 +1417,14 @@ static void ble_log_PackSetDefaultPhy(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPa
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the Set PHY command into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackSetPhy(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -1031,6 +1438,14 @@ static void ble_log_PackSetPhy(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, u
     ble_log_GenerateHciCommandStatus(p_log->logId, *(uint8_t *)p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the Receiver Test V2 command into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackReceiverTestV2(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -1042,6 +1457,14 @@ static void ble_log_PackReceiverTestV2(BT_SYS_LogEvent_T *p_log, uint8_t *p_logP
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the Set Advertising Set Random Address command into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackSetAdvSetRandomAddr(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -1052,6 +1475,14 @@ static void ble_log_PackSetAdvSetRandomAddr(BT_SYS_LogEvent_T *p_log, uint8_t *p
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the Set Extended Advertising Parameters command into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackSetExtAdvParam(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -1071,10 +1502,20 @@ static void ble_log_PackSetExtAdvParam(BT_SYS_LogEvent_T *p_log, uint8_t *p_logP
     U8_TO_STREAM(&p_buf, ((HCI_LE_SetExtAdvertisingParameters_T *)p_log->p_logPayload)->secPhy);
     U8_TO_STREAM(&p_buf, ((HCI_LE_SetExtAdvertisingParameters_T *)p_log->p_logPayload)->advSid);
     U8_TO_STREAM(&p_buf, ((HCI_LE_SetExtAdvertisingParameters_T *)p_log->p_logPayload)->scanReqNotifiEnable);
+    U8_TO_STREAM(&p_buf, ((HCI_LE_SetExtAdvertisingParameters_T *)p_log->p_logPayload)->priPhyOptions);
+    U8_TO_STREAM(&p_buf, ((HCI_LE_SetExtAdvertisingParameters_T *)p_log->p_logPayload)->secPhyOptions);
     ble_log_Print(BLE_LOG_TYPE_HCI_COMMAND, logLength, p_logPacket);
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the Set Extended Advertising Data command into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackSetExtAdvData(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -1095,6 +1536,14 @@ static void ble_log_PackSetExtAdvData(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPa
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the extended scan response data into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackSetExtScanRspData(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -1114,6 +1563,14 @@ static void ble_log_PackSetExtScanRspData(BT_SYS_LogEvent_T *p_log, uint8_t *p_l
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the extended advertising enable parameters into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackSetExtAdvEnable(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -1137,6 +1594,14 @@ static void ble_log_PackSetExtAdvEnable(BT_SYS_LogEvent_T *p_log, uint8_t *p_log
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the remove advertising set command into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackRemoveAdvSet(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -1146,12 +1611,28 @@ static void ble_log_PackRemoveAdvSet(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPac
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the clear advertising sets command into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackClearAdvSet(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     ble_log_Print(BLE_LOG_TYPE_HCI_COMMAND, logLength, p_logPacket);
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the periodic advertising parameters into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackSetPeriodicAdvParam(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -1164,6 +1645,14 @@ static void ble_log_PackSetPeriodicAdvParam(BT_SYS_LogEvent_T *p_log, uint8_t *p
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the periodic advertising data into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackSetPeriodicAdvData(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -1183,6 +1672,14 @@ static void ble_log_PackSetPeriodicAdvData(BT_SYS_LogEvent_T *p_log, uint8_t *p_
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the enable or disable command for periodic advertising into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackSetPeriodicAdvEnable(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -1193,6 +1690,14 @@ static void ble_log_PackSetPeriodicAdvEnable(BT_SYS_LogEvent_T *p_log, uint8_t *
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the extended scan parameters into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackSetExtScanParam(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -1233,6 +1738,14 @@ static void ble_log_PackSetExtScanParam(BT_SYS_LogEvent_T *p_log, uint8_t *p_log
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the enable or disable command for scan into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackSetExtScanEnable(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -1245,6 +1758,14 @@ static void ble_log_PackSetExtScanEnable(BT_SYS_LogEvent_T *p_log, uint8_t *p_lo
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the extended create connection command into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackExtCreateConn(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -1297,6 +1818,14 @@ static void ble_log_PackExtCreateConn(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPa
     ble_log_GenerateHciCommandStatus(p_log->logId, *(uint8_t *)p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the periodic advertising create sync command into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackPeriodicAdvCreateSync(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -1312,12 +1841,28 @@ static void ble_log_PackPeriodicAdvCreateSync(BT_SYS_LogEvent_T *p_log, uint8_t 
     ble_log_GenerateHciCommandStatus(p_log->logId, *(uint8_t *)p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the cancelling the creation of a periodic advertising sync command into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackPeriodicAdvCreateSyncCancel(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     ble_log_Print(BLE_LOG_TYPE_HCI_COMMAND, logLength, p_logPacket);
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the terminating a periodic advertising sync command into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackPeriodicAdvTerminateSync(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -1327,6 +1872,14 @@ static void ble_log_PackPeriodicAdvTerminateSync(BT_SYS_LogEvent_T *p_log, uint8
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the adding a device to the periodic advertising list command into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackAddDevToPeriodicAdvList(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -1338,18 +1891,42 @@ static void ble_log_PackAddDevToPeriodicAdvList(BT_SYS_LogEvent_T *p_log, uint8_
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the clearing the periodic advertising list command into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackClearPeriodicAdvList(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     ble_log_Print(BLE_LOG_TYPE_HCI_COMMAND, logLength, p_logPacket);
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the clearing the reading the transmit power level command into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackReadTransmitPower(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     ble_log_Print(BLE_LOG_TYPE_HCI_COMMAND, logLength, p_logPacket);
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the Set Privacy Mode command into a log packet.
+ * 
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackSetPrivacyMode(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -1361,6 +1938,14 @@ static void ble_log_PackSetPrivacyMode(BT_SYS_LogEvent_T *p_log, uint8_t *p_logP
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the Set Periodic Advertisement Receive Enable command into a log packet.
+ * 
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackSetPeriodicAdvReceiveEnable(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -1371,6 +1956,32 @@ static void ble_log_PackSetPeriodicAdvReceiveEnable(BT_SYS_LogEvent_T *p_log, ui
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the Set Host Feature command into a log packet.
+ * 
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
+static void ble_log_PackSetHostFeature(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
+{
+    uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
+
+    U16_TO_STREAM_LE(&p_buf, ((HCI_LE_SetHostFeature_T *)p_log->p_logPayload)->bitNumber);
+    U8_TO_STREAM(&p_buf, ((HCI_LE_SetHostFeature_T *)p_log->p_logPayload)->bitValue);
+    ble_log_Print(BLE_LOG_TYPE_HCI_COMMAND, logLength, p_logPacket);
+    ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
+}
+
+
+/**
+ * @brief Packs the Enhanced Read Transmit Power Level command into a log packet.
+ * 
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackEnhancedReadTransmitPowerLevel(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -1381,6 +1992,14 @@ static void ble_log_PackEnhancedReadTransmitPowerLevel(BT_SYS_LogEvent_T *p_log,
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the Read Remote Transmit Power Level command into a log packet.
+ * 
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackReadRemoteTransmitPowerLevel(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -1391,6 +2010,14 @@ static void ble_log_PackReadRemoteTransmitPowerLevel(BT_SYS_LogEvent_T *p_log, u
     ble_log_GenerateHciCommandStatus(p_log->logId, *(uint8_t *)p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the Set Transmit Power Reporting Enable command into a log packet.
+ * 
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackSetTransmitPowerReportingEnable(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -1402,6 +2029,14 @@ static void ble_log_PackSetTransmitPowerReportingEnable(BT_SYS_LogEvent_T *p_log
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the Transmitter Test V4 command into a log packet.
+ * 
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackTransmitterTestV4(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t     *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -1425,6 +2060,32 @@ static void ble_log_PackTransmitterTestV4(BT_SYS_LogEvent_T *p_log, uint8_t *p_l
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the Set Data Related Address Changes command into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
+static void ble_log_PackSetDataRelatedAddrChange(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
+{
+    uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
+
+    U8_TO_STREAM(&p_buf, ((HCI_LE_SetDataRelatedAddrChange_T *)p_log->p_logPayload)->advHandle);
+    U8_TO_STREAM(&p_buf, ((HCI_LE_SetDataRelatedAddrChange_T *)p_log->p_logPayload)->changeReasons);
+    ble_log_Print(BLE_LOG_TYPE_HCI_COMMAND, logLength, p_logPacket);
+    ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
+}
+
+
+/**
+ * @brief Packs the Set Path Loss Reporting Parameters command into a log packet.
+ * 
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackSetPathLossParams(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -1439,6 +2100,14 @@ static void ble_log_PackSetPathLossParams(BT_SYS_LogEvent_T *p_log, uint8_t *p_l
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the Set Path Loss Enable command into a log packet.
+ * 
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackSetPathLossEnable(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
@@ -1449,6 +2118,58 @@ static void ble_log_PackSetPathLossEnable(BT_SYS_LogEvent_T *p_log, uint8_t *p_l
     ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
 }
 
+
+/**
+ * @brief Packs the Set Default Subrate command into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
+static void ble_log_PackSetDefaultSubrate(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
+{
+    uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
+
+    U16_TO_STREAM_LE(&p_buf, ((HCI_LE_SetDefaultSubrate_T *)p_log->p_logPayload)->subrateMin);
+    U16_TO_STREAM_LE(&p_buf, ((HCI_LE_SetDefaultSubrate_T *)p_log->p_logPayload)->subrateMax);
+    U16_TO_STREAM_LE(&p_buf, ((HCI_LE_SetDefaultSubrate_T *)p_log->p_logPayload)->maxLatency);
+    U16_TO_STREAM_LE(&p_buf, ((HCI_LE_SetDefaultSubrate_T *)p_log->p_logPayload)->continuationNum);
+    U16_TO_STREAM_LE(&p_buf, ((HCI_LE_SetDefaultSubrate_T *)p_log->p_logPayload)->supervisionTimeout);
+    ble_log_Print(BLE_LOG_TYPE_HCI_COMMAND, logLength, p_logPacket);
+    ble_log_GenerateHciCommandComplete(p_log->logId, *(uint8_t *)p_log->p_returnParams, p_log->paramsLength, p_log->p_returnParams);
+}
+
+
+/**
+ * @brief Packs the Set Subrate Request command into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet buffer.
+ * @param logLength     Length of the log packet.
+ */
+static void ble_log_PackSubrateRequest(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
+{
+    uint8_t *p_buf = (p_logPacket+HCI_COMMAND_OPCODE_SIZE+HCI_COMMAND_PARAMETER_LENGTH_SIZE);
+
+    U16_TO_STREAM_LE(&p_buf, ((HCI_LE_SubrateRequest_T *)p_log->p_logPayload)->connHandle);
+    U16_TO_STREAM_LE(&p_buf, ((HCI_LE_SubrateRequest_T *)p_log->p_logPayload)->subrateMin);
+    U16_TO_STREAM_LE(&p_buf, ((HCI_LE_SubrateRequest_T *)p_log->p_logPayload)->subrateMax);
+    U16_TO_STREAM_LE(&p_buf, ((HCI_LE_SubrateRequest_T *)p_log->p_logPayload)->maxLatency);
+    U16_TO_STREAM_LE(&p_buf, ((HCI_LE_SubrateRequest_T *)p_log->p_logPayload)->continuationNum);
+    U16_TO_STREAM_LE(&p_buf, ((HCI_LE_SubrateRequest_T *)p_log->p_logPayload)->supervisionTimeout);
+    ble_log_Print(BLE_LOG_TYPE_HCI_COMMAND, logLength, p_logPacket);
+    ble_log_GenerateHciCommandStatus(p_log->logId, *(uint8_t *)p_log->p_returnParams);
+}
+
+
+/**
+ * @brief Get the size of HCI command parameters based on OGF and OCF.
+ *
+ * @param ogf Opcode    Group Field of the HCI command.
+ * @param ocf Opcode    Command Field of the HCI command.
+ * 
+ * @retval uint16_t     Size of the HCI command parameters.
+ */
 static uint16_t ble_log_GetHciCommandParametersSize(uint8_t ogf, uint16_t ocf)
 {
     uint16_t cmdParamsSize = 0;
@@ -1465,7 +2186,15 @@ static uint16_t ble_log_GetHciCommandParametersSize(uint8_t ogf, uint16_t ocf)
         }
         else if (ogf == HCI_HC)
         {
-            if (ocf == HCI_READ_AUTHENTICATED_PAYLOAD_TIMEOUT)
+            if (ocf == HCI_READ_AFH_CHANNEL_ASSESS_MODE)
+            {
+                cmdParamsSize = HCI_CMD_SIZE_READ_AFH_CHAN_ASSESS_MODE;
+            }
+            else if (ocf == HCI_WRITE_AFH_CHANNEL_ASSESS_MODE)
+            {
+                cmdParamsSize = HCI_CMD_SIZE_WRITE_AFH_CHAN_ASSESS_MODE;
+            }
+            else if (ocf == HCI_READ_AUTHENTICATED_PAYLOAD_TIMEOUT)
             {
                 cmdParamsSize = HCI_CMD_SIZE_READ_AUTH_PAYLOAD_TO;
             }
@@ -1495,6 +2224,16 @@ static uint16_t ble_log_GetHciCommandParametersSize(uint8_t ogf, uint16_t ocf)
     return cmdParamsSize;
 }
 
+
+/**
+ * @brief Generate an HCI command log.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the log packet data.
+ * @param logLength     Length of the log packet.
+ * @param ogf       Opcode Group Field of the HCI command.
+ * @param ocf   Opcode Command Field of the HCI command.
+ */
 static void ble_log_GenerateHciCommand(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength, uint8_t ogf, uint16_t ocf)
 {
     if (ogf == HCI_LE_CTRL)
@@ -1512,7 +2251,15 @@ static void ble_log_GenerateHciCommand(BT_SYS_LogEvent_T *p_log, uint8_t *p_logP
         }
         else if (ogf == HCI_HC)
         {
-            if (ocf == HCI_READ_AUTHENTICATED_PAYLOAD_TIMEOUT)
+            if (ocf == HCI_READ_AFH_CHANNEL_ASSESS_MODE)
+            {
+                ble_log_PackReadAfhChannelAssessmentMode(p_log, p_logPacket, logLength);
+            }
+            else if (ocf == HCI_WRITE_AFH_CHANNEL_ASSESS_MODE)
+            {
+                ble_log_PackWriteAfhChannelAssessmentMode(p_log, p_logPacket, logLength);
+            }
+            else if (ocf == HCI_READ_AUTHENTICATED_PAYLOAD_TIMEOUT)
             {
                 ble_log_PackReadAuthenticatedPayloadTimeout(p_log, p_logPacket, logLength);
             }
@@ -1540,7 +2287,11 @@ static void ble_log_GenerateHciCommand(BT_SYS_LogEvent_T *p_log, uint8_t *p_logP
     }
 }
 
-//void ble_log_ProcHciCommand(BLE_Log_T *p_log)
+/**
+ * @brief Process an HCI command log.
+ *
+ * @param p_log     Pointer to the log event structure.
+ */
 static void ble_log_ProcHciCommand(BT_SYS_LogEvent_T *p_log)
 {
     uint8_t *p_logPacket;
@@ -1575,6 +2326,14 @@ static void ble_log_ProcHciCommand(BT_SYS_LogEvent_T *p_log)
     OSAL_Free(p_logPacket);
 }
 
+
+/**
+ * @brief Packs the disconnect complete event into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackDiscComplete(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_EVENT_CODE_SIZE+HCI_EVENT_PARAMETER_LENGTH_SIZE);
@@ -1585,6 +2344,14 @@ static void ble_log_PackDiscComplete(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPac
     ble_log_Print(BLE_LOG_TYPE_HCI_EVENT, logLength, p_logPacket);
 }
 
+
+/**
+ * @brief Packs the encryption change event into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackEncryptionChange(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_EVENT_CODE_SIZE+HCI_EVENT_PARAMETER_LENGTH_SIZE);
@@ -1595,6 +2362,14 @@ static void ble_log_PackEncryptionChange(BT_SYS_LogEvent_T *p_log, uint8_t *p_lo
     ble_log_Print(BLE_LOG_TYPE_HCI_EVENT, logLength, p_logPacket);
 }
 
+
+/**
+ * @brief Packs the read remote version information complete event into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackReadRemoteVersionInfomationComplete(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_EVENT_CODE_SIZE+HCI_EVENT_PARAMETER_LENGTH_SIZE);
@@ -1607,6 +2382,14 @@ static void ble_log_PackReadRemoteVersionInfomationComplete(BT_SYS_LogEvent_T *p
     ble_log_Print(BLE_LOG_TYPE_HCI_EVENT, logLength, p_logPacket);
 }
 
+
+/**
+ * @brief Packs the number of completed packets event into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackNumberOfCompletedPacket(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_EVENT_CODE_SIZE+HCI_EVENT_PARAMETER_LENGTH_SIZE);
@@ -1621,6 +2404,14 @@ static void ble_log_PackNumberOfCompletedPacket(BT_SYS_LogEvent_T *p_log, uint8_
     ble_log_Print(BLE_LOG_TYPE_HCI_EVENT, logLength, p_logPacket);
 }
 
+
+/**
+ * @brief Packs the key refresh complete event into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackKeyRefreshComplete(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_EVENT_CODE_SIZE+HCI_EVENT_PARAMETER_LENGTH_SIZE);
@@ -1630,6 +2421,14 @@ static void ble_log_PackKeyRefreshComplete(BT_SYS_LogEvent_T *p_log, uint8_t *p_
     ble_log_Print(BLE_LOG_TYPE_HCI_EVENT, logLength, p_logPacket);
 }
 
+
+/**
+ * @brief Packs the connect complete event into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackConnectComplete(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_EVENT_CODE_SIZE+HCI_EVENT_PARAMETER_LENGTH_SIZE+HCI_EVENT_LE_PARAMETER_SUBCODE_SIZE);
@@ -1646,6 +2445,14 @@ static void ble_log_PackConnectComplete(BT_SYS_LogEvent_T *p_log, uint8_t *p_log
     ble_log_Print(BLE_LOG_TYPE_HCI_EVENT, logLength, p_logPacket);
 }
 
+
+/**
+ * @brief Packs the advertising report event into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackAdvReport(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_EVENT_CODE_SIZE+HCI_EVENT_PARAMETER_LENGTH_SIZE+HCI_EVENT_LE_PARAMETER_SUBCODE_SIZE);
@@ -1660,6 +2467,14 @@ static void ble_log_PackAdvReport(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket
     ble_log_Print(BLE_LOG_TYPE_HCI_EVENT, logLength, p_logPacket);
 }
 
+
+/**
+ * @brief Packs the connection update complete event into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackConnectionUpdateComplete(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_EVENT_CODE_SIZE+HCI_EVENT_PARAMETER_LENGTH_SIZE+HCI_EVENT_LE_PARAMETER_SUBCODE_SIZE);
@@ -1672,6 +2487,14 @@ static void ble_log_PackConnectionUpdateComplete(BT_SYS_LogEvent_T *p_log, uint8
     ble_log_Print(BLE_LOG_TYPE_HCI_EVENT, logLength, p_logPacket);
 }
 
+
+/**
+ * @brief Packs the read remote features complete event into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackReadRemoteFeaturesComplete(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_EVENT_CODE_SIZE+HCI_EVENT_PARAMETER_LENGTH_SIZE+HCI_EVENT_LE_PARAMETER_SUBCODE_SIZE);
@@ -1682,6 +2505,14 @@ static void ble_log_PackReadRemoteFeaturesComplete(BT_SYS_LogEvent_T *p_log, uin
     ble_log_Print(BLE_LOG_TYPE_HCI_EVENT, logLength, p_logPacket);
 }
 
+
+/**
+ * @brief Packs a Long Term Key Request event into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackLtkRequest(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_EVENT_CODE_SIZE+HCI_EVENT_PARAMETER_LENGTH_SIZE+HCI_EVENT_LE_PARAMETER_SUBCODE_SIZE);
@@ -1692,6 +2523,14 @@ static void ble_log_PackLtkRequest(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacke
     ble_log_Print(BLE_LOG_TYPE_HCI_EVENT, logLength, p_logPacket);
 }
 
+
+/**
+ * @brief Packs a Remote Connection Parameter Update Request event into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackRemoteConnectionUpdateRequest(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_EVENT_CODE_SIZE+HCI_EVENT_PARAMETER_LENGTH_SIZE+HCI_EVENT_LE_PARAMETER_SUBCODE_SIZE);
@@ -1704,6 +2543,14 @@ static void ble_log_PackRemoteConnectionUpdateRequest(BT_SYS_LogEvent_T *p_log, 
     ble_log_Print(BLE_LOG_TYPE_HCI_EVENT, logLength, p_logPacket);
 }
 
+
+/**
+ * @brief Packs a Data Length Change event into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackDataLengthChange(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_EVENT_CODE_SIZE+HCI_EVENT_PARAMETER_LENGTH_SIZE+HCI_EVENT_LE_PARAMETER_SUBCODE_SIZE);
@@ -1716,6 +2563,14 @@ static void ble_log_PackDataLengthChange(BT_SYS_LogEvent_T *p_log, uint8_t *p_lo
     ble_log_Print(BLE_LOG_TYPE_HCI_EVENT, logLength, p_logPacket);
 }
 
+
+/**
+ * @brief Packs a Direct Advertising Report event into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackDirectAdvReport(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_EVENT_CODE_SIZE+HCI_EVENT_PARAMETER_LENGTH_SIZE+HCI_EVENT_LE_PARAMETER_SUBCODE_SIZE);
@@ -1730,6 +2585,14 @@ static void ble_log_PackDirectAdvReport(BT_SYS_LogEvent_T *p_log, uint8_t *p_log
     ble_log_Print(BLE_LOG_TYPE_HCI_EVENT, logLength, p_logPacket);
 }
 
+
+/**
+ * @brief Packs a PHY Update Complete event into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackPhyUpdateComplete(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_EVENT_CODE_SIZE+HCI_EVENT_PARAMETER_LENGTH_SIZE+HCI_EVENT_LE_PARAMETER_SUBCODE_SIZE);
@@ -1741,6 +2604,14 @@ static void ble_log_PackPhyUpdateComplete(BT_SYS_LogEvent_T *p_log, uint8_t *p_l
     ble_log_Print(BLE_LOG_TYPE_HCI_EVENT, logLength, p_logPacket);
 }
 
+
+/**
+ * @brief Packs an Extended Advertising Report event into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackExtAdvReport(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_EVENT_CODE_SIZE+HCI_EVENT_PARAMETER_LENGTH_SIZE+HCI_EVENT_LE_PARAMETER_SUBCODE_SIZE);
@@ -1762,6 +2633,14 @@ static void ble_log_PackExtAdvReport(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPac
     ble_log_Print(BLE_LOG_TYPE_HCI_EVENT, logLength, p_logPacket);
 }
 
+
+/**
+ * @brief Packs a Periodic Advertising Sync Established event into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackPeriodicAdvSyncEstablished(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_EVENT_CODE_SIZE+HCI_EVENT_PARAMETER_LENGTH_SIZE+HCI_EVENT_LE_PARAMETER_SUBCODE_SIZE);
@@ -1777,6 +2656,14 @@ static void ble_log_PackPeriodicAdvSyncEstablished(BT_SYS_LogEvent_T *p_log, uin
     ble_log_Print(BLE_LOG_TYPE_HCI_EVENT, logLength, p_logPacket);
 }
 
+
+/**
+ * @brief Packs a Periodic Advertising Report event into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackPeriodicAdvReport(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_EVENT_CODE_SIZE+HCI_EVENT_PARAMETER_LENGTH_SIZE+HCI_EVENT_LE_PARAMETER_SUBCODE_SIZE);
@@ -1791,6 +2678,14 @@ static void ble_log_PackPeriodicAdvReport(BT_SYS_LogEvent_T *p_log, uint8_t *p_l
     ble_log_Print(BLE_LOG_TYPE_HCI_EVENT, logLength, p_logPacket);
 }
 
+
+/**
+ * @brief Packs a Periodic Advertising Report event into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackPeriodicAdvSyncLost(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_EVENT_CODE_SIZE+HCI_EVENT_PARAMETER_LENGTH_SIZE+HCI_EVENT_LE_PARAMETER_SUBCODE_SIZE);
@@ -1799,11 +2694,27 @@ static void ble_log_PackPeriodicAdvSyncLost(BT_SYS_LogEvent_T *p_log, uint8_t *p
     ble_log_Print(BLE_LOG_TYPE_HCI_EVENT, logLength, p_logPacket);
 }
 
+
+/**
+ * @brief Packs a Scan Timeout event into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackScanTimeout(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     ble_log_Print(BLE_LOG_TYPE_HCI_EVENT, logLength, p_logPacket);
 }
 
+
+/**
+ * @brief Packs an Advertising Set Terminated event into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackAdvSetTerminated(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_EVENT_CODE_SIZE+HCI_EVENT_PARAMETER_LENGTH_SIZE+HCI_EVENT_LE_PARAMETER_SUBCODE_SIZE);
@@ -1815,6 +2726,14 @@ static void ble_log_PackAdvSetTerminated(BT_SYS_LogEvent_T *p_log, uint8_t *p_lo
     ble_log_Print(BLE_LOG_TYPE_HCI_EVENT, logLength, p_logPacket);
 }
 
+
+/**
+ * @brief Packs a Scan Request Received event into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackScanRequestReceived(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_EVENT_CODE_SIZE+HCI_EVENT_PARAMETER_LENGTH_SIZE+HCI_EVENT_LE_PARAMETER_SUBCODE_SIZE);
@@ -1825,6 +2744,14 @@ static void ble_log_PackScanRequestReceived(BT_SYS_LogEvent_T *p_log, uint8_t *p
     ble_log_Print(BLE_LOG_TYPE_HCI_EVENT, logLength, p_logPacket);
 }
 
+
+/**
+ * @brief Packs a Channel Selection Algorithm event into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackChannelSelectAlgorithm(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_EVENT_CODE_SIZE+HCI_EVENT_PARAMETER_LENGTH_SIZE+HCI_EVENT_LE_PARAMETER_SUBCODE_SIZE);
@@ -1834,6 +2761,14 @@ static void ble_log_PackChannelSelectAlgorithm(BT_SYS_LogEvent_T *p_log, uint8_t
     ble_log_Print(BLE_LOG_TYPE_HCI_EVENT, logLength, p_logPacket);
 }
 
+
+/**
+ * @brief Packs the transmit power reporting data into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackTransmitPowerReporting(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_EVENT_CODE_SIZE+HCI_EVENT_PARAMETER_LENGTH_SIZE+HCI_EVENT_LE_PARAMETER_SUBCODE_SIZE);
@@ -1848,6 +2783,14 @@ static void ble_log_PackTransmitPowerReporting(BT_SYS_LogEvent_T *p_log, uint8_t
     ble_log_Print(BLE_LOG_TYPE_HCI_EVENT, logLength, p_logPacket);
 }
 
+
+/**
+ * @brief Packs the path loss threshold data into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackPathLossThreshold(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_EVENT_CODE_SIZE+HCI_EVENT_PARAMETER_LENGTH_SIZE+HCI_EVENT_LE_PARAMETER_SUBCODE_SIZE);
@@ -1858,6 +2801,34 @@ static void ble_log_PackPathLossThreshold(BT_SYS_LogEvent_T *p_log, uint8_t *p_l
     ble_log_Print(BLE_LOG_TYPE_HCI_EVENT, logLength, p_logPacket);
 }
 
+/**
+ * @brief Packs the subrate change into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
+static void ble_log_PackSubrateChange(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
+{
+    uint8_t *p_buf = (p_logPacket+HCI_EVENT_CODE_SIZE+HCI_EVENT_PARAMETER_LENGTH_SIZE+HCI_EVENT_LE_PARAMETER_SUBCODE_SIZE);
+
+    U8_TO_STREAM(&p_buf, ((HCI_EvtLeSubrateChange_T *)p_log->p_logPayload)->status);
+    U16_TO_STREAM_LE(&p_buf, ((HCI_EvtLeSubrateChange_T *)p_log->p_logPayload)->connHandle);
+    U16_TO_STREAM_LE(&p_buf, ((HCI_EvtLeSubrateChange_T *)p_log->p_logPayload)->subrateFactor);
+    U16_TO_STREAM_LE(&p_buf, ((HCI_EvtLeSubrateChange_T *)p_log->p_logPayload)->periLatency);
+    U16_TO_STREAM_LE(&p_buf, ((HCI_EvtLeSubrateChange_T *)p_log->p_logPayload)->continuationNum);
+    U16_TO_STREAM_LE(&p_buf, ((HCI_EvtLeSubrateChange_T *)p_log->p_logPayload)->supervisionTimeout);
+    ble_log_Print(BLE_LOG_TYPE_HCI_EVENT, logLength, p_logPacket);
+}
+
+
+/**
+ * @brief Packs the authenticated payload timeout expired data into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ */
 static void ble_log_PackAuthenticatedPayloadTimeoutExpired(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength)
 {
     uint8_t *p_buf = (p_logPacket+HCI_EVENT_CODE_SIZE+HCI_EVENT_PARAMETER_LENGTH_SIZE);
@@ -1866,6 +2837,16 @@ static void ble_log_PackAuthenticatedPayloadTimeoutExpired(BT_SYS_LogEvent_T *p_
     ble_log_Print(BLE_LOG_TYPE_HCI_EVENT, logLength, p_logPacket);
 }
 
+
+/**
+ * @brief Gets the size of HCI event parameters based on the event code and sub-event code.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param evtCode       Event code to determine the size of parameters.
+ * @param subEvtCode    Sub-event code to determine the size of parameters.
+ * 
+ * @retval Size of the HCI event parameters.
+ */
 static uint8_t ble_log_GetHciEventParametersSize(BT_SYS_LogEvent_T *p_log, uint8_t evtCode, uint8_t subEvtCode)
 {
     uint8_t evtParamsSize = 0;
@@ -1921,6 +2902,16 @@ static uint8_t ble_log_GetHciEventParametersSize(BT_SYS_LogEvent_T *p_log, uint8
     return evtParamsSize;
 }
 
+
+/**
+ * @brief Generates an HCI event based on the event code and packs it into a log packet.
+ *
+ * @param p_log         Pointer to the log event structure.
+ * @param p_logPacket   Pointer to the buffer where the log packet will be stored.
+ * @param logLength     Length of the log packet.
+ * 
+ * @param evtCode Event code to determine which event to generate.
+ */
 static void ble_log_GenerateHciEvent(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPacket, uint16_t logLength, uint8_t evtCode)
 {
     if (evtCode == HCI_DISCONNECTION_COMPLETE)
@@ -1953,7 +2944,11 @@ static void ble_log_GenerateHciEvent(BT_SYS_LogEvent_T *p_log, uint8_t *p_logPac
     }
 }
 
-//void ble_log_ProcHciEvent(BLE_Log_T *p_log)
+/**
+ * @brief Processes HCI events and generates corresponding log packets.
+ *
+ * @param p_log     Pointer to the log event structure.
+ */
 static void ble_log_ProcHciEvent(BT_SYS_LogEvent_T *p_log)
 {
     uint8_t *p_logPacket;
@@ -2000,7 +2995,11 @@ static void ble_log_ProcHciEvent(BT_SYS_LogEvent_T *p_log)
     OSAL_Free(p_logPacket);
 }
 
-//void ble_log_ProcHciAcl(BLE_Log_T *p_log)
+/**
+ * @brief Processes HCI ACL data and generates corresponding log packets.
+ *
+ * @param p_log     Pointer to the log event structure.
+ */
 static void ble_log_ProcHciAcl(BT_SYS_LogEvent_T *p_log)
 {
     uint8_t *p_logPacket;
@@ -2031,7 +3030,11 @@ static void ble_log_ProcHciAcl(BT_SYS_LogEvent_T *p_log)
     OSAL_Free(p_logPacket);
 }
 
-//void BLE_LOG_StackLogHandler(BLE_Log_T *p_log)
+/**
+ * @brief Handles stack log events and processes them based on their type.
+ *
+ * @param p_log     Pointer to the log event structure.
+ */
 void BLE_LOG_StackLogHandler(BT_SYS_LogEvent_T *p_log)
 {
     if (p_log->logType == (uint16_t)BT_SYS_LOG_TYPE_HCI_COMMAND)
@@ -2068,6 +3071,12 @@ void BLE_LOG_StackLogHandler(BT_SYS_LogEvent_T *p_log)
     OSAL_Free(p_log);
 }
 
+
+/**
+ * @brief Registers a callback for BLE log events.
+ *
+ * @param eventCb   Callback function to be registered for log events.
+ */
 void BLE_LOG_EventRegister(BLE_LOG_EventCb_T eventCb)
 {
     s_logEventCb = NULL;

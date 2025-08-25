@@ -31,10 +31,13 @@
     ble_tps.c
 
   Summary:
-    This file contains the BLE Tx Power Service functions for application user.
+    Implements the BLE) TX Power Service (TPS), providing interfaces for managing 
+    Tx power levels in a BLE application.
 
   Description:
-    This file contains the BLE Tx Power Service functions for application user.
+    This source file includes the necessary functions to interact with the BLE
+    TX Power Service, allowing an application to monitor the transmission power 
+    of a BLE device .
  *******************************************************************************/
 
 
@@ -55,30 +58,29 @@
 // Section: Macros
 // *****************************************************************************
 // *****************************************************************************
-
+#define BLE_TPS_MIN_KEY_SIZE                                0x10        // The minimum key size for attribute permissions (TPS).
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Local Variables
 // *****************************************************************************
 // *****************************************************************************
-
+/* UUIDs for BLE TX Power Service and its Characteristics */
 static const uint8_t s_svcUuidTps[ATT_UUID_LENGTH_2] =                 {UINT16_TO_BYTES(UUID_TXPOWER_SERVICE)};
 static const uint8_t s_chUuidTxPowerLevel[ATT_UUID_LENGTH_2] =         {UINT16_TO_BYTES(UUID_TXPOWER_LEVEL)};
 
-/* Tx Power Service Declaration */
+/* BLE TX Power Service Declaration */
 static uint16_t s_svcUuidTpsLen = (uint16_t)sizeof(s_svcUuidTps);
 
-/* Tx Power Level Characteristic Declaration */
+/* BLE TX Power Level Characteristic Declaration */
 static const uint8_t s_charTxPowerLevel[] = {(ATT_PROP_READ), UINT16_TO_BYTES(TPS_HDL_CHARVAL_TXPOWER_LEVEL), UINT16_TO_BYTES(UUID_TXPOWER_LEVEL)};
 static const uint16_t s_charTxPowerLevelLen = (uint16_t)sizeof (s_charTxPowerLevel);
 
-/* Tx Power Level Characteristic Value */
+/* BLE TX Power Level Characteristic Value */
 static uint8_t s_txPowerLevelVal[1] = {0};
 static uint16_t s_txPowerLevelValLen = 1;
 
-
-/* Attribute list for Tx Power service */
+/* Attribute list for BLE TX Power service */
 static GATTS_Attribute_T s_tpsList[] = {
     /* Service Declaration */
     {
@@ -109,7 +111,7 @@ static GATTS_Attribute_T s_tpsList[] = {
     },
 };
 
-/* Tx Power Service structure */
+/* BLE TX Power Service structure */
 static GATTS_Service_T s_svcTps =
 {
     NULL,
@@ -125,7 +127,15 @@ static GATTS_Service_T s_svcTps =
 // Section: Functions
 // *****************************************************************************
 // *****************************************************************************
-
+/**
+ * @brief Adds the BLE TX Power Service to the GATT server.
+ *
+ * This function adds the BLE TX Power Service to the BLE stack's GATT server,
+ * enabling the service to be discovered and accessed by remote BLE devices.
+ * 
+ * @retval MBA_RES_SUCCESS                    The BLE TX Power service was successfully added.
+ * @retval MBA_RES_NO_RESOURCE                Insufficient resource to add the BLE TX Power service.
+ */
 uint16_t BLE_TPS_Add(void)
 {
     return GATTS_AddService(&s_svcTps, (uint8_t)((uint16_t)TPS_END_HDL - (uint16_t)TPS_START_HDL + 1U));

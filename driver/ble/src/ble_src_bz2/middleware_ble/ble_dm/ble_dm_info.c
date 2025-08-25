@@ -31,12 +31,14 @@
     ble_dm_info.c
 
   Summary:
-    This file contains the Device Information functions for 
-    BLE Device Manager module internal use.
+    Implements the internal Device Information functions used by the BLE Device 
+    Manager module.
 
   Description:
-    This file contains the Device Information functions for 
-    BLE Device Manager module internal use.
+    This source file provides the implementation for the internal functions
+    that handle device information within the BLE Device Manager. These
+    functions are not exposed externally and are utilized for managing BLE
+    device information states and processes.
  *******************************************************************************/
 
 
@@ -59,22 +61,31 @@
 // *****************************************************************************
 typedef struct BLE_DM_InfoCtrl_T
 {
-    BLE_DM_InfoConn_T *  conn[BLE_GAP_MAX_LINK_NBR];
-    uint8_t              filterAcceptListCnt;
-    uint8_t              filterAcceptList[BLE_DM_MAX_FILTER_ACCEPT_LIST_NUM];
+    BLE_DM_InfoConn_T *  conn[BLE_GAP_MAX_LINK_NBR];                            // Array of pointers to connection information.
+    uint8_t              filterAcceptListCnt;                                   // Count of devices in the filter accept list.
+    uint8_t              filterAcceptList[BLE_DM_MAX_FILTER_ACCEPT_LIST_NUM];   // Filter accept list.
 } BLE_DM_InfoCtrl_T;
 
 
-/**************************************************************************************************
-  Variables
-**************************************************************************************************/
-static BLE_DM_InfoCtrl_T      *sp_dmInfoCtrl;
+// *****************************************************************************
+// *****************************************************************************
+// Section: Local Variables
+// *****************************************************************************
+// *****************************************************************************
+static BLE_DM_InfoCtrl_T      *sp_dmInfoCtrl;                                   // Pointer to @ref BLE_DM_InfoCtrl_T structure.
 
 
-/**************************************************************************************************
-  Function
-**************************************************************************************************/
+// *****************************************************************************
+// *****************************************************************************
+// Section: Functions
+// *****************************************************************************
+// *****************************************************************************
 
+/**
+ * @brief Get a free connection object from the BLE Device Manager.
+ * 
+ * @retval Pointer to the free connection object, or NULL if none are available.
+ */
 static BLE_DM_InfoConn_T *ble_dm_InfoGetFreeConn(void)
 {
     uint8_t i;
@@ -95,6 +106,14 @@ static BLE_DM_InfoConn_T *ble_dm_InfoGetFreeConn(void)
     return NULL;
 }
 
+
+/**
+ * @brief Get a connection object by its handle.
+ * 
+ * @param[in] connHandle    The handle of the connection to retrieve.
+ * 
+ * @retval Pointer to the connection object, or NULL if not found.
+ */
 BLE_DM_InfoConn_T *BLE_DM_InfoGetConnByHandle(uint16_t connHandle)
 {
     uint8_t i;
@@ -111,6 +130,11 @@ BLE_DM_InfoConn_T *BLE_DM_InfoGetConnByHandle(uint16_t connHandle)
 }
 
 
+/**
+ * @brief Free a connection object.
+ * 
+ * @param[in] p_conn    Pointer to the connection object to free.
+ */
 static void ble_dm_FreeConn(BLE_DM_InfoConn_T * p_conn)
 {
     uint8_t i;
@@ -132,7 +156,11 @@ static void ble_dm_FreeConn(BLE_DM_InfoConn_T * p_conn)
     }
 }
 
-
+/**
+ * @brief Initialize the BLE Device Information submodule.
+ * 
+ * @retval true if initialization was successful, false otherwise.
+ */
 bool BLE_DM_InfoInit(void)
 {
     uint8_t i;
@@ -159,6 +187,12 @@ bool BLE_DM_InfoInit(void)
     return true;
 }
 
+
+/**
+ * @brief Handle BLE stack events related to the Device Manager.
+ * 
+ * @param[in] p_stackEvent Pointer to the stack event to handle.
+ */
 void BLE_DM_Info(STACK_Event_T *p_stackEvent)
 {
     switch (p_stackEvent->groupId)
@@ -247,6 +281,15 @@ void BLE_DM_Info(STACK_Event_T *p_stackEvent)
     }
 }
 
+
+/**
+ * @brief Set the BLE filter accept list.
+ * 
+ * @param[in] devCnt    Number of devices to add to the list.
+ * @param[in] p_devId   Pointer to the array of device IDs to add.
+ * 
+ * @retval MBA_RES_SUCCESS on success, error code otherwise.
+ */
 uint16_t BLE_DM_InfoSetFilterAcceptList(uint8_t devCnt, uint8_t const * p_devId)
 {
     uint16_t result;
@@ -301,6 +344,14 @@ uint16_t BLE_DM_InfoSetFilterAcceptList(uint8_t devCnt, uint8_t const * p_devId)
 }
 
 
+/**
+ * @brief Retrieve the BLE filter accept list.
+ * 
+ * @param[out] p_devCnt      Pointer to store the count of devices in the list.
+ * @param[out] p_addr        Pointer to the array to store the device addresses.
+ * 
+ * @retval MBA_RES_SUCCESS on success, error code otherwise.
+ */
 uint16_t BLE_DM_InfoGetFilterAcceptList(uint8_t *p_devCnt, BLE_GAP_Addr_T *p_addr)
 {
     BLE_DM_PairedDevInfo_T pairedInfo;
@@ -320,6 +371,16 @@ uint16_t BLE_DM_InfoGetFilterAcceptList(uint8_t *p_devCnt, BLE_GAP_Addr_T *p_add
     return MBA_RES_SUCCESS;
 }
 
+
+/**
+ * @brief Set the BLE resolving list.
+ * 
+ * @param[in] devCnt        Number of devices to add to the list.
+ * @param[in] p_devId       Pointer to the array of device IDs to add.
+ * @param[in] p_privacyMode Pointer to the array of privacy modes for each device.
+ * 
+ * @retval MBA_RES_SUCCESS on success, error code otherwise.
+ */
 uint16_t BLE_DM_InfoSetResolvingList(uint8_t devCnt, uint8_t const *p_devId, uint8_t const *p_privacyMode)
 {
     uint16_t                        result;
@@ -393,6 +454,15 @@ uint16_t BLE_DM_InfoSetResolvingList(uint8_t devCnt, uint8_t const *p_devId, uin
     return result;
 }
 
+
+/**
+ * @brief Retrieve the connection handle by device ID.
+ * 
+ * @param[in]  devId         The device ID to look up.
+ * @param[out] p_connHandle  Pointer to store the connection handle.
+ * 
+ * @retval MBA_RES_SUCCESS on success, error code otherwise.
+ */
 uint16_t BLE_DM_InfoGetConnHandleByDevId(uint8_t devId, uint16_t *p_connHandle)
 {
     uint8_t  i;

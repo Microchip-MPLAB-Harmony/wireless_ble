@@ -31,10 +31,12 @@
     ble_trspc.c
 
   Summary:
-    This file contains the BLE Transparent Client functions for application user.
+    Implements the client-side functionality of the BLE Transparent Profile.
 
   Description:
-    This file contains the BLE Transparent Client functions for application user.
+    This source file provides the implementation for the client-side operations
+    of the BLE Transparent Profile, enabling the application to interact with
+    the corresponding server-side profile on a remote BLE device.
  *******************************************************************************/
 
 
@@ -60,109 +62,68 @@
 // Section: Macros
 // *****************************************************************************
 // *****************************************************************************
+#define BLE_TRSPC_CCCD_DISABLE                  (0x0000U)       // Client Characteristic Configuration Descriptor (CCCD) disabled state.
+#define BLE_TRSPC_CCCD_NOTIFY                   NOTIFICATION    // CCCD notification property enabled state.
 
-/**@defgroup BLE_TRSPC_CCCD BLE_TRSPC_CCCD
- * @brief The definition of Client Characteristic Configuration Descriptor
- * @{ */
-#define BLE_TRSPC_CCCD_DISABLE                  (0x0000U)      /**< Definition of Client Characteristic Configuration Descriptor disable. */
-#define BLE_TRSPC_CCCD_NOTIFY                   NOTIFICATION   /**< Definition of Client Characteristic Configuration Descriptor enable NOTIFY property. */
-/** @} */
+#define BLE_TRSPC_CBFC_OPCODE_SUCCESS           (0x00U)         // Response code for successful operation.
+#define BLE_TRSPC_CBFC_OPCODE_DL_ENABLED        (0x14U)         // Opcode to enable Credit Based Flow Control (CBFC) for downlink.
+#define BLE_TRSPC_CBFC_OPCODE_UL_ENABLED        (0x15U)         // Opcode to enable Credit Based Flow Control (CBFC) for uplink.
 
-/**@defgroup BLE_TRSPC_CBFC_OPCODE BLE_TRSPC_CBFC_OPCODE
- * @brief The definition of BLE transparent credit based flow control
- * @{ */
-#define BLE_TRSPC_CBFC_OPCODE_SUCCESS           (0x00U)    /**< Definition of response for successful operation. */
-#define BLE_TRSPC_CBFC_OPCODE_DL_ENABLED        (0x14U)    /**< Definition of Op Code for Credit Based Flow Control Protocol, Enable CBFC downlink. */
-#define BLE_TRSPC_CBFC_OPCODE_UL_ENABLED        (0x15U)    /**< Definition of Op Code for Credit Based Flow Control Protocol: Enable CBFC uplink. */
-/** @} */
+#define BLE_TRSPC_VENDOR_OPCODE_MIN             (0x20U)         // Minimum opcode value for TRS vendor-specific commands.
+#define BLE_TRSPC_VENDOR_OPCODE_MAX             (0xFFU)         // Maximum opcode value for TRS vendor-specific commands.
 
-/**@defgroup BLE_TRSPC_VENDOR_OPCODE BLE_TRSPC_VENDOR_OPCODE
- * @brief The definition of BLE transparent vendor opcodes
- * @{ */
-#define BLE_TRSPC_VENDOR_OPCODE_MIN             (0x20U)    /**< Definition of Op Code range in TRS vendor commands. */
-#define BLE_TRSPC_VENDOR_OPCODE_MAX             (0xFFU)    /**< Definition of Op Code range in TRS vendor commands. */
-/** @} */
+#define BLE_TRSPC_INIT_CREDIT                   (0x10U)         // Initial credit value for CBFC.
 
-/**@defgroup BLE_TRSPC_INIT_CREDIT BLE_TRSPC_INIT_CREDIT
- * @brief The definition of initial credit value.
- * @{ */
-#define BLE_TRSPC_INIT_CREDIT                   (0x10U)     /**< Definition of initial credit */
-/** @} */
+// Maximum number of incoming buffers, based on initial credit and max connections.
+#define BLE_TRSPC_MAX_BUF_IN                    (BLE_TRSPC_INIT_CREDIT*BLE_TRSPC_MAX_CONN_NBR)
 
-/**@defgroup BLE_TRSPC_MAX_BUF BLE_TRSPC_MAX_BUF
- * @brief The definition of maximum buffer list.
- * @{ */
-#define BLE_TRSPC_MAX_BUF_IN                    (BLE_TRSPC_INIT_CREDIT*BLE_TRSPC_MAX_CONN_NBR)     /**< Maximum incoming queue number */
-/** @} */
+#define BLE_TRSPC_MAX_RETURN_CREDIT             (13U)           // Maximum number of credits that can be returned.
 
-/**@defgroup BLE_TRSPC_MAX_RETURN_CREDIT BLE_TRSPC_MAX_RETURN_CREDIT
- * @brief The definition of maximum return credit number.
- * @{ */
-#define BLE_TRSPC_MAX_RETURN_CREDIT             (13U)     /**< Maximum return credit number */
-/** @} */
+#define CBFC_PROC_IDLE                          (0x00U)         // CBFC procdure: Idle.
+#define CBFC_PROC_ENABLE_SESSION                (0x01U)         // CBFC procdure: Enable Control Point CCCD.
+#define CBFC_PROC_ENABLE_TCP_CCCD               (0x02U)         // CBFC procdure: Enable TCP CCCD.
+#define CBFC_PROC_ENABLE_TDD_CBFC               (0x03U)         // CBFC procdure: Enable TDD CBFC.
+#define CBFC_PROC_ENABLE_TUD_CCCD               (0x04U)         // CBFC procdure: Enable TUD CCCD.
+#define CBFC_PROC_DISABLE_TUD_CCCD              (0x05U)         // CBFC procdure: Disable TUD CCCD.
 
-/**@defgroup BLE_TRSPC_CBFC_PROC BLE_TRSPC_CBFC_PROC
- * @brief The definition of CBFC procedure in connect/disconnect process.
- * @{ */
-#define CBFC_PROC_IDLE                          (0x00U)    /**< CBFC procdure: Idle. */
-#define CBFC_PROC_ENABLE_SESSION                (0x01U)    /**< CBFC procdure: Enable Control Point CCCD. */
-#define CBFC_PROC_ENABLE_TCP_CCCD               (0x02U)    /**< CBFC procdure: Enable TCP CCCD. */
-#define CBFC_PROC_ENABLE_TDD_CBFC               (0x03U)    /**< CBFC procdure: Enable TDD CBFC. */
-#define CBFC_PROC_ENABLE_TUD_CCCD               (0x04U)    /**< CBFC procdure: Enable TUD CCCD. */
-#define CBFC_PROC_DISABLE_TUD_CCCD              (0x05U)    /**< CBFC procdure: Disable TUD CCCD. */
-/** @} */
+#define VENCOM_PROC_IDLE                        (0x00U)         // Vendor command response procdure: Idle.
+#define VENCOM_PROC_ENABLE                      (0x01U)         // Vendor command response procdure: Enable.
 
-/**@defgroup BLE_TRSPC_VENCOM_PROC BLE_TRSPC_VENCOM_PROC
- * @brief The definition of vendor command response procedure.
- * @{ */
-#define VENCOM_PROC_IDLE                        (0x00U)    /**< Vendor command response procdure: Idle. */
-#define VENCOM_PROC_ENABLE                      (0x01U)    /**< Vendor command response procdure: Enable. */
-/** @} */
+#define BLE_TRSPC_CBFC_DISABLED                 (0x00U)         // CBFC downlink/uplink disabled state for BLE transparent service.
+#define BLE_TRSPC_CBFC_DL_ENABLED               (0x01U)         // CBFC downlink enabled state for BLE transparent service.
+#define BLE_TRSPC_CBFC_UL_ENABLED               (0x02U)         // CBFC uplink enabled state for BLE transparent service.
 
-/**@defgroup BLE_TRSPC_CBFC_CONFIG BLE_TRSPC_CBFC_CONFIG
- * @brief The definition of credit base flow control configuration.
- * @{ */
-#define BLE_TRSPC_CBFC_DISABLED                 (0x00U)    /**< Definition of ble transparent service credit based downlink/uplink disable. */
-#define BLE_TRSPC_CBFC_DL_ENABLED               (0x01U)    /**< Definition of ble transparent service credit based downlink enable. */
-#define BLE_TRSPC_CBFC_UL_ENABLED               (0x02U)    /**< Definition of ble transparent service credit based uplink enable. */
-/** @} */
+#define BLE_TRSPC_CP_STATUS_DISABLED            (0x00U)         // Transparent control point CCCD disabled state.
+#define BLE_TRSPC_CP_STATUS_ENABLED             (0x80U)         // Transparent control point CCCD enabled state (Notify).
 
-/**@defgroup BLE_TRSPC_CP_STATUS BLE_TRSPC_CP_STATUS
- * @brief The definition of BLE transparent service control point status.
- * @{ */
-#define BLE_TRSPC_CP_STATUS_DISABLED            (0x00U)    /**< Transparent control point CCCD is disabled. */
-#define BLE_TRSPC_CP_STATUS_ENABLED             (0x80U)    /**< Transparent control point CCCD is enabled (Notify). */
-/** @} */
+// MCHP proprietary service UUID (little endian).
+#define UUID_MCHP_TRANS_SVC                     0x55,0xE4,0x05,0xD2,0xAF,0x9F,0xA9,0x8F,0xE5,0x4A,0x7D,0xFE,0x43,0x53,0x53,0x49
 
-/**@defgroup BLE_TRSPC_UUID BLE_TRSPC_UUID
- * @brief The definition of UUID in TRS
- * @{ */
-#define UUID_MCHP_TRANS_SVC                     0x55,0xE4,0x05,0xD2,0xAF,0x9F,0xA9,0x8F,0xE5,0x4A,0x7D,0xFE,0x43,0x53,0x53,0x49         /**< Definition of MCHP proprietary service UUID in little endian. */
-#define UUID_MCHP_CHAR_TUD                      0x16,0x96,0x24,0x47,0xC6,0x23,0x61,0xBA,0xD9,0x4B,0x4D,0x1E,0x43,0x53,0x53,0x49         /**< Definition of MCHP Transparent TUD characteristic UUID in little endian. */
-#define UUID_MCHP_CHAR_TDD                      0xB3,0x9B,0x72,0x34,0xBE,0xEC,0xD4,0xA8,0xF4,0x43,0x41,0x88,0x43,0x53,0x53,0x49         /**< Definition of MCHP Transparent TDD characteristic UUID in little endian. */
-#define UUID_MCHP_CHAR_TCP                      0x7e,0x3b,0x07,0xff,0x1c,0x51,0x49,0x2f,0xb3,0x39,0x8a,0x4c,0x43,0x53,0x53,0x49         /**< Definition of MCHP Transparent TCP characteristic UUID in little endian. */
-/** @} */
+// MCHP Transparent TUD characteristic UUID (little endian).
+#define UUID_MCHP_CHAR_TUD                      0x16,0x96,0x24,0x47,0xC6,0x23,0x61,0xBA,0xD9,0x4B,0x4D,0x1E,0x43,0x53,0x53,0x49
 
-/**@brief Enumeration type of BLE transparent profile characteristics. */
+// MCHP Transparent TDD characteristic UUID (little endian).
+#define UUID_MCHP_CHAR_TDD                      0xB3,0x9B,0x72,0x34,0xBE,0xEC,0xD4,0xA8,0xF4,0x43,0x41,0x88,0x43,0x53,0x53,0x49
+
+// MCHP Transparent TCP characteristic UUID (little endian).
+#define UUID_MCHP_CHAR_TCP                      0x7e,0x3b,0x07,0xff,0x1c,0x51,0x49,0x2f,0xb3,0x39,0x8a,0x4c,0x43,0x53,0x53,0x49
+
 typedef enum BLE_TRSPC_CharIndex_T
 {
-    TRSPC_INDEX_CHARTUD = 0x00U,        /**< Index of transparent transparent Uplink Data Characteristic. */
-    TRSPC_INDEX_CHARTUDCCCD,            /**< Index of transparent Uplink Data Characteristic CCCD. */
-    TRSPC_INDEX_CHARTDD,                /**< Index of transparent transparent Downlink Data Characteristic. */
-    TRSPC_INDEX_CHARTCP,                /**< Index of transparent Control Point characteristic. */
-    TRSPC_INDEX_CHARTCPCCCD,            /**< Index of transparent Control Point CCCD. */
-    TRSPC_CHAR_NUM                      /**< Total number of TRS characteristics. */
+    TRSPC_INDEX_CHARTUD = 0x00U,                // Index for Transparent Uplink Data Characteristic.
+    TRSPC_INDEX_CHARTUDCCCD,                    // Index for Transparent Uplink Data CCCD.
+    TRSPC_INDEX_CHARTDD,                        // Index for Transparent Downlink Data Characteristic.
+    TRSPC_INDEX_CHARTCP,                        // Index for Transparent Control Point Characteristic.
+    TRSPC_INDEX_CHARTCPCCCD,                    // Index for Transparent Control Point CCCD.
+    TRSPC_CHAR_NUM                              // Total number of TRS characteristics.
 }BLE_TRSPC_CharIndex_T;
 
-/**@defgroup BLE_TRSPC_STATE TRSPC state
- * @brief The definition of BLE TRSPC connection state
- * @{ */
 typedef enum BLE_TRSPC_State_T
 {
-    BLE_TRSPC_STATE_IDLE = 0x00,        /**< Default state (Disconnected). */
-    BLE_TRSPC_STATE_CONNECTED           /**< Connected. */
+    BLE_TRSPC_STATE_IDLE = 0x00,                // The BLE Transparent profile is in an idle state.
+    BLE_TRSPC_STATE_CONNECTED                   // The BLE Transparent profile is in a connected state.
 } BLE_TRSPC_State_T;
-/** @} */
+
 
 // *****************************************************************************
 // *****************************************************************************
@@ -170,74 +131,82 @@ typedef enum BLE_TRSPC_State_T
 // *****************************************************************************
 // *****************************************************************************
 
-/**@brief The structure contains information about BLE transparent profile packetIn. */
+/* Structure for BLE transparent profile packet information. */
 typedef struct BLE_TRSPC_PacketList_T
 {
-    uint16_t                   length;                  /**< Data length. */
-    uint8_t                    *p_packet;               /**< Pointer to the TX/RX data buffer */
+    uint16_t                   length;                  // Length of the data in bytes.
+    uint8_t                    *p_packet;               // Pointer to the data buffer for transmission or reception.
 } BLE_TRSPC_PacketList_T;
 
-/**@brief The structure contains information about packet input queue format of BLE transparent profile. */
+/* Structure for managing the input queue of packets in the BLE transparent profile. */
 typedef struct BLE_TRSPC_QueueIn_T
 {
-    uint8_t                    usedNum;                    /**< The number of data list of packetIn buffer. */
-    uint8_t                    writeIndex;                 /**< The Index of data, written in packet buffer. */
-    uint8_t                    readIndex;                  /**< The Index of data, read in packet buffer. */
-    BLE_TRSPC_PacketList_T     packetList[BLE_TRSPC_INIT_CREDIT];  /**< Written in packet buffer. @ref BLE_TRSPC_PacketList_T.*/  
+    uint8_t                    usedNum;                 // Number of packets currently in the input buffer.
+    uint8_t                    writeIndex;              // Index at which a new packet will be written to the buffer.
+    uint8_t                    readIndex;               // Index from which the next packet will be read from the buffer.
+    BLE_TRSPC_PacketList_T     packetList[BLE_TRSPC_INIT_CREDIT];  // Array of packet buffers.
 } BLE_TRSPC_QueueIn_T;
 
-/**@brief The structure contains information about BLE transparent profile connection parameters for recording connection information. */
+/* Structure for storing connection-specific information in the BLE transparent profile. */
 typedef struct BLE_TRSPC_ConnList_T
 {
-    uint8_t                     trsState;               /**< BLE transparent service current state. @ref BLE_TRSPC_STATUS.*/
-    uint8_t                     connIndex;
-    uint16_t                    connHandle;             /**< Connection handle associated with this connection. */
-    uint16_t                    attMtu;                 /**< Record the current connection MTU size. */
-    uint8_t                     cbfcConfig;             /**< Credit based flow control usage of uplink/downlink. */
-    uint8_t                     cbfcProcedure;          /**< Record ongoing credit based flow control configuration procedure. */
-    uint8_t                     localCredit;            /**< Credit number of TRS downlink (Client to Server). */
-    uint8_t                     peerCredit;             /**< Credit number of TRS uplink (Server to Client). */
-    uint8_t                     vendorCmdProc;          /**< Vendor command reponse procedure. */
-    BLE_TRSPC_QueueIn_T         inputQueue;             /**< Input queue to store Rx packets. */
-    uint8_t                     cbfcRetryProcedure;     /**< Record credit based flow control configuration procedure for retry used. */
-    uint8_t                     sessionReqAuth;         /**< Data Session need authenticated. */
-    BLE_TRSPC_State_T           state;                  /**< Connection state. */
+    uint8_t                     trsState;               // Current state of the BLE transparent service.
+    uint8_t                     connIndex;              // Index identifying the connection.
+    uint16_t                    connHandle;             // Handle for the BLE connection.
+    uint16_t                    attMtu;                 // MTU size for the current connection.
+    uint8_t                     cbfcConfig;             // Configuration for credit-based flow control.
+    uint8_t                     cbfcProcedure;          // Ongoing procedure for configuring credit-based flow control.
+    uint8_t                     localCredit;            // Credits available for downlink (Client to Server).
+    uint8_t                     peerCredit;             // Credits available for uplink (Server to Client).
+    uint8_t                     vendorCmdProc;          // Procedure for handling vendor-specific commands.
+    BLE_TRSPC_QueueIn_T         inputQueue;             // Queue for incoming packets.
+    uint8_t                     cbfcRetryProcedure;     // Procedure for retrying credit-based flow control configuration.
+    uint8_t                     sessionReqAuth;         // Indicates if data session requires authentication.
+    BLE_TRSPC_State_T           state;                  // State of the BLE connection.
 } BLE_TRSPC_ConnList_T;
+
+/* The Structure service database and discovery list for BLE TRSPC. */
+typedef struct BLE_TRSPC_TrsServiceDb_T
+{
+    BLE_DD_CharList_T trspcCharList[BLE_TRSPC_MAX_CONN_NBR];
+    BLE_DD_CharInfo_T trspcCharInfoList[BLE_TRSPC_MAX_CONN_NBR][TRSPC_CHAR_NUM];
+    BLE_DD_DiscChar_T trspcDiscCharList[TRSPC_CHAR_NUM];
+    BLE_DD_DiscChar_T *p_trspcDiscCharList[TRSPC_CHAR_NUM];
+} BLE_TRSPC_TrsServiceDb_T;
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Local Variables
 // *****************************************************************************
 // *****************************************************************************
+// Callback function type for BLE Transparent profile events processing.
 static BLE_TRSPC_EventCb_T      bleTrspcProcess;
-static BLE_TRSPC_ConnList_T     s_trspcConnList[BLE_TRSPC_MAX_CONN_NBR];
-static BLE_DD_CharInfo_T        s_trsCharInfoList[BLE_TRSPC_MAX_CONN_NBR][TRSPC_CHAR_NUM];
 
+// Connection list for BLE Transparent profile.
+static BLE_TRSPC_ConnList_T     *sp_trspcConnList[BLE_TRSPC_MAX_CONN_NBR];
+
+// List of pointers to the discovery information for TRS characteristics and descriptors.
+static BLE_TRSPC_TrsServiceDb_T *sp_trspcServiceDb;
+
+// UUID for the Microchip Transparent Service.
 static const uint8_t            discSvcUuid[] =     {UUID_MCHP_TRANS_SVC};
 
+// UUID for the Transparent Uplink Data Characteristic. 
 static const ATT_Uuid_T         discCharTud =       { {UUID_MCHP_CHAR_TUD}, ATT_UUID_LENGTH_16 };
+
+// UUID for the Transparent Uplink Data Characteristic's Client Characteristic Configuration Descriptor (CCCD).
 static const ATT_Uuid_T         discCharTudCccd =   { {UINT16_TO_BYTES(UUID_DESCRIPTOR_CLIENT_CHAR_CONFIG)}, ATT_UUID_LENGTH_2 };
+
+// UUID for the Transparent Downlink Data Characteristic.
 static const ATT_Uuid_T         discCharTdd =       { {UUID_MCHP_CHAR_TDD}, ATT_UUID_LENGTH_16 };
+
+// UUID for the Transparent Control Point Characteristic.
 static const ATT_Uuid_T         discCharTcp =       { {UUID_MCHP_CHAR_TCP}, ATT_UUID_LENGTH_16 };
+
+// UUID for the Transparent Control Point Characteristic's Client Characteristic Configuration Descriptor (CCCD). 
 static const ATT_Uuid_T         discCharTcpCccd =   { {UINT16_TO_BYTES(UUID_DESCRIPTOR_CLIENT_CHAR_CONFIG)}, ATT_UUID_LENGTH_2 };
 
-static BLE_DD_DiscChar_T        trsTud =            { &discCharTud, 0 };
-static BLE_DD_DiscChar_T        trsTudCccd =        { &discCharTudCccd, CHAR_SET_DESCRIPTOR };
-static BLE_DD_DiscChar_T        trsTdd =            { &discCharTdd, 0 };
-static BLE_DD_DiscChar_T        trsTcp =            { &discCharTcp, 0 };
-static BLE_DD_DiscChar_T        trsTcpCccd =        { &discCharTcpCccd, CHAR_SET_DESCRIPTOR };
-
-static BLE_DD_DiscChar_T        *trsDiscCharList[] =
-{
-    &trsTud,                    /* Transparent Uplink Data Characteristic */
-    &trsTudCccd,                /* Transparent Uplink Data Characteristic CCCD */
-    &trsTdd,                    /* Transparent Downlink Data Characteristic */
-    &trsTcp,                    /* Transparent Control Point Characteristic */
-    &trsTcpCccd                 /* Transparent Control Point Characteristic CCCD*/
-};
-
-static BLE_DD_CharList_T        s_trsCharList[BLE_TRSPC_MAX_CONN_NBR];
-
+// Assertion to ensure the buffer initialization matches the connection number and initial credits.
 MW_ASSERT((BLE_TRSPC_MAX_CONN_NBR*BLE_TRSPC_INIT_CREDIT)==BLE_TRSPC_MAX_BUF_IN);
 
 // *****************************************************************************
@@ -249,58 +218,95 @@ MW_ASSERT((BLE_TRSPC_MAX_CONN_NBR*BLE_TRSPC_INIT_CREDIT)==BLE_TRSPC_MAX_BUF_IN);
 static void ble_trspc_ProcessQueuedTask(void);
 static void ble_trspc_OnLinkEncrypted(uint16_t connHandle);
 
-static void ble_trspc_InitConnList(BLE_TRSPC_ConnList_T *p_conn)
+/**
+ * @brief Free the connection list for the TRSPC.
+ *
+ * @param p_conn        Pointer to the TRSPC connection list structure to initialize.
+ * @param disconnect    Flag indicating whether to disconnect.
+ */
+static void ble_trspc_FreeConnList(BLE_TRSPC_ConnList_T *p_conn)
 {
-    (void)memset((uint8_t *)p_conn, 0, sizeof(BLE_TRSPC_ConnList_T));
-    p_conn->attMtu= BLE_ATT_DEFAULT_MTU_LEN;
+    uint8_t i;
+    for (i = 0; i < BLE_TRSPC_MAX_CONN_NBR; i++)
+    {
+        if (sp_trspcConnList[i] == p_conn)
+        {
+            OSAL_Free(sp_trspcConnList[i]);
+            sp_trspcConnList[i] = NULL;
+            break;
+        }
+    }
 }
 
+
+/**
+ * @brief Retrieve a connection list entry by its connection handle.
+ *
+ * @param connHandle The connection handle to search for.
+ * 
+ * @retval Pointer to the corresponding connection list entry, or NULL if not found.
+ */
 static BLE_TRSPC_ConnList_T *ble_trspc_GetConnListByHandle(uint16_t connHandle)
 {
     uint8_t i;
 
     for(i=0; i<BLE_TRSPC_MAX_CONN_NBR; i++)
     {
-        if ((s_trspcConnList[i].state == BLE_TRSPC_STATE_CONNECTED) && (s_trspcConnList[i].connHandle == connHandle))
+        if ((sp_trspcConnList[i] != NULL) && (sp_trspcConnList[i]->state == BLE_TRSPC_STATE_CONNECTED) && (sp_trspcConnList[i]->connHandle == connHandle))
         {
-            return &s_trspcConnList[i];
+            return sp_trspcConnList[i];
         }
     }
-
     return NULL;
 }
 
+
+/**
+ * @brief Get a free connection list entry.
+ *
+ * @retval Pointer to a free connection list entry, or NULL if all entries are in use.
+ */
 static BLE_TRSPC_ConnList_T *ble_trspc_GetFreeConnList(void)
 {
     uint8_t i;
+    BLE_TRSPC_ConnList_T *p_conn = NULL;
 
-    for(i=0; i<BLE_TRSPC_MAX_CONN_NBR; i++)
+    for(i = 0; i < BLE_TRSPC_MAX_CONN_NBR; i++)
     {
-        if (s_trspcConnList[i].state == BLE_TRSPC_STATE_IDLE)
+        if (sp_trspcConnList[i] == NULL)
         {
-            s_trspcConnList[i].state = BLE_TRSPC_STATE_CONNECTED;
-            s_trspcConnList[i].connIndex = i;
-            return &s_trspcConnList[i];
+            sp_trspcConnList[i] = OSAL_Malloc(sizeof(BLE_TRSPC_ConnList_T));
+            p_conn = sp_trspcConnList[i];
+            if (p_conn != NULL)
+            {
+                (void)memset(p_conn, 0, sizeof(BLE_TRSPC_ConnList_T));
+                p_conn->attMtu    = BLE_ATT_DEFAULT_MTU_LEN;
+                p_conn->state     = BLE_TRSPC_STATE_CONNECTED;
+                p_conn->connIndex = i;
+            }
+            break;
         }
     }
-
-    return NULL;
+    return p_conn;
 }
 
-static void ble_trspc_InitCharList(BLE_DD_CharList_T *p_charList, uint8_t connIndex)
+/**
+ * @brief Initializes the Transparent profile Service (TRS) characteristic list to zero.
+ * 
+ * @param connIndex     Index of the connection in the TRS characteristic list.
+ */
+static void ble_trspc_InitTrsCharList(uint8_t connIndex)
 {
-    uint8_t i;
-
-    p_charList->connHandle = 0;
-    p_charList->p_charInfo = (BLE_DD_CharInfo_T *) &(s_trsCharInfoList[connIndex]);
-
-    for(i=0U; i<(uint8_t)TRSPC_CHAR_NUM; i++)
-    {
-        s_trsCharInfoList[connIndex][i].charHandle = 0;
-        s_trsCharInfoList[connIndex][i].property = 0;
-    }
+    (void)memset(&sp_trspcServiceDb->trspcCharList[connIndex], 0x0, sizeof(BLE_DD_CharList_T));
+    (void)memset(sp_trspcServiceDb->trspcCharInfoList[connIndex], 0x0, sizeof(BLE_DD_CharInfo_T)*TRSPC_CHAR_NUM);
+    sp_trspcServiceDb->trspcCharList[connIndex].p_charInfo = sp_trspcServiceDb->trspcCharInfoList[connIndex];
 }
 
+/**
+ * @brief Enable notifications for the Transparent Service Control Point characteristic.
+ *
+ * @param p_conn Pointer to the connection list entry for which to enable notifications.
+ */
 static void ble_trspc_EnableControlPointCccd(BLE_TRSPC_ConnList_T *p_conn)
 {
     GATTC_WriteParams_T *p_writeParams;
@@ -309,7 +315,7 @@ static void ble_trspc_EnableControlPointCccd(BLE_TRSPC_ConnList_T *p_conn)
     p_writeParams = OSAL_Malloc(sizeof(GATTC_WriteParams_T));
     if (p_writeParams != NULL)
     {
-        p_writeParams->charHandle = s_trsCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTCPCCCD].charHandle;
+        p_writeParams->charHandle = sp_trspcServiceDb->trspcCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTCPCCCD].charHandle;
         p_writeParams->charLength = 0x02;
         U16_TO_BUF_LE(p_writeParams->charValue, BLE_TRSPC_CCCD_NOTIFY);
         p_writeParams->writeType = ATT_WRITE_REQ;
@@ -330,6 +336,11 @@ static void ble_trspc_EnableControlPointCccd(BLE_TRSPC_ConnList_T *p_conn)
     }
 }
 
+/**
+ * @brief Enable downlink credit-based flow control for the Transparent Service.
+ *
+ * @param p_conn Pointer to the connection list entry for which to enable flow control.
+ */
 static void ble_trspc_EnableDownlinkCreditBaseFlowControl(BLE_TRSPC_ConnList_T *p_conn)
 {
     GATTC_WriteParams_T *p_writeParams;
@@ -338,7 +349,7 @@ static void ble_trspc_EnableDownlinkCreditBaseFlowControl(BLE_TRSPC_ConnList_T *
     p_writeParams = OSAL_Malloc(sizeof(GATTC_WriteParams_T));
     if (p_writeParams != NULL)
     {
-        p_writeParams->charHandle = s_trsCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTCP].charHandle;
+        p_writeParams->charHandle = sp_trspcServiceDb->trspcCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTCP].charHandle;
         p_writeParams->charLength = 0x01;
         p_writeParams->charValue[0] = BLE_TRSPC_CBFC_OPCODE_DL_ENABLED;
         p_writeParams->writeType = ATT_WRITE_REQ;
@@ -359,6 +370,11 @@ static void ble_trspc_EnableDownlinkCreditBaseFlowControl(BLE_TRSPC_ConnList_T *
     }
 }
 
+/**
+ * @brief Return uplink credits to the peer device for the Transparent Service.
+ *
+ * @param p_conn Pointer to the connection list entry for which to return credits.
+ */
 static void ble_trspc_ClientReturnCredit(BLE_TRSPC_ConnList_T *p_conn)
 {
     GATTC_WriteParams_T *p_writeParams;
@@ -367,7 +383,7 @@ static void ble_trspc_ClientReturnCredit(BLE_TRSPC_ConnList_T *p_conn)
     p_writeParams = OSAL_Malloc(sizeof(GATTC_WriteParams_T));
     if (p_writeParams != NULL)
     {
-        p_writeParams->charHandle = s_trsCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTCP].charHandle;
+        p_writeParams->charHandle = sp_trspcServiceDb->trspcCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTCP].charHandle;
         p_writeParams->charLength = 0x02;
         p_writeParams->charValue[0] = BLE_TRSPC_CBFC_OPCODE_UL_ENABLED;
         p_writeParams->charValue[1] = p_conn->peerCredit;
@@ -384,6 +400,13 @@ static void ble_trspc_ClientReturnCredit(BLE_TRSPC_ConnList_T *p_conn)
     }
 }
 
+
+/**
+ * @brief Configure the Client Characteristic Configuration Descriptor (CCCD) for uplink data.
+ *
+ * @param p_conn Pointer to the connection list entry for which to configure the CCCD.
+ * @param cccdValue The value to write to the CCCD.
+ */
 static void ble_trspc_ConfigureUplinkDataCccd(BLE_TRSPC_ConnList_T *p_conn, uint16_t cccdValue)
 {
     GATTC_WriteParams_T *p_writeParams;
@@ -392,7 +415,7 @@ static void ble_trspc_ConfigureUplinkDataCccd(BLE_TRSPC_ConnList_T *p_conn, uint
     p_writeParams = OSAL_Malloc(sizeof(GATTC_WriteParams_T));
     if (p_writeParams != NULL)
     {
-        p_writeParams->charHandle = s_trsCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTUDCCCD].charHandle;
+        p_writeParams->charHandle = sp_trspcServiceDb->trspcCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTUDCCCD].charHandle;
         p_writeParams->charLength = (uint16_t)sizeof(cccdValue);
         U16_TO_BUF_LE(p_writeParams->charValue, cccdValue);
         p_writeParams->writeType = ATT_WRITE_REQ;
@@ -420,6 +443,12 @@ static void ble_trspc_ConfigureUplinkDataCccd(BLE_TRSPC_ConnList_T *p_conn, uint
     }
 }
 
+/**
+ * @brief Enable data session for the given connection handle.
+ *
+ * @param connHandle The connection handle for which to enable the data session.
+ * @param cbfcConfig The credit-based flow control configuration to be enabled.
+ */
 static void ble_trspc_EnableDataSession(uint16_t connHandle, uint8_t cbfcConfig)
 {
     BLE_TRSPC_ConnList_T *p_conn;
@@ -445,6 +474,14 @@ static void ble_trspc_EnableDataSession(uint16_t connHandle, uint8_t cbfcConfig)
     }
 }
 
+
+/**
+ * @brief Process received data for a given connection.
+ *
+ * @param p_conn            Pointer to the connection list entry.
+ * @param receivedLen       Length of the received data.
+ * @param p_receivedValue   Pointer to the buffer containing the received data.
+ */
 static void ble_trspc_RcvData(BLE_TRSPC_ConnList_T *p_conn, uint16_t receivedLen, uint8_t *p_receivedValue)
 {
     if (p_conn->inputQueue.usedNum < (uint8_t)BLE_TRSPC_INIT_CREDIT)
@@ -485,6 +522,12 @@ static void ble_trspc_RcvData(BLE_TRSPC_ConnList_T *p_conn, uint16_t receivedLen
     }
 }
 
+
+/**
+ * @brief Process GATT write response for a given connection.
+ *
+ * @param p_conn Pointer to the connection list entry.
+ */
 static void ble_trspc_ProcGattWriteResp(BLE_TRSPC_ConnList_T *p_conn)
 {
     BLE_TRSPC_Event_T evtPara;
@@ -568,17 +611,25 @@ static void ble_trspc_ProcGattWriteResp(BLE_TRSPC_ConnList_T *p_conn)
     }
 }
 
+
+/**
+ * @brief Process GATT notifications for a given connection.
+ *
+ * @param p_conn        Pointer to the connection list entry.
+ * @param p_event       Pointer to the GATT event containing the notification data.
+ * @param charHandle    The characteristic handle for which the notification was received.
+ */
 static void ble_trspc_ProcGattNotification(BLE_TRSPC_ConnList_T *p_conn, GATT_EvtReceiveHandleValue_T *p_event , uint16_t charHandle)
 {
     BLE_TRSPC_Event_T evtPara;
 
     (void)memset((uint8_t *) &evtPara, 0, sizeof(evtPara));
 
-    if (charHandle == s_trsCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTUD].charHandle)
+    if (charHandle == sp_trspcServiceDb->trspcCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTUD].charHandle)
     {
         ble_trspc_RcvData(p_conn, p_event->receivedLength, p_event->receivedValue);
     }
-    else if (charHandle == s_trsCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTCP].charHandle)
+    else if (charHandle == sp_trspcServiceDb->trspcCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTCP].charHandle)
     {
         /* Opcode: response */
         if (p_event->receivedValue[0] == BLE_TRSPC_CBFC_OPCODE_SUCCESS)
@@ -623,6 +674,11 @@ static void ble_trspc_ProcGattNotification(BLE_TRSPC_ConnList_T *p_conn, GATT_Ev
     }
 }
 
+/**
+ * @brief Process GATT events.
+ *
+ * @param p_event Pointer to the GATT event to be processed.
+ */
 static void ble_trspc_GattEventProcess(GATT_Event_T *p_event)
 {
     BLE_TRSPC_ConnList_T *p_conn = NULL;
@@ -652,7 +708,7 @@ static void ble_trspc_GattEventProcess(GATT_Event_T *p_event)
                 if ((p_event->eventField.onError.reqOpcode == ATT_WRITE_REQ) &&
                     (p_event->eventField.onError.errCode == ATT_ERR_INSUF_AUTHN || 
                     p_event->eventField.onError.errCode == ATT_ERR_INSUF_ENC) &&
-                    (p_event->eventField.onError.attrHandle == s_trsCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTCPCCCD].charHandle))
+                    (p_event->eventField.onError.attrHandle == sp_trspcServiceDb->trspcCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTCPCCCD].charHandle))
                 {
                     p_conn->sessionReqAuth = 1;
                 }
@@ -665,11 +721,11 @@ static void ble_trspc_GattEventProcess(GATT_Event_T *p_event)
 
             if (p_conn != NULL)
             {
-                if (p_event->eventField.onWriteResp.charHandle != s_trsCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTUD].charHandle &&
-                    p_event->eventField.onWriteResp.charHandle != s_trsCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTUDCCCD].charHandle &&
-                    p_event->eventField.onWriteResp.charHandle != s_trsCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTDD].charHandle &&
-                    p_event->eventField.onWriteResp.charHandle != s_trsCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTCP].charHandle &&
-                    p_event->eventField.onWriteResp.charHandle != s_trsCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTCPCCCD].charHandle)
+                if (p_event->eventField.onWriteResp.charHandle != sp_trspcServiceDb->trspcCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTUD].charHandle &&
+                    p_event->eventField.onWriteResp.charHandle != sp_trspcServiceDb->trspcCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTUDCCCD].charHandle &&
+                    p_event->eventField.onWriteResp.charHandle != sp_trspcServiceDb->trspcCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTDD].charHandle &&
+                    p_event->eventField.onWriteResp.charHandle != sp_trspcServiceDb->trspcCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTCP].charHandle &&
+                    p_event->eventField.onWriteResp.charHandle != sp_trspcServiceDb->trspcCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTCPCCCD].charHandle)
                 {
                     break;
                 }
@@ -716,13 +772,19 @@ static void ble_trspc_GattEventProcess(GATT_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Check if there are any queued tasks that need processing.
+ *
+ * @retval true if there are queued tasks, false otherwise.
+ */
 static bool ble_trspc_CheckQueuedTask(void)
 {
     uint8_t i;
 
     for (i = 0; i < BLE_TRSPC_MAX_CONN_NBR; i++)
     {
-        if ((s_trspcConnList[i].state == BLE_TRSPC_STATE_CONNECTED) && (s_trspcConnList[i].peerCredit >= BLE_TRSPC_MAX_RETURN_CREDIT))
+        if ((sp_trspcConnList[i] != NULL) && (sp_trspcConnList[i]->state == BLE_TRSPC_STATE_CONNECTED) && (sp_trspcConnList[i]->peerCredit >= BLE_TRSPC_MAX_RETURN_CREDIT))
         {
             return true;
         }
@@ -731,22 +793,34 @@ static bool ble_trspc_CheckQueuedTask(void)
     return false;
 }
 
+
+/**
+ * @brief Process queued tasks.
+ */
 static void ble_trspc_ProcessQueuedTask(void)
 {
     uint8_t i;
 
     for(i = 0; i < BLE_TRSPC_MAX_CONN_NBR; i++)
     {
-        if (s_trspcConnList[i].state == BLE_TRSPC_STATE_CONNECTED)
+        if (sp_trspcConnList[i] != NULL)
         {
-            if (s_trspcConnList[i].peerCredit >= BLE_TRSPC_MAX_RETURN_CREDIT)
+            if (sp_trspcConnList[i]->state == BLE_TRSPC_STATE_CONNECTED)
             {
-                ble_trspc_ClientReturnCredit(&s_trspcConnList[i]);
+                if (sp_trspcConnList[i]->peerCredit >= BLE_TRSPC_MAX_RETURN_CREDIT)
+                {
+                    ble_trspc_ClientReturnCredit(sp_trspcConnList[i]);
+                }
             }
         }
     }
 }
 
+/**
+ * @brief Process GAP events.
+ *
+ * @param p_event Pointer to the GAP event to be processed.
+ */
 static void ble_trspc_GapEventProcess(BLE_GAP_Event_T *p_event)
 {
     BLE_TRSPC_ConnList_T *p_conn = NULL;
@@ -788,7 +862,7 @@ static void ble_trspc_GapEventProcess(BLE_GAP_Event_T *p_event)
 
                     p_conn->inputQueue.usedNum--;
                 }
-                ble_trspc_InitConnList(p_conn);
+                ble_trspc_FreeConnList(p_conn);
             }
         }
         break;
@@ -816,6 +890,11 @@ static void ble_trspc_GapEventProcess(BLE_GAP_Event_T *p_event)
     }
 }
 
+/**
+ * @brief Handle link encryption event.
+ *
+ * @param connHandle The connection handle for which the link encryption event occurred.
+ */
 static void ble_trspc_OnLinkEncrypted(uint16_t connHandle)
 {
     uint8_t i;
@@ -826,10 +905,10 @@ static void ble_trspc_OnLinkEncrypted(uint16_t connHandle)
     /* Check if TRS characteristics are found or not. */
     for (i=0; i<BLE_TRSPC_MAX_CONN_NBR; i++)
     {
-        if (s_trsCharList[i].connHandle == connHandle)
+        if (sp_trspcServiceDb->trspcCharList[i].connHandle == connHandle)
         {
             /* By checking the discovered handles exist or not. */
-            if (s_trsCharList[i].p_charInfo[TRSPC_INDEX_CHARTCP].charHandle != 0U)
+            if (sp_trspcServiceDb->trspcCharList[i].p_charInfo[TRSPC_INDEX_CHARTCP].charHandle != 0U)
             {
                 if (p_conn != NULL && p_conn->sessionReqAuth == 1U)
                 {
@@ -841,33 +920,90 @@ static void ble_trspc_OnLinkEncrypted(uint16_t connHandle)
     }
 }
 
-
+/**
+ * @brief Registers a callback function for BLE Transparent profile client events.
+ *
+ * @param[in] bleTranCliHandler             The client callback function to handle BLE Transparent Profile client events.
+ *
+ */
 void BLE_TRSPC_EventRegister(BLE_TRSPC_EventCb_T bleTranCliHandler)
 {
     bleTrspcProcess = bleTranCliHandler;
 }
 
+
+/**
+ * @brief Initializes the BLE Transparent Profile Client.
+ *
+ * @retval MBA_RES_SUCCESS                  BLE Transparent Profile Client was successfully initialized.
+ * @retval MBA_RES_FAIL                     BLE Transparent Profile Client failed to initialize.
+ *
+ */
 uint16_t BLE_TRSPC_Init(void)
 {
-    BLE_DD_DiscSvc_T trsDisc;
     uint8_t i;
+    uint16_t ret;
+    BLE_DD_DiscSvc_T trsDisc;
 
-    /* Reset connection information */
-    for (i = 0; i < BLE_TRSPC_MAX_CONN_NBR; i++)
+    if (sp_trspcServiceDb)
     {
-        ble_trspc_InitConnList(&s_trspcConnList[i]);
-        ble_trspc_InitCharList(&s_trsCharList[i], i);
+        return MBA_RES_FAIL;
+    }
+    sp_trspcServiceDb = (BLE_TRSPC_TrsServiceDb_T*)OSAL_Malloc(sizeof(BLE_TRSPC_TrsServiceDb_T));
+    if (sp_trspcServiceDb == NULL)
+    {
+        return MBA_RES_OOM;
     }
 
+    (void)memset(sp_trspcServiceDb->trspcDiscCharList, 0x00, sizeof(BLE_DD_DiscChar_T)*TRSPC_CHAR_NUM);
+    sp_trspcServiceDb->trspcDiscCharList[TRSPC_INDEX_CHARTUD].p_uuid     = &discCharTud;
+    sp_trspcServiceDb->trspcDiscCharList[TRSPC_INDEX_CHARTUDCCCD].p_uuid = &discCharTudCccd;
+    sp_trspcServiceDb->trspcDiscCharList[TRSPC_INDEX_CHARTUDCCCD].settings = CHAR_SET_DESCRIPTOR;
+    sp_trspcServiceDb->trspcDiscCharList[TRSPC_INDEX_CHARTDD].p_uuid     = &discCharTdd;
+    sp_trspcServiceDb->trspcDiscCharList[TRSPC_INDEX_CHARTCP].p_uuid     = &discCharTcp;
+    sp_trspcServiceDb->trspcDiscCharList[TRSPC_INDEX_CHARTCPCCCD].p_uuid = &discCharTcpCccd;
+    sp_trspcServiceDb->trspcDiscCharList[TRSPC_INDEX_CHARTCPCCCD].settings = CHAR_SET_DESCRIPTOR;
+
+    for(i = 0; i < TRSPC_CHAR_NUM; i++)
+    {
+        sp_trspcServiceDb->p_trspcDiscCharList[i] = &sp_trspcServiceDb->trspcDiscCharList[i];
+    }
+    for(i = 0; i < BLE_TRSPC_MAX_CONN_NBR; i++)
+    {
+        ble_trspc_InitTrsCharList(i);
+    }
     trsDisc.svcUuid.uuidLength = ATT_UUID_LENGTH_16;
     (void)memcpy(trsDisc.svcUuid.uuid, discSvcUuid, ATT_UUID_LENGTH_16);
     trsDisc.p_discInfo = NULL;
-    trsDisc.p_discChars = trsDiscCharList;
-    trsDisc.p_charList = s_trsCharList;
+    trsDisc.p_discChars = sp_trspcServiceDb->p_trspcDiscCharList;
+    trsDisc.p_charList = sp_trspcServiceDb->trspcCharList;
     trsDisc.discCharsNum = (uint8_t)TRSPC_CHAR_NUM;
-    return BLE_DD_ServiceDiscoveryRegister(&trsDisc);
+
+    ret = BLE_DD_ServiceDiscoveryRegister(&trsDisc);
+
+    if (ret != MBA_RES_SUCCESS)
+    {
+        OSAL_Free(sp_trspcServiceDb);
+        sp_trspcServiceDb = NULL;
+    }
+    return ret;
 }
 
+
+/**
+ * @brief Sends a vendor-specific command over the BLE connection.
+ *
+ * @param[in] connHandle                    Connection handle associated with this connection.
+ * @param[in] commandID                     The identifier for the vendor-specific command.
+ * @param[in] commandLength                 The length of the command payload.
+ * @param[in] p_commandPayload              Pointer to the command payload data.
+ *
+ * @retval MBA_RES_SUCCESS                  The command was successfully sent.
+ * @retval MBA_RES_FAIL                     The connection is invalid or the CCCD of TCP is not enabled.
+ * @retval MBA_RES_OOM                      Internal memory allocation failure.
+ * @retval MBA_RES_INVALID_PARA             The commandID or commandLength is invalid.
+ *
+ */
 uint16_t BLE_TRSPC_SendVendorCommand(uint16_t connHandle, uint8_t commandID, uint8_t commandLength, uint8_t *p_commandPayload)
 {
     BLE_TRSPC_ConnList_T *p_conn;
@@ -898,7 +1034,7 @@ uint16_t BLE_TRSPC_SendVendorCommand(uint16_t connHandle, uint8_t commandID, uin
     p_writeParams = OSAL_Malloc(sizeof(GATTC_WriteParams_T));
     if (p_writeParams != NULL)
     {
-        p_writeParams->charHandle = s_trsCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTCP].charHandle;
+        p_writeParams->charHandle = sp_trspcServiceDb->trspcCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTCP].charHandle;
         p_writeParams->charLength = ((uint16_t)commandLength+1U);
         p_writeParams->charValue[0] = commandID;
         (void)memcpy(&p_writeParams->charValue[1], p_commandPayload, commandLength);
@@ -919,6 +1055,19 @@ uint16_t BLE_TRSPC_SendVendorCommand(uint16_t connHandle, uint8_t commandID, uin
     }
 }
 
+
+/**
+ * @brief Sends transparent data to the connected BLE device.
+ *
+ * @param[in] connHandle                    Connection handle associated with this connection.
+ * @param[in] len                           The length of the data to be sent.
+ * @param[in] p_data                        Pointer to the data to be sent.
+ *
+ * @retval MBA_RES_SUCCESS                  The data was successfully sent.
+ * @retval MBA_RES_OOM                      Internal memory allocation failure.
+ * @retval MBA_RES_INVALID_PARA             The parameters do not meet the specifications.
+ *
+ */
 uint16_t BLE_TRSPC_SendData(uint16_t connHandle, uint16_t len, uint8_t *p_data)
 {
     GATTC_WriteParams_T *p_writeParams;
@@ -967,7 +1116,7 @@ uint16_t BLE_TRSPC_SendData(uint16_t connHandle, uint16_t len, uint8_t *p_data)
         return MBA_RES_BAD_STATE;
     }
 
-    p_writeParams->charHandle = s_trsCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTDD].charHandle;
+    p_writeParams->charHandle = sp_trspcServiceDb->trspcCharInfoList[p_conn->connIndex][TRSPC_INDEX_CHARTDD].charHandle;
     p_writeParams->charLength = len;
     (void)memcpy(p_writeParams->charValue, p_data, len);
     p_writeParams->valueOffset = 0;
@@ -986,6 +1135,14 @@ uint16_t BLE_TRSPC_SendData(uint16_t connHandle, uint16_t len, uint8_t *p_data)
     return result;
 }
 
+
+/**
+ * @brief Retrieves the length of data queued.
+ *
+ * @param[in]  connHandle                   Connection handle associated with the queued data.
+ * @param[out] p_dataLength                 Pointer to where the data length will be stored.
+ *
+ */
 void BLE_TRSPC_GetDataLength(uint16_t connHandle, uint16_t *p_dataLength)
 {
     BLE_TRSPC_ConnList_T *p_conn = NULL;
@@ -1008,6 +1165,17 @@ void BLE_TRSPC_GetDataLength(uint16_t connHandle, uint16_t *p_dataLength)
     }
 }
 
+
+/**
+ * @brief Retrieves queued data from the buffer.
+ *
+ * @param[in]  connHandle                   Connection handle associated with the queued data.
+ * @param[out] p_data                       Pointer to the buffer where the data should be copied.
+ *
+ * @retval MBA_RES_SUCCESS                  The data was successfully retrieved.
+ * @retval MBA_RES_FAIL                     No data in the input queue.
+ *
+ */
 uint16_t BLE_TRSPC_GetData(uint16_t connHandle, uint8_t *p_data)
 {
     BLE_TRSPC_ConnList_T *p_conn = NULL;
@@ -1055,6 +1223,14 @@ uint16_t BLE_TRSPC_GetData(uint16_t connHandle, uint8_t *p_data)
     }
 }
 
+
+/**
+ * @brief Handles BLE_Stack events.
+ * This function should be called by the application when BLE stack events occur.
+ *
+ * @param[in] p_stackEvent        					Pointer to the BLE stack event data.
+ *
+ */
 void BLE_TRSPC_BleEventHandler(STACK_Event_T *p_stackEvent)
 {
     switch (p_stackEvent->groupId)
@@ -1079,6 +1255,15 @@ void BLE_TRSPC_BleEventHandler(STACK_Event_T *p_stackEvent)
     }
 }
 
+
+/**
+ * @brief Handles BLE Database Discovery (BLE_DD) events.
+ *
+ * @note This function should be called when BLE_DD events occur.
+ *
+ * @param[in] p_event                       Pointer to the BLE_DD event data.
+ *
+ */
 void BLE_TRSPC_BleDdEventHandler(BLE_DD_Event_T *p_event)
 {
     switch (p_event->eventId)
@@ -1091,10 +1276,10 @@ void BLE_TRSPC_BleDdEventHandler(BLE_DD_Event_T *p_event)
             /* Check if TRS characteristics are found or not. */
             for (i=0; i<BLE_TRSPC_MAX_CONN_NBR; i++)
             {
-                if (s_trsCharList[i].connHandle == p_event->eventField.evtDiscResult.connHandle)
+                if (sp_trspcServiceDb->trspcCharList[i].connHandle == p_event->eventField.evtDiscResult.connHandle)
                 {
                     /* By checking the discovered handles exist or not. */
-                    if (s_trsCharList[i].p_charInfo[TRSPC_INDEX_CHARTCP].charHandle != 0U)
+                    if (sp_trspcServiceDb->trspcCharList[i].p_charInfo[TRSPC_INDEX_CHARTCP].charHandle != 0U)
                     {
                         if (bleTrspcProcess != NULL)
                         {
@@ -1123,6 +1308,3 @@ void BLE_TRSPC_BleDdEventHandler(BLE_DD_Event_T *p_event)
         break;
     }
 }
-
-
-

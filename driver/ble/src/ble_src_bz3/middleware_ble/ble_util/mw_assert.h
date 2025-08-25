@@ -31,17 +31,24 @@
     mw_assert.h
 
   Summary:
-    This file contains the Middleware Assert functions for this project.
+    Defines the middleware assertion functionality.
 
   Description:
-    This file contains the Middleware Assert functions for this project.
+    This header file declares the assertion macros and functions used by
+    middleware components to validate assumptions during runtime. If an
+    assertion fails, it can aid in identifying incorrect program behavior
+    early in the development cycle.
  *******************************************************************************/
 
+/**
+ * @addtogroup BLE_MW BLE Middleware
+ * @{
+ */
 
 /**
- * @addtogroup MW_ASSERT MW_ASSERT
+ * @defgroup MW_ASSERT Assertion macros
+ * @brief Provides assertion macros for middleware validation.
  * @{
- * @brief Header file for the middleware assert definitions.
  */
 
 #ifndef MW_ASSERT_H
@@ -49,9 +56,7 @@
 
 // DOM-IGNORE-BEGIN
 #ifdef __cplusplus  // Provide C++ Compatibility
-
 extern "C" {
-
 #endif
 // DOM-IGNORE-END
 
@@ -60,15 +65,32 @@ extern "C" {
 // Section: Macros
 // *****************************************************************************
 // *****************************************************************************
+/**
+ * @brief Asserts that a condition is true at compile time.
+ *
+ * This macro implements a static assertion mechanism that checks a condition
+ * during compilation. If the condition is false, it will cause a compile-time
+ * error due to the negative size array declaration. This is useful for
+ * enforcing constraints that can be verified during compilation rather than at
+ * runtime.
+ *
+ * @param[in] check The compile-time condition that should be true.
+ *
+ * Example usage:
+ * @code
+ *     MW_ASSERT(sizeof(int) == 4);
+ * @endcode
+ */
 #define  MW_ASSERT(check)     extern char assertion[(check) ? 1 : -1]
-	
+
+/** @} */
+
+/** @} */
+
 //DOM-IGNORE-BEGIN
 #ifdef __cplusplus
 }
 #endif
 //DOM-IGNORE-END
 
-#endif
-
-/** @} */
-
+#endif //MW_ASSERT_H

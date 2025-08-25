@@ -31,10 +31,12 @@
     ble_pxpr.c
 
   Summary:
-    This file contains the BLE Proximity Profile Server functions for application user.
+    Implements the server-side functionality of the BLE Proximity Profile.
 
   Description:
-    This file contains the BLE Proximity Profile Server functions for application user.
+    This source file provides the server-side functions necessary for the
+    application to handle the BLE Proximity Profile, enabling the device to
+    report proximity information to a paired BLE client.
  *******************************************************************************/
 
 
@@ -57,29 +59,16 @@
 // Section: Macros
 // *****************************************************************************
 // *****************************************************************************
+#define BLE_PXPR_RETRY_TYPE_WRITE_RESP         (0x01U)          // Retry type for write response operations
+#define BLE_PXPR_RETRY_TYPE_READ_RESP          (0x02U)          // Retry type for read response operations 
+#define BLE_PXPR_RETRY_TYPE_ERR                (0x03U)          // retry type for error response operations 
 
-/**@defgroup BLE_PXPR_RETRY_TYPE Retrying type 
- * @brief The definition of BLE pxpr retry type
- * @{ */
-#define BLE_PXPR_RETRY_TYPE_WRITE_RESP         (0x01U)    /**< Definition of response retry type write response. */
-#define BLE_PXPR_RETRY_TYPE_READ_RESP          (0x02U)    /**< Definition of response retry type read response. */
-#define BLE_PXPR_RETRY_TYPE_ERR                (0x03U)    /**< Definition of error retry type. */
-/** @} */
-
-/**@addtogroup BLE_PXPR_DEFINES Defines
- * @{ */
-
-/**@defgroup BLE_PXPR_MAX_CONN_NBR Maximum connection number
- * @brief The definition of maximum connection number.
- * @{ */
-#define BLE_PXPR_MAX_CONN_NBR                  BLE_GAP_MAX_LINK_NBR    /**< Maximum allowing conncetion numbers. */
-/** @} */
-/**@} */ //BLE_PXPR_DEFINES
+#define BLE_PXPR_MAX_CONN_NBR                  BLE_GAP_MAX_LINK_NBR    // The maximum number of BLE connections that can be maintained concurrently.
 
 typedef enum BLE_PXPR_State_T
 {
-    BLE_PXPR_STATE_IDLE = 0x00U,
-    BLE_PXPR_STATE_CONNECTED
+    BLE_PXPR_STATE_IDLE = 0x00U,            // The BLE Proxy profile is in an idle state.
+    BLE_PXPR_STATE_CONNECTED                // The BLE Proxy profile is in a connected state.
 } BLE_PXPR_State_T;
 
 // *****************************************************************************
@@ -90,10 +79,10 @@ typedef enum BLE_PXPR_State_T
 
 typedef struct BLE_PXPR_ConnList_T
 {
-    uint16_t            connHandle;     /**< Connection handle associated with this connection. */
-    uint8_t             retryType;      /**< Retry type. @ref BLE_PXPR_RETRY_TYPE. */
-    BLE_PXPR_State_T    state;         /**< Connection state. @ref BLE_PXPR_State_T. */
-    uint8_t             *p_retryData;   /**< Retry data pointer. */
+    uint16_t            connHandle;         // Connection handle associated with this connection.
+    uint8_t             retryType;          // Type of retry mechanism in use, as defined in BLE_PXPR_RETRY_TYPE.
+    BLE_PXPR_State_T    state;              // Current state of the connection.
+    uint8_t             *p_retryData;       // Pointer to data required for retry operations.
 } BLE_PXPR_ConnList_T;
 
 // *****************************************************************************
@@ -102,23 +91,29 @@ typedef struct BLE_PXPR_ConnList_T
 // *****************************************************************************
 // *****************************************************************************
 
-/* Variables for service characteristics. */
+// The alert level for the Proximity Profile's Link Loss Service (LLS).
 static BLE_PXPR_AlertLevel_T s_pxprLlsAlertLevel;
-static BLE_PXPR_ConnList_T   s_pxprConnList[BLE_PXPR_MAX_CONN_NBR];
+
+// Array to keep track of the connection list 
+static BLE_PXPR_ConnList_T   *sp_pxprConnList[BLE_PXPR_MAX_CONN_NBR];
 #ifdef BLE_PXPR_TPS_ENABLE
+// The Tx power level for the Proximity Profile's Tx Power Service (TPS).
 static int8_t s_pxprTpsTxPowerLevel;
 #endif
 
-/* Variables for callback routines. */
+// Pointer to a function that will be called for Proximity Profile events.
 static BLE_PXPR_EventCb_T sp_pxprCbRoutine;
-
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Functions
 // *****************************************************************************
 // *****************************************************************************
-
+/**
+ * @brief Frees the retry data associated with a BLE connection.
+ *
+ * @param p_conn Pointer to the BLE connection list structure.
+ */
 static void ble_pxpr_FreeRetryData(BLE_PXPR_ConnList_T *p_conn) {
     if (p_conn->p_retryData != NULL)
     {
@@ -128,41 +123,83 @@ static void ble_pxpr_FreeRetryData(BLE_PXPR_ConnList_T *p_conn) {
     }
 }
 
-static void ble_pxpr_InitConnList(BLE_PXPR_ConnList_T *p_conn)
+
+/**
+ * @brief Free the connection list for the PXPR.
+ *
+ * @param p_conn Pointer to the PXPR connection list structure to initialize.
+ */
+static void ble_pxpr_FreeConnList(BLE_PXPR_ConnList_T *p_conn)
 {
-    (void)memset(p_conn, 0, sizeof(BLE_PXPR_ConnList_T));
+    uint8_t i;
+    for (i = 0; i < BLE_PXPR_MAX_CONN_NBR; i++)
+    {
+        if (sp_pxprConnList[i] == p_conn)
+        {
+            OSAL_Free(sp_pxprConnList[i]);
+            sp_pxprConnList[i] = NULL;
+            break;
+        }
+    }
 }
 
+
+/**
+ * @brief Retrieves a pointer to the connection list entry for a given connection handle.
+ *
+ * @param connHandle The connection handle to search for in the connection list.
+ * @retval Pointer to the corresponding connection list entry, or NULL if not found.
+ */
 static BLE_PXPR_ConnList_T * ble_pxpr_GetConnListByHandle(uint16_t connHandle)
 {
     uint8_t i;
 
-    for(i=0; i<BLE_PXPR_MAX_CONN_NBR;i++)
+    for(i=0; i<BLE_PXPR_MAX_CONN_NBR; i++)
     {
-        if ((s_pxprConnList[i].state == BLE_PXPR_STATE_CONNECTED) && (s_pxprConnList[i].connHandle == connHandle))
+        if ((sp_pxprConnList[i] != NULL) && (sp_pxprConnList[i]->state == BLE_PXPR_STATE_CONNECTED) && (sp_pxprConnList[i]->connHandle == connHandle))
         {
-            return &s_pxprConnList[i];
+            return sp_pxprConnList[i];
         }
     }
-
     return NULL;
 }
 
+
+/**
+ * @brief Retrieves a pointer to the first free (idle) connection list entry.
+ *
+ * @retval Pointer to the free connection list entry, or NULL if no free entry is available.
+ */
 static BLE_PXPR_ConnList_T *ble_pxpr_GetFreeConnList(void)
 {
     uint8_t i;
+    BLE_PXPR_ConnList_T *p_conn = NULL;
 
-    for(i=0; i<BLE_PXPR_MAX_CONN_NBR;i++)
+    for(i = 0; i < BLE_PXPR_MAX_CONN_NBR; i++)
     {
-        if (s_pxprConnList[i].state == BLE_PXPR_STATE_IDLE)
+        if (sp_pxprConnList[i] == NULL)
         {
-            s_pxprConnList[i].state = BLE_PXPR_STATE_CONNECTED;
-            return &s_pxprConnList[i];
+            sp_pxprConnList[i] = OSAL_Malloc(sizeof(BLE_PXPR_ConnList_T));
+            p_conn = sp_pxprConnList[i];
+            if (p_conn != NULL)
+            {
+                (void)memset(p_conn, 0, sizeof(BLE_PXPR_ConnList_T));
+                p_conn->state     = BLE_PXPR_STATE_CONNECTED;
+            }
+            break;
         }
     }
-
-    return NULL;
+    return p_conn;
 }
+
+
+/**
+ * @brief Conveys a BLE event to the registered callback routine.
+ *
+ * @param eventId The identifier of the event.
+ * @param p_eventField Pointer to the event data.
+ * @param eventFieldLen Length of the event data in bytes.
+ */
 static void ble_pxpr_ConveyEvent(BLE_PXPR_EventId_T eventId, uint8_t *p_eventField, uint8_t eventFieldLen)
 {
     if (sp_pxprCbRoutine != NULL)
@@ -175,6 +212,12 @@ static void ble_pxpr_ConveyEvent(BLE_PXPR_EventId_T eventId, uint8_t *p_eventFie
     }
 }
 
+
+/**
+ * @brief Processes a write request event from GATT.
+ *
+ * @param p_event Pointer to the GATT event structure.
+ */
 static void ble_pxpr_ProcWrite(GATT_Event_T *p_event)
 {
     switch(p_event->eventField.onWrite.attrHandle)
@@ -216,6 +259,14 @@ static void ble_pxpr_ProcWrite(GATT_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Sends a read response or an error response for a read request.
+ *
+ * @param p_event Pointer to the GATT event structure.
+ * @param p_value Pointer to the value to be sent in the read response.
+ * @param len Length of the value to be sent.
+ */
 static void ble_pxpr_SendReadResponse(GATT_Event_T *p_event, uint8_t *p_value, uint16_t len)
 {
     GATTS_SendReadRespParams_T *p_respParams;
@@ -268,6 +319,12 @@ static void ble_pxpr_SendReadResponse(GATT_Event_T *p_event, uint8_t *p_value, u
     }
 }
 
+
+/**
+ * @brief Processes a read request event from GATT.
+ *
+ * @param p_event Pointer to the GATT event structure.
+ */
 static void ble_pxpr_ProcRead(GATT_Event_T *p_event)
 {
     switch(p_event->eventField.onRead.attrHandle)
@@ -294,6 +351,12 @@ static void ble_pxpr_ProcRead(GATT_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Processes a queued task for a given connection handle.
+ *
+ * @param connHandle The connection handle for which the queued task is to be processed.
+ */
 static void ble_pxpr_ProcessQueuedTask(uint16_t connHandle)
 {
     uint16_t status;
@@ -333,6 +396,12 @@ static void ble_pxpr_ProcessQueuedTask(uint16_t connHandle)
     }
 }
 
+
+/**
+ * @brief Process GAP events for the BLE PXPR service.
+ *
+ * @param p_event Pointer to the BLE_GAP_Event_T structure containing the GAP event data.
+ */
 static void ble_pxpr_GapEventProcess(BLE_GAP_Event_T *p_event)
 {
     switch (p_event->eventId)
@@ -360,14 +429,12 @@ static void ble_pxpr_GapEventProcess(BLE_GAP_Event_T *p_event)
 
             p_conn = ble_pxpr_GetConnListByHandle(p_event->eventField.evtDisconnect.connHandle);
 
-            if (p_conn == NULL)
+            if (p_conn != NULL)
             {
-                ble_pxpr_ConveyEvent(BLE_PXPR_EVT_ERR_UNSPECIFIED_IND, NULL, 0);
-                return;
+                ble_pxpr_FreeRetryData(p_conn);
+                ble_pxpr_FreeConnList(p_conn);
             }
 
-            ble_pxpr_FreeRetryData(p_conn);
-            ble_pxpr_InitConnList(p_conn);
         }
         break;
         case BLE_GAP_EVT_TX_BUF_AVAILABLE:
@@ -383,6 +450,12 @@ static void ble_pxpr_GapEventProcess(BLE_GAP_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Process GATT events for the BLE PXPR service.
+ *
+ * @param p_event Pointer to the GATT_Event_T structure containing the GATT event data.
+ */
 static void ble_pxpr_GattEventProcess(GATT_Event_T *p_event)
 {
     switch (p_event->eventId)
@@ -407,6 +480,14 @@ static void ble_pxpr_GattEventProcess(GATT_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Initializes the BLE Proximity Profile (PXP) Reporter.
+ *
+ * @retval MBA_RES_SUCCESS          The PXP reporter was successfully initialized.
+ * @retval MBA_RES_FAIL             The PXP reporter failed to initialize.
+ *
+ */
 uint16_t BLE_PXPR_Init(void)
 {
     sp_pxprCbRoutine = NULL;
@@ -435,11 +516,27 @@ uint16_t BLE_PXPR_Init(void)
     return MBA_RES_SUCCESS;
 }
 
+
+/**
+ * @brief Registers a callback function for BLE PXP Reporter events.
+ *
+ * @param[in] routine               The function to be called when a PXP Reporter event occurs.
+ *
+ */
 void BLE_PXPR_EventRegister(BLE_PXPR_EventCb_T routine)
 {
     sp_pxprCbRoutine = routine;
 }
 
+
+/**
+ * @brief Sets the Alert Level for the Link Loss Service (LLS).
+ *
+ * @param[in] level                 The desired Alert Level to be set.
+ *
+ * @retval MBA_RES_SUCCESS          The alert level was successfully set.
+ * @retval MBA_RES_INVALID_PARA     The provided parameters are invalid.
+ */
 uint16_t BLE_PXPR_SetLlsAlertLevel(BLE_PXPR_AlertLevel_T level)
 {
     if(level > BLE_PXPR_ALERT_LEVEL_HIGH)
@@ -452,12 +549,27 @@ uint16_t BLE_PXPR_SetLlsAlertLevel(BLE_PXPR_AlertLevel_T level)
 }
 
 #ifdef BLE_PXPR_TPS_ENABLE
+/**
+ * @brief Sets the Transmission Power Level for the Tx Power Service.
+ *
+ * @param[in] level                 The desired Tx Power Level to be set.
+ *
+ */
 void BLE_PXPR_SetTxPowerLevel(int8_t level)
 {
     s_pxprTpsTxPowerLevel = level;
 }
 #endif
 
+
+/**
+ * @brief Handles BLE_Stack events.
+ * 
+ * @note This function should be called when BLE Stack events occur.
+ *
+ * @param[in] p_stackEvent          Pointer to the BLE Stack event data structure.
+ *
+*/
 void BLE_PXPR_BleEventHandler(STACK_Event_T *p_stackEvent)
 {
     switch (p_stackEvent->groupId)

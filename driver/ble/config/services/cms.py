@@ -212,8 +212,8 @@ def instantiateComponent(serviceCmsComponent):
         cmsFileSrc[count].setDestPath("ble/service_ble/ble_cms")
         cmsFileSrc[count].setProjectPath('config/' + configName + '/ble/service_ble/ble_cms')
         cmsFileSrc[count].setType("SOURCE")
+        cmsFileSrc[count].setDependencies(cmsGenFileSrc, ["CMS_INT_SERVICE_COUNT", "CMS_STR_SVC_NAME_" + str(count)])
         if count == 0:
-            cmsFileSrc[count].setDependencies(cmsGenFileSrc, ["CMS_INT_SERVICE_COUNT", "CMS_STR_SVC_NAME_" + str(count)])
             cmsFileSrc[count].setEnabled(True)
         else:
             cmsFileSrc[count].setEnabled(False)

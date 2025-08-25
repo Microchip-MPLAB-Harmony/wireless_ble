@@ -31,10 +31,13 @@
     ble_ancs.c
 
   Summary:
-    This file contains the BLE ANCS functions for application user.
+    Implementation of the BLE ANCS profile functions for application developers.
 
   Description:
-    This file contains the BLE ANCS functions for application user.
+    This source file provides the implementation of the Bluetooth Low Energy
+    (BLE) Apple Notification Center Service (ANCS) profile. It is designed to
+    be used by application developers to facilitate communication with ANCS
+    compliant devices, enabling notification-related interactions.
  *******************************************************************************/
 
 
@@ -54,159 +57,165 @@
 #include "ble_util/byte_stream.h"
 #include "ble_ancs.h"
 
-
 // *****************************************************************************
 // *****************************************************************************
 // Section: Macros
 // *****************************************************************************
 // *****************************************************************************
-#define BLE_ANCS_NTFY_DATA_LENGTH               (8U)
-#define BLE_ANCS_NTFY_EVT_ID_INDEX              (0U)           /**< Index of the Event ID field when parsing notifications. */
-#define BLE_ANCS_NTFY_FLAGS_INDEX               (1U)           /**< Index of the Flags field when parsing notifications. */
-#define BLE_ANCS_NTFY_CATEGORY_ID_INDEX         (2U)           /**< Index of the Category ID field when parsing notifications. */
-#define BLE_ANCS_NTFY_CATEGORY_CNT_INDEX        (3U)           /**< Index of the Category Count field when parsing notifications. */
-#define BLE_ANCS_NTFY_UID_INDEX                 (4U)           /**< Index of the Notification UID field when parsing notifications. */
+#define BLE_ANCS_NTFY_DATA_LENGTH               (8U)                        // Length of the notification data.
+#define BLE_ANCS_NTFY_EVT_ID_INDEX              (0U)                        // Index for Event ID in notification data.
+#define BLE_ANCS_NTFY_FLAGS_INDEX               (1U)                        // Index for Flags in notification data.
+#define BLE_ANCS_NTFY_CATEGORY_ID_INDEX         (2U)                        // Index for Category ID in notification data.
+#define BLE_ANCS_NTFY_CATEGORY_CNT_INDEX        (3U)                        // Index for Category Count in notification data.
+#define BLE_ANCS_NTFY_UID_INDEX                 (4U)                        // Index for Notification UID in notification data.
 
-#define UUID_ANCS_SVC                           0xD0,0x00,0x2D,0x12,0x1E,0x4B,0x0F,0xA4,0x99,0x4E,0xCE,0xB5,0x31,0xF4,0x05,0x79         /**< Definition of ANCS proprietary service UUID in little endian. */
-#define UUID_ANCS_CHAR_NOTIFICATION_SOURCE      0xBD,0x1D,0xA2,0x99,0xE6,0x25,0x58,0x8C,0xD9,0x42,0x01,0x63,0x0D,0x12,0xBF,0x9F         /**< Definition of ANCS Notification Source characteristic UUID in little endian. */
-#define UUID_ANCS_CHAR_CONTROL_POINT            0xD9,0xD9,0xAA,0xFD,0xBD,0x9B,0x21,0x98,0xA8,0x49,0xE1,0x45,0xF3,0xD8,0xD1,0x69         /**< Definition of ANCS Control Point characteristic UUID in little endian. */
-#define UUID_ANCS_CHAR_DATA_SOURCE              0xFB,0x7B,0x7C,0xCE,0x6A,0xB3,0x44,0xBE,0xB5,0x4B,0xD6,0x24,0xE9,0xC6,0xEA,0x22         /**< Definition of ANCS Data Source characteristic UUID in little endian. */
+/* Apple Notification Center Service (ANCS) UUIDs in little endian format. */
+#define UUID_ANCS_SVC                           0xD0,0x00,0x2D,0x12,0x1E,0x4B,0x0F,0xA4,0x99,0x4E,0xCE,0xB5,0x31,0xF4,0x05,0x79         // ANCS service UUID.
+#define UUID_ANCS_CHAR_NOTIFICATION_SOURCE      0xBD,0x1D,0xA2,0x99,0xE6,0x25,0x58,0x8C,0xD9,0x42,0x01,0x63,0x0D,0x12,0xBF,0x9F         // Notification Source characteristic UUID.
+#define UUID_ANCS_CHAR_CONTROL_POINT            0xD9,0xD9,0xAA,0xFD,0xBD,0x9B,0x21,0x98,0xA8,0x49,0xE1,0x45,0xF3,0xD8,0xD1,0x69         // Control Point characteristic UUID.
+#define UUID_ANCS_CHAR_DATA_SOURCE              0xFB,0x7B,0x7C,0xCE,0x6A,0xB3,0x44,0xBE,0xB5,0x4B,0xD6,0x24,0xE9,0xC6,0xEA,0x22         // Data Source characteristic UUID.
 
-#define BLE_ANCS_MAX_CONN_NBR                   BLE_GAP_MAX_LINK_NBR
+#define BLE_ANCS_MAX_CONN_NBR                   BLE_GAP_MAX_LINK_NBR        // Aligns with the GAP's max link number.
 
-#define BLE_ANCS_EVENT_FLAG_SILENT              0U           //!< 0b.......1 Silent: First (LSB) bit is set. All flags can be active at the same time.
-#define BLE_ANCS_EVENT_FLAG_IMPORTANT           1U           //!< 0b......1. Important: Second (LSB) bit is set. All flags can be active at the same time.
-#define BLE_ANCS_EVENT_FLAG_PREEXISTING         2U           //!< 0b.....1.. Pre-existing: Third (LSB) bit is set. All flags can be active at the same time.
-#define BLE_ANCS_EVENT_FLAG_POSITIVE_ACTION     3U           //!< 0b....1... Positive action: Fourth (LSB) bit is set. All flags can be active at the same time.
-#define BLE_ANCS_EVENT_FLAG_NEGATIVE_ACTION     4U           //!< 0b...1.... Negative action: Fifth (LSB) bit is set. All flags can be active at the same time.
+#define BLE_ANCS_EVENT_FLAG_SILENT              0U                          // Silent: Bit 0 (LSB).
+#define BLE_ANCS_EVENT_FLAG_IMPORTANT           1U                          // Important: Bit 1.
+#define BLE_ANCS_EVENT_FLAG_PREEXISTING         2U                          // Pre-existing: Bit 2.
+#define BLE_ANCS_EVENT_FLAG_POSITIVE_ACTION     3U                          // Positive action: Bit 3.
+#define BLE_ANCS_EVENT_FLAG_NEGATIVE_ACTION     4U                          // Negative action: Bit 4.
 
-/**@defgroup BLE_ANCS_RETRY_TYPE Retrying type
- * @brief The definition of BLE apple notification client service retry type
- * @{ */
-#define BLE_ANCS_RETRY_TYPE_ENABLE_NTFY        0x01U    /**< Definition of response retry type enable notification. */
-/** @} */
+#define BLE_ANCS_RETRY_TYPE_ENABLE_NTFY         0x01U                       // Enable notification retry type.
 
-/**@brief Enumeration type of BLE ANCS profile characteristics. */
+/* Enumeration for BLE Apple Notification Center Service (ANCS) characteristic indexes. */
 typedef enum BLE_ANCS_CharIndex_T
 {
-    ANCS_INDEX_CHAR_CONTROL_POINT = 0U,
-    ANCS_INDEX_CHAR_NTFY,
-    ANCS_INDEX_CHAR_NTFY_CCCD,
-    ANCS_INDEX_CHAR_DATA,
-    ANCS_INDEX_CHAR_DATA_CCCD,
-    ANCS_INDEX_CHAR_MAX_NUM
+    ANCS_INDEX_CHAR_CONTROL_POINT = 0U,                                     // Index for the Control Point characteristic.
+    ANCS_INDEX_CHAR_NTFY,                                                   // Index for the Notification Source characteristic.
+    ANCS_INDEX_CHAR_NTFY_CCCD,                                              // Index for the Notification Source characteristic's CCCD (Client Characteristic Configuration Descriptor).
+    ANCS_INDEX_CHAR_DATA,                                                   // Index for the Data Source characteristic.
+    ANCS_INDEX_CHAR_DATA_CCCD,                                              // Index for the Data Source characteristic's CCCD.
+    ANCS_INDEX_CHAR_MAX_NUM                                                 // Total number of ANCS characteristics.
 }BLE_ANCS_CharIndex_T;
  
-/**@brief Event for iOS Notification. */
+/* Enumeration for iOS notification events. */
 typedef enum BLE_ANCS_NtfyEvt_T
 {
-    BLE_ANCS_NTFY_EVT_ADDED = 0x0U,                                /**< The iOS notification was added. */
-    BLE_ANCS_NTFY_EVT_MODIFIED,                             /**< The iOS notification was modified. */
-    BLE_ANCS_NTFY_EVT_REMOVED,                              /**< The iOS notification was removed. */
-    BLE_ANCS_NTFY_EVT_MAX                                   /**< Undefined notification event. */
+    BLE_ANCS_NTFY_EVT_ADDED = 0x0U,                                         // Notification was added.
+    BLE_ANCS_NTFY_EVT_MODIFIED,                                             // Notification was modified.
+    BLE_ANCS_NTFY_EVT_REMOVED,                                              // Notification was removed.
+    BLE_ANCS_NTFY_EVT_MAX                                                   // Placeholder for the maximum event value.
 } BLE_ANCS_NtfyEvt_T;
 
-
-/**@brief AppAttributeID for iOS Get App Attributes. */
+/* Enumeration for App Attribute IDs in the context of the Get App Attributes command. */
 typedef enum BLE_ANCS_AppAttrId_T
 {
-    BLE_ANCS_APP_ATTR_ID_DISPLAY_NAME = 0x0U,                  /**< Command used to get the display name for an app identifier. */
-    BLE_ANCS_APP_ATTR_ID_MAX                                /**< Undefined application attribute id. */
+    BLE_ANCS_APP_ATTR_ID_DISPLAY_NAME = 0x0U,                               // Attribute ID for the app's display name.
+    BLE_ANCS_APP_ATTR_ID_MAX                                                // Undefined application attribute ID, used as a placeholder for the maximum value.
 } BLE_ANCS_AppAttrId_T;
 
-
-typedef struct
-{
-    uint8_t                     attrId;                     //!< Attribute ID: AppIdentifier(0), Title(1), Subtitle(2), Message(3), MessageSize(4), Date(5), PositiveActionLabel(6), NegativeActionLabel(7).
-    uint16_t                    attrLen;                    //!< Length of the attribute. If more data is received from the Notification Provider, all the data beyond this length is discarded.
-    uint8_t                     *p_attrData;                //!< Pointer to where the memory is allocated for storing incoming attributes.
-} BLE_ANCS_AttrList_T;
-
+/* Enumeration for packet order in a sequence of ANCS data packets. */
 typedef enum BLE_ANCS_PacketOrder_T
 {
-    BLE_ANCS_FIRST_PACKET = 0,
-    BLE_ANCS_MID_PACKET,
-    BLE_ANCS_LAST_PACKET
+    BLE_ANCS_FIRST_PACKET = 0,                                              // Indicates the first packet in a sequence.
+    BLE_ANCS_MID_PACKET,                                                    // Indicates a packet in the middle of a sequence.
+    BLE_ANCS_LAST_PACKET                                                    // Indicates the last packet in a sequence.
 } BLE_ANCS_PacketOrder_T;
 
+/* Enumeration for command IDs used in the ANCS protocol. */
 typedef enum BLE_ANCS_CmdId_T
 {
-    BLE_ANCS_COMMAND_ID_GET_NTFY_ATTR = 0x00U,              /**< Requests attributes to be sent from the NP to the NC for a given notification. */
-    BLE_ANCS_COMMAND_ID_GET_APP_ATTR,                       /**< Requests attributes to be sent from the NP to the NC for a given iOS app. */
-    BLE_ANCS_COMMAND_ID_SET_PERFORM_NTFY_ACTION,            /**< Requests an action to be performed on a given notification. For example, dismiss an alarm. */
+    BLE_ANCS_COMMAND_ID_GET_NTFY_ATTR = 0x00U,                              // Command to request notification attributes.
+    BLE_ANCS_COMMAND_ID_GET_APP_ATTR,                                       // Command to request notification attributes.
+    BLE_ANCS_COMMAND_ID_SET_PERFORM_NTFY_ACTION,                            // Command to perform an action on a notification.
 } BLE_ANCS_CmdId_T;
 
+/* Enumeration for the states of the ANCS service. */
 typedef enum BLE_ANCS_State_T
 {
-    BLE_ANCS_STATE_IDLE = 0x00,
-    BLE_ANCS_STATE_CONNECTED
+    BLE_ANCS_STATE_IDLE = 0x00,                                             // ANCS service is idle.
+    BLE_ANCS_STATE_CONNECTED                                                // ANCS service is connected to a peer device.
 } BLE_ANCS_State_T;
-
 // *****************************************************************************
 // *****************************************************************************
 // Section: Data Types
 // *****************************************************************************
 // *****************************************************************************
+/* Structure representing a list of attributes for a given notification or app. */
+typedef struct BLE_ANCS_AttrList_T
+{
+    uint8_t                     attrId;                                     // Attribute ID (e.g., AppIdentifier, Title, Subtitle, etc.).
+    uint16_t                    attrLen;                                    // Length of the attribute data; excess data beyond this length is ignored.
+    uint8_t                     *p_attrData;                                // Pointer to the allocated memory for the attribute data.
+} BLE_ANCS_AttrList_T;
 
+/* Structure holding decoded notification and application attribute data for BLE Apple Notification Center Service (ANCS). */
 typedef struct BLE_ANCS_DecodeAttrs_T
 {
-    BLE_ANCS_DecodeNtfyAttrs_T  attrNtfyData;               /**< Decode Data @ref BLE_ANCS_DecodeNtfyAttrs_T. */
-    BLE_ANCS_DecodeAppAttrs_T   attrAppData;                /**< Decode Data @ref BLE_ANCS_DecodeAppAttrs_T. */
+    BLE_ANCS_DecodeNtfyAttrs_T  attrNtfyData;                               // Notification attribute data.
+    BLE_ANCS_DecodeAppAttrs_T   attrAppData;                                // Application attribute data.
 } BLE_ANCS_DecodeAttrs_T;
 
+/* Structure representing a connection list for BLE ANCS. */
 typedef struct BLE_ANCS_ConnList_T
 {
-    uint8_t                     connIndex;
-    BLE_ANCS_State_T            state;
-    uint16_t                    connHandle;
-    uint16_t                    attMtu;
+    uint8_t                     connIndex;                                  // Index of the connection.
+    BLE_ANCS_State_T            state;                                      // Current state of the ANCS connection.
+    uint16_t                    connHandle;                                 // Connection handle.
+    uint16_t                    attMtu;                                     // Attribute MTU size.
 
-    BLE_ANCS_CharIndex_T        enableCccd;
+    BLE_ANCS_CharIndex_T        enableCccd;                                 // Characteristic index for enabling CCCD.
 
-    uint8_t                     *p_packet;
-    BLE_ANCS_PacketOrder_T      completePkt;
-    uint16_t                    pktLen;
+    uint8_t                     *p_packet;                                  // Pointer to the packet data.
+    BLE_ANCS_PacketOrder_T      completePkt;                                // Status of the complete packet.
+    uint16_t                    pktLen;                                     // Length of the packet.
 
-    BLE_ANCS_DecodeAttrs_T      attrData;
+    BLE_ANCS_DecodeAttrs_T      attrData;                                   // Decoded attribute data.
 
-    BLE_ANCS_AttrList_T         ntfyAttrList[BLE_ANCS_NTFY_ATTR_ID_MAX];
-    BLE_ANCS_AttrList_T         appAttrList[BLE_ANCS_APP_ATTR_ID_MAX];
-    BLE_ANCS_AttrList_T         *p_attrList;
-    uint8_t                     retryType;
+    BLE_ANCS_AttrList_T         ntfyAttrList[BLE_ANCS_NTFY_ATTR_ID_MAX];    // List of notification attributes.
+    BLE_ANCS_AttrList_T         appAttrList[BLE_ANCS_APP_ATTR_ID_MAX];      // List of application attributes.
+    BLE_ANCS_AttrList_T         *p_attrList;                                // Pointer to the current attribute list being processed.
+    uint8_t                     retryType;                                  // Type of retry operation.
 } BLE_ANCS_ConnList_T;
+
+/* Structure service database and discovery list for BLE ANCS. */
+typedef struct BLE_ANCS_ServiceDb_T
+{
+    BLE_DD_CharList_T ancsCharList[BLE_ANCS_MAX_CONN_NBR];
+    BLE_DD_CharInfo_T ancsCharInfoList[BLE_ANCS_MAX_CONN_NBR][ANCS_INDEX_CHAR_MAX_NUM];
+    BLE_DD_DiscChar_T ancsDiscCharList[ANCS_INDEX_CHAR_MAX_NUM];
+    BLE_DD_DiscChar_T *p_ancsDiscCharList[ANCS_INDEX_CHAR_MAX_NUM];
+} BLE_ANCS_ServiceDb_T;
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Local Variables
 // *****************************************************************************
 // *****************************************************************************
-static BLE_ANCS_EventCb_T       bleAncsProcess;
-static BLE_ANCS_ConnList_T      s_ancsConnList[BLE_ANCS_MAX_CONN_NBR];
-static BLE_DD_CharInfo_T        s_ancsCharInfoList[BLE_ANCS_MAX_CONN_NBR][ANCS_INDEX_CHAR_MAX_NUM];
+// Callback for processing BLE ANCS events.
+static BLE_ANCS_EventCb_T       s_bleAncsProcess;
+// An array to keep track of the connection list for ANCS.
+static BLE_ANCS_ConnList_T      *sp_ancsConnList[BLE_ANCS_MAX_CONN_NBR];
+// List of pointers to the discovery information for ANCS characteristics and descriptors.
+static BLE_ANCS_ServiceDb_T     *sp_ancsServiceDb;
 
-static const uint8_t            discSvcUuid[] =     {UUID_ANCS_SVC};
-static const ATT_Uuid_T         discCharCtrl =      {{UUID_ANCS_CHAR_CONTROL_POINT}, ATT_UUID_LENGTH_16 };
-static const ATT_Uuid_T         discCharNtfy =      {{UUID_ANCS_CHAR_NOTIFICATION_SOURCE}, ATT_UUID_LENGTH_16 };
-static const ATT_Uuid_T         discCharNtfyCccd =  {{UINT16_TO_BYTES(UUID_DESCRIPTOR_CLIENT_CHAR_CONFIG)}, ATT_UUID_LENGTH_2 };
-static const ATT_Uuid_T         discCharData =      {{UUID_ANCS_CHAR_DATA_SOURCE}, ATT_UUID_LENGTH_16 };
-static const ATT_Uuid_T         discCharDataCccd =  {{UINT16_TO_BYTES(UUID_DESCRIPTOR_CLIENT_CHAR_CONFIG)}, ATT_UUID_LENGTH_2 };
+// UUID for the ANCS service discovery.
+static const uint8_t            s_discSvcUuid[] =     {UUID_ANCS_SVC};    
 
-static BLE_DD_DiscChar_T        ancsCtrl =          {&discCharCtrl, 0 };
-static BLE_DD_DiscChar_T        ancsNtfy =          {&discCharNtfy,0 };
-static BLE_DD_DiscChar_T        ancsNtfyCccd =      {&discCharNtfyCccd, CHAR_SET_DESCRIPTOR };
-static BLE_DD_DiscChar_T        ancsData =          {&discCharData, 0 };
-static BLE_DD_DiscChar_T        ancsDataCccd =      {&discCharDataCccd, CHAR_SET_DESCRIPTOR };
+// UUID for the ANCS control point characteristic discovery.
+static const ATT_Uuid_T         s_discCharCtrl =      {{UUID_ANCS_CHAR_CONTROL_POINT}, ATT_UUID_LENGTH_16 };
 
-static BLE_DD_DiscChar_T        *ancsDiscCharList[] =
-{
-    &ancsCtrl,
-    &ancsNtfy,
-    &ancsNtfyCccd,
-    &ancsData,
-    &ancsDataCccd
-};
+// UUID for the ANCS notification source characteristic discovery.
+static const ATT_Uuid_T         s_discCharNtfy =      {{UUID_ANCS_CHAR_NOTIFICATION_SOURCE}, ATT_UUID_LENGTH_16 };
 
-static BLE_DD_CharList_T        s_ancsCharList[BLE_ANCS_MAX_CONN_NBR];
+// UUID for the ANCS notification source characteristic's CCCD (Client Characteristic Configuration Descriptor) discovery.
+static const ATT_Uuid_T         s_discCharNtfyCccd =  {{UINT16_TO_BYTES(UUID_DESCRIPTOR_CLIENT_CHAR_CONFIG)}, ATT_UUID_LENGTH_2 };
+
+// UUID for the ANCS data source characteristic discovery.
+static const ATT_Uuid_T         s_discCharData =      {{UUID_ANCS_CHAR_DATA_SOURCE}, ATT_UUID_LENGTH_16 };
+
+// UUID for the ANCS data source characteristic's CCCD discovery.
+static const ATT_Uuid_T         s_discCharDataCccd =  {{UINT16_TO_BYTES(UUID_DESCRIPTOR_CLIENT_CHAR_CONFIG)}, ATT_UUID_LENGTH_2 };
+
+
 
 // *****************************************************************************
 // *****************************************************************************
@@ -214,18 +223,36 @@ static BLE_DD_CharList_T        s_ancsCharList[BLE_ANCS_MAX_CONN_NBR];
 // *****************************************************************************
 // *****************************************************************************
 
+/**
+ * @brief Conveys an ANCS event to the registered process handler.
+ *
+ * @param eventId       The identifier of the ANCS event.
+ * @param p_eventField  Pointer to the event data.
+ * @param eventFieldLen Length of the event data.
+ */
 static void ble_ancs_ConveyEvent(BLE_ANCS_EventId_T eventId, uint8_t *p_eventField, uint8_t eventFieldLen)
 {
-    if(bleAncsProcess != NULL)
+    if(s_bleAncsProcess != NULL)
     {
         BLE_ANCS_Event_T evtPara;
 
         evtPara.eventId = eventId;
         (void)memcpy((uint8_t *)&evtPara.eventField, p_eventField, eventFieldLen);
-        bleAncsProcess(&evtPara);
+        s_bleAncsProcess(&evtPara);
     }
 }
 
+
+/**
+ * @brief Writes data to a GATT characteristic.
+ *
+ * @param p_conn        Pointer to the connection list structure.
+ * @param p_writeParams Pointer to the GATT write parameters structure.
+ * @param charHandle    Handle of the characteristic to write to.
+ * @param len           Length of the data to write.
+ * 
+ * @retval uint16_t     Result of the GATT write operation.
+ */
 static uint16_t ble_ancs_GattWrite(BLE_ANCS_ConnList_T *p_conn, GATTC_WriteParams_T *p_writeParams, 
                             uint16_t charHandle, uint16_t len)
 {
@@ -242,6 +269,12 @@ static uint16_t ble_ancs_GattWrite(BLE_ANCS_ConnList_T *p_conn, GATTC_WriteParam
     return ret;
 }
 
+
+/**
+ * @brief Initializes the resources for a BLE ANCS connection.
+ *
+ * @param p_conn    Pointer to the ANCS connection list structure.
+ */
 static void ble_ancs_InitResource(BLE_ANCS_ConnList_T *p_conn)
 {
     BLE_ANCS_DecodeNtfyAttrs_T  *p_attrNtfyData= &p_conn->attrData.attrNtfyData;
@@ -274,6 +307,17 @@ static void ble_ancs_InitResource(BLE_ANCS_ConnList_T *p_conn)
     }
 }
 
+
+/**
+ * @brief Verify the validity of the notification event.
+ *
+ * This function checks if the notification event ID and category ID are within their valid ranges.
+ *
+ * @param p_ntfy    Pointer to the notification structure.
+ * @param ntfyEvtId Notification event ID to verify.
+ * 
+ * @retval true if the notification event ID or category ID is out of range, false otherwise.
+ */
 static bool ble_ancs_VerifyNotification(BLE_ANCS_EvtNtfyInd_T *p_ntfy, BLE_ANCS_NtfyEvt_T ntfyEvtId)
 {
     if (  (ntfyEvtId >= BLE_ANCS_NTFY_EVT_MAX)
@@ -284,7 +328,16 @@ static bool ble_ancs_VerifyNotification(BLE_ANCS_EvtNtfyInd_T *p_ntfy, BLE_ANCS_
 
     return false;
 }
- 
+
+
+/**
+ * @brief Handle the notification response.
+ *
+ * This function processes the received notification attributes and conveys the appropriate event.
+ *
+ * @param p_conn    Pointer to the connection list structure.
+ * @param p_event Pointer to the received handle value event structure.
+ */
 static void ble_ancs_NotificationRsp(BLE_ANCS_ConnList_T *p_conn, GATT_EvtReceiveHandleValue_T *p_event)
 {
     BLE_ANCS_EvtNtfyInd_T *p_ntfy;
@@ -334,6 +387,16 @@ static void ble_ancs_NotificationRsp(BLE_ANCS_ConnList_T *p_conn, GATT_EvtReceiv
     ble_ancs_ConveyEvent(eventId[ntfyEvtId], (uint8_t *)&evtPara.eventField, (uint8_t)sizeof(BLE_ANCS_EvtNtfyInd_T));
 }
 
+
+/**
+ * @brief Get the connection list entry by connection handle.
+ *
+ * This function searches the connection list for an entry with the given connection handle.
+ *
+ * @param connHandle The connection handle to search for.
+ * 
+ * @retval Pointer to the connection list entry, or NULL if not found.
+ */
 static BLE_ANCS_ConnList_T *ble_ancs_GetConnListByHandle(uint16_t connHandle)
 {
     uint8_t i;
@@ -341,16 +404,26 @@ static BLE_ANCS_ConnList_T *ble_ancs_GetConnListByHandle(uint16_t connHandle)
 
     for(i=0; i<BLE_ANCS_MAX_CONN_NBR; i++)
     {
-        if ((s_ancsConnList[i].state == BLE_ANCS_STATE_CONNECTED) && (s_ancsConnList[i].connHandle == connHandle))
+        if ((sp_ancsConnList[i] != NULL) && (sp_ancsConnList[i]->state == BLE_ANCS_STATE_CONNECTED) && (sp_ancsConnList[i]->connHandle == connHandle))
         {
-            p_conn = &s_ancsConnList[i];
+            p_conn = sp_ancsConnList[i];
             break;
         }
     }
 
     return p_conn;
 }
- 
+
+
+/**
+ * @brief Check if the ANCS packet is complete.
+ *
+ * This function checks the packet data to determine if the ANCS packet is complete or if more packets are expected.
+ *
+ * @param p_conn    Pointer to the connection list structure containing the packet data.
+ * 
+ * @retval The status of the packet (last packet, mid packet, or error).
+ */
 static BLE_ANCS_PacketOrder_T  ble_ancs_ChkAncsComplete(BLE_ANCS_ConnList_T *p_conn)
 {
     BLE_ANCS_PacketOrder_T ret;
@@ -403,7 +476,14 @@ static BLE_ANCS_PacketOrder_T  ble_ancs_ChkAncsComplete(BLE_ANCS_ConnList_T *p_c
     return ret;
 }
 
-static uint16_t ble_ancs_AttrsRsp(BLE_ANCS_ConnList_T *p_conn)
+
+/**
+ * @brief Handles the response for attribute data received from ANCS.
+ *
+ * @param p_conn Pointer to the connection list structure.
+ * 
+ */
+static void ble_ancs_AttrsRsp(BLE_ANCS_ConnList_T *p_conn)
 {
     uint8_t * p_data        = p_conn->p_packet;
     BLE_ANCS_DecodeNtfyAttrs_T  *p_attrNtfyData= &p_conn->attrData.attrNtfyData;
@@ -525,10 +605,19 @@ static uint16_t ble_ancs_AttrsRsp(BLE_ANCS_ConnList_T *p_conn)
         index += len;
 
     } while (index <hvx_data_len);
-
-    return MBA_RES_SUCCESS;
 }
 
+
+/**
+ * @brief Queries the notification attributes and prepares the data to be sent over GATT.
+ *
+ * @param p_conn        Pointer to the connection list structure.
+ * @param p_gattValue   Pointer to the buffer where the GATT value will be stored.
+ * @param uid           Unique identifier for the notification.
+ * @param enabeMask     Bitmask to specify which attributes to query.
+ * 
+ * @retval uint16_t The length of the encoded data.
+ */
 static uint16_t ble_ancs_QueryNtfyAttr(BLE_ANCS_ConnList_T *p_conn, uint8_t *p_gattValue, uint32_t uid, BLE_ANCS_NtfyAttrsMask_T enabeMask)
 {
     uint16_t index  = 0;
@@ -567,6 +656,17 @@ static uint16_t ble_ancs_QueryNtfyAttr(BLE_ANCS_ConnList_T *p_conn, uint8_t *p_g
     return index ;
 }
 
+
+/**
+ * @brief Encodes the notification action into the provided buffer.
+ *
+ * @param p_conn        Pointer to the connection list structure.
+ * @param p_encodedData Pointer to the buffer where the encoded data will be stored.
+ * @param ntfyId        Notification identifier to which the action applies.
+ * @param actId         Action identifier that specifies the action to be performed.
+ * 
+ * @retval uint16_t The length of the encoded data.
+ */
 static uint16_t ble_ancs_EncodeNotifAction(BLE_ANCS_ConnList_T *p_conn, uint8_t * p_encodedData, uint32_t ntfyId, BLE_ANCS_ActionId_T actId)
 {
     uint8_t index = 0;
@@ -580,6 +680,23 @@ static uint16_t ble_ancs_EncodeNotifAction(BLE_ANCS_ConnList_T *p_conn, uint8_t 
 }
 
 
+/**
+ * @brief Requests attributes for a specific iOS notification.
+ * This function triggers the ANCS client role to retrieve notification attributes from an iOS device.
+ *
+ * @param[in] connHandle                    The connection handle associated with the iOS device.
+ * @param[in] ntfyId                        The unique identifier for the iOS notification. The ntfyId could be retrieved when receiving @ref BLE_ANCS_EVT_NTFY_ADDED_IND or @ref BLE_ANCS_EVT_NTFY_MODIFIED_IND or @ref BLE_ANCS_EVT_NTFY_REMOVED_IND events.
+ * @param[in] bitmask                       A bitmask specifying which notification attributes to retrieve.
+ *
+ * @retval MBA_RES_SUCCESS                  Get notification attributes was issued successfully.
+ * @retval MBA_RES_FAIL                     The operation is not permitted.
+ * @retval MBA_RES_OOM                      Internal memory allocation failure.
+ * @retval MBA_RES_INVALID_PARA             Invalid parameters were provided. Possible reasons include:\n
+ *                                          - Invalid connection handle.\n
+ *                                          - Invalid write parameters. See @ref GATTC_WriteParams_T for valid values.\n
+ * @retval MBA_RES_NO_RESOURCE              Insufficient resources to perform the operation.
+ * @retval MBA_RES_BUSY                     The GATT Client is currently busy with another operation.
+ */
 uint16_t BLE_ANCS_GetNtfyAttr(uint16_t connHandle, uint32_t ntfyId, BLE_ANCS_NtfyAttrsMask_T bitmask)
 {
     uint16_t ret = MBA_RES_INVALID_PARA, len;
@@ -589,7 +706,7 @@ uint16_t BLE_ANCS_GetNtfyAttr(uint16_t connHandle, uint32_t ntfyId, BLE_ANCS_Ntf
     if (p_conn != NULL)
     {       
         GATTC_WriteParams_T *p_writeParams;
-        uint16_t charHandle = s_ancsCharInfoList[p_conn->connIndex][ANCS_INDEX_CHAR_CONTROL_POINT].charHandle;
+        uint16_t charHandle = sp_ancsServiceDb->ancsCharInfoList[p_conn->connIndex][ANCS_INDEX_CHAR_CONTROL_POINT].charHandle;
 
         p_writeParams = OSAL_Malloc(sizeof(GATTC_WriteParams_T));
         if (p_writeParams == NULL)
@@ -609,7 +726,17 @@ uint16_t BLE_ANCS_GetNtfyAttr(uint16_t connHandle, uint32_t ntfyId, BLE_ANCS_Ntf
  
     return ret;
 }
- 
+
+
+/**
+ * @brief Queries the app attributes and prepares the data to be sent over GATT.
+ *
+ * @param p_conn    Pointer to the connection list structure.
+ * @param p_appId   Pointer to the app identifier string.
+ * @param p_value   Pointer to the buffer where the GATT value will be stored.
+ * 
+ * @retval uint16_t The length of the encoded data.
+ */
 static uint16_t ble_ancs_QueryAppAttr(BLE_ANCS_ConnList_T *p_conn, uint8_t *p_appId, uint8_t *p_value)
 {
     uint16_t  index = 0;
@@ -627,6 +754,23 @@ static uint16_t ble_ancs_QueryAppAttr(BLE_ANCS_ConnList_T *p_conn, uint8_t *p_ap
     return index;
 }
 
+
+/**
+ * @brief Retrieves attributes for a specific app on an iOS device.
+ *
+ * @param[in] connHandle                    The handle for the current connection with the iOS device.
+ * @param[in] p_appId                       Pointer to a null-terminated string representing the app's identifier. App Identifier can be retrieved when receiving @ref BLE_ANCS_EVT_NTFY_ATTR_IND event.
+ * @param[in] bitmask                       Bitmask specifying which app attributes to retrieve. Refer to @ref BLE_ANCS_AppAttrsMask_T for possible values.
+ *
+ * @retval MBA_RES_SUCCESS                  Command successfully sent to retrieve app attributes.
+ * @retval MBA_RES_FAIL                     The operation is not permitted.
+ * @retval MBA_RES_OOM                      Internal memory allocation failure.
+ * @retval MBA_RES_INVALID_PARA             Invalid parameters were provided. Possible reasons include:\n
+ *                                          - Invalid connection handle.\n
+ *                                          - Invalid write parameters. See @ref GATTC_WriteParams_T for valid values.\n
+ * @retval MBA_RES_NO_RESOURCE              Insufficient resources to perform the operation.
+ * @retval MBA_RES_BUSY                     The GATT Client is currently busy with another operation.
+ */
 uint16_t BLE_ANCS_GetAppAttr(uint16_t connHandle, uint8_t *p_appId, BLE_ANCS_AppAttrsMask_T bitmask)
 {
     uint16_t ret = MBA_RES_INVALID_PARA, index;
@@ -641,7 +785,7 @@ uint16_t BLE_ANCS_GetAppAttr(uint16_t connHandle, uint8_t *p_appId, BLE_ANCS_App
     if (p_conn != NULL)
     { 
         GATTC_WriteParams_T *p_writeParams;
-        uint16_t charHandle = s_ancsCharInfoList[p_conn->connIndex][ANCS_INDEX_CHAR_CONTROL_POINT].charHandle;
+        uint16_t charHandle = sp_ancsServiceDb->ancsCharInfoList[p_conn->connIndex][ANCS_INDEX_CHAR_CONTROL_POINT].charHandle;
 
         p_writeParams = OSAL_Malloc(sizeof(GATTC_WriteParams_T));
         if (p_writeParams == NULL)
@@ -662,6 +806,27 @@ uint16_t BLE_ANCS_GetAppAttr(uint16_t connHandle, uint8_t *p_appId, BLE_ANCS_App
     return ret;
 }
 
+
+/**
+ * @brief Performs an action on a specific iOS notification.
+ * 
+ * This function sends a command to the iOS device to perform a specified action on a notification identified 
+ * by its unique identifier (UID). The action to be performed is determined by the action ID provided.
+ *
+ * @param[in] connHandle                    The handle for the current connection with the iOS device.
+ * @param[in] ntfyId                        The 32-bit UID of the iOS notification on which to perform the action.
+ *                                          The ntfyId can be retrieved when receiving @ref BLE_ANCS_EVT_NTFY_ADDED_IND or @ref BLE_ANCS_EVT_NTFY_MODIFIED_IND or @ref BLE_ANCS_EVT_NTFY_REMOVED_IND events.
+ * @param[in] actId                         The action to perform on the notification. Refer to @ref BLE_ANCS_ActionId_T for possible values.
+ *
+ * @retval MBA_RES_SUCCESS                  Command successfully sent to perform the action on the notification.
+ * @retval MBA_RES_FAIL                     The operation is not permitted.
+ * @retval MBA_RES_OOM                      Internal memory allocation failure.
+ * @retval MBA_RES_INVALID_PARA             Invalid parameters were provided. Possible reasons include:\n
+ *                                          - Invalid connection handle.\n
+ *                                          - Invalid write parameters. See @ref GATTC_WriteParams_T for valid values.\n
+ * @retval MBA_RES_NO_RESOURCE              No available resource to send write operation.
+ * @retval MBA_RES_BUSY                     The GATT Client is currently busy with another operation.
+ */
 uint16_t BLE_ANCS_PerformNtfyAction(uint16_t connHandle, uint32_t ntfyId, BLE_ANCS_ActionId_T actId)
 {
     uint16_t len, ret= MBA_RES_INVALID_PARA;
@@ -673,7 +838,7 @@ uint16_t BLE_ANCS_PerformNtfyAction(uint16_t connHandle, uint32_t ntfyId, BLE_AN
         if (p_conn != NULL)
         {
             GATTC_WriteParams_T *p_writeParams;
-            uint16_t charHandle = s_ancsCharInfoList[p_conn->connIndex][ANCS_INDEX_CHAR_CONTROL_POINT].charHandle;
+            uint16_t charHandle = sp_ancsServiceDb->ancsCharInfoList[p_conn->connIndex][ANCS_INDEX_CHAR_CONTROL_POINT].charHandle;
 
             p_writeParams = OSAL_Malloc(sizeof(GATTC_WriteParams_T));
             if (p_writeParams == NULL)
@@ -692,6 +857,12 @@ uint16_t BLE_ANCS_PerformNtfyAction(uint16_t connHandle, uint32_t ntfyId, BLE_AN
     return ret;
 }
 
+
+/**
+ * @brief Process error event from GATT.
+ *
+ * @param p_event   Pointer to the GATT event structure.
+ */
 static void ble_ancs_ProcErr(GATT_Event_T *p_event)
 {
     BLE_ANCS_Event_T evtPara;
@@ -699,17 +870,24 @@ static void ble_ancs_ProcErr(GATT_Event_T *p_event)
     evtPara.eventField.evtErrInd.errCode     = p_event->eventField.onError.errCode;
     ble_ancs_ConveyEvent(BLE_ANCS_EVT_ERR_IND, (uint8_t *)&evtPara.eventField,(uint8_t)sizeof(BLE_ANCS_EvtErrInd_T));
 }
+
+
+/**
+ * @brief Process GATT notifications for the ANCS service.
+ *
+ * @param p_conn    Pointer to the ANCS connection list structure.
+ * @param p_event   Pointer to the GATT event structure.
+ */
 static void ble_ancs_ProcGattNotification(BLE_ANCS_ConnList_T *p_conn, GATT_Event_T *p_event)
 {
-    uint16_t ret = MBA_RES_SUCCESS;
     uint16_t charHandle = p_event->eventField.onNotification.charHandle;
     BLE_ANCS_Event_T evtPara;
 
-    if (charHandle == s_ancsCharInfoList[p_conn->connIndex][ANCS_INDEX_CHAR_NTFY].charHandle)
+    if (charHandle == sp_ancsServiceDb->ancsCharInfoList[p_conn->connIndex][ANCS_INDEX_CHAR_NTFY].charHandle)
     {
         ble_ancs_NotificationRsp(p_conn, &p_event->eventField.onNotification);
     }
-    else if (charHandle == s_ancsCharInfoList[p_conn->connIndex][ANCS_INDEX_CHAR_DATA].charHandle)
+    else if (charHandle == sp_ancsServiceDb->ancsCharInfoList[p_conn->connIndex][ANCS_INDEX_CHAR_DATA].charHandle)
     {
         BLE_ANCS_DecodeNtfyAttrs_T  *p_attrNtfyData= &p_conn->attrData.attrNtfyData;
         uint8_t * p_data   = p_event->eventField.onNotification.receivedValue;
@@ -721,9 +899,9 @@ static void ble_ancs_ProcGattNotification(BLE_ANCS_ConnList_T *p_conn, GATT_Even
 
             p_conn->p_packet = OSAL_Malloc(BLE_ANCS_MAX_PACKET_BUFFER_SIZE);
             if (p_conn->p_packet == NULL)
-			{
+            {
                return;
-			}
+            }
         }
         else
         {
@@ -750,23 +928,19 @@ static void ble_ancs_ProcGattNotification(BLE_ANCS_ConnList_T *p_conn, GATT_Even
         {
             BLE_ANCS_CmdId_T  commandId = (BLE_ANCS_CmdId_T) p_conn->p_packet[0];
 
-            ret = ble_ancs_AttrsRsp(p_conn);
-            if (ret == MBA_RES_SUCCESS)
+            ble_ancs_AttrsRsp(p_conn);
+
+            if (commandId == BLE_ANCS_COMMAND_ID_GET_NTFY_ATTR)
             {
-                if (commandId == BLE_ANCS_COMMAND_ID_GET_NTFY_ATTR)
-                {
-                    evtPara.eventField.evtNtfyAttrInd.connHandle  = p_conn->connHandle;
-
-                    evtPara.eventField.evtNtfyAttrInd.p_data = &p_conn->attrData.attrNtfyData;
-                    ble_ancs_ConveyEvent(BLE_ANCS_EVT_NTFY_ATTR_IND, (uint8_t *)&evtPara.eventField, (uint8_t)sizeof(BLE_ANCS_EvtNtfyAttrInd_T));
-                }
-                else
-                {
-                    evtPara.eventField.evtAppAttrInd.connHandle     = p_conn->connHandle;
-
-                    evtPara.eventField.evtAppAttrInd.p_data = &p_conn->attrData.attrAppData;
-                    ble_ancs_ConveyEvent(BLE_ANCS_EVT_APP_ATTR_IND, (uint8_t *)&evtPara.eventField, (uint8_t)sizeof(BLE_ANCS_EvtAppAttrInd_T));
-                }
+                evtPara.eventField.evtNtfyAttrInd.connHandle  = p_conn->connHandle;
+                evtPara.eventField.evtNtfyAttrInd.p_data = &p_conn->attrData.attrNtfyData;
+                ble_ancs_ConveyEvent(BLE_ANCS_EVT_NTFY_ATTR_IND, (uint8_t *)&evtPara.eventField, (uint8_t)sizeof(BLE_ANCS_EvtNtfyAttrInd_T));
+            }
+            else
+            {
+                evtPara.eventField.evtAppAttrInd.connHandle     = p_conn->connHandle;
+                evtPara.eventField.evtAppAttrInd.p_data = &p_conn->attrData.attrAppData;
+                ble_ancs_ConveyEvent(BLE_ANCS_EVT_APP_ATTR_IND, (uint8_t *)&evtPara.eventField, (uint8_t)sizeof(BLE_ANCS_EvtAppAttrInd_T));
             }
             ble_ancs_InitResource(p_conn);
         }
@@ -776,6 +950,13 @@ static void ble_ancs_ProcGattNotification(BLE_ANCS_ConnList_T *p_conn, GATT_Even
         //Shall not enter here
     }
 }
+
+
+/**
+ * @brief Enable the CCCD (Client Characteristic Configuration Descriptor) for the ANCS characteristics.
+ *
+ * @param connHandle    Connection handle to identify the GATT connection.
+ */
 static void ble_ancs_enableCccd(uint16_t connHandle)
 {
     BLE_ANCS_ConnList_T *p_conn = ble_ancs_GetConnListByHandle(connHandle);
@@ -797,7 +978,7 @@ static void ble_ancs_enableCccd(uint16_t connHandle)
                 ble_ancs_ConveyEvent(BLE_ANCS_EVT_ERR_NO_MEM_IND, NULL, 0);
                 return;
             }
-            p_writeParams->charHandle   = s_ancsCharInfoList[p_conn->connIndex][p_conn->enableCccd].charHandle;
+            p_writeParams->charHandle   = sp_ancsServiceDb->ancsCharInfoList[p_conn->connIndex][p_conn->enableCccd].charHandle;
             U16_TO_BUF_LE(p_writeParams->charValue, NOTIFICATION);
             p_writeParams->charLength   = 2;
             p_writeParams->writeType    = ATT_WRITE_REQ;
@@ -832,6 +1013,12 @@ static void ble_ancs_enableCccd(uint16_t connHandle)
     }
 }
 
+
+/**
+ * @brief Process queued tasks for the ANCS service based on the connection handle.
+ *
+ * @param connHandle    Connection handle to identify the GATT connection.
+ */
 static void ble_ancs_ProcessQueuedTask(uint16_t connHandle)
 {
     BLE_ANCS_ConnList_T *p_conn;
@@ -856,6 +1043,12 @@ static void ble_ancs_ProcessQueuedTask(uint16_t connHandle)
     }
 }
 
+
+/**
+ * @brief Process GATT events for the ANCS service.
+ *
+ * @param p_event   Pointer to the GATT event structure.
+ */
 static void ble_ancs_GattEventProcess(GATT_Event_T *p_event)
 {
     BLE_ANCS_ConnList_T *p_conn;
@@ -886,9 +1079,9 @@ static void ble_ancs_GattEventProcess(GATT_Event_T *p_event)
         {
             p_conn = ble_ancs_GetConnListByHandle(p_event->eventField.onUpdateMTU.connHandle);
             if (p_conn == NULL)
-			{
+            {
                 return;
-			}
+            }
 
             if ((p_conn->enableCccd == ANCS_INDEX_CHAR_NTFY_CCCD) || (p_conn->enableCccd == ANCS_INDEX_CHAR_DATA_CCCD))
             {
@@ -914,19 +1107,43 @@ static void ble_ancs_GattEventProcess(GATT_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Get a free connection list entry for the ANCS service.
+ *
+ * @retval Pointer to the ANCS connection list structure, or NULL if no free entry is available.
+ */
 static BLE_ANCS_ConnList_T *ble_ancs_GetFreeConnList(void)
 {
     uint8_t i;
     BLE_ANCS_ConnList_T *p_conn = NULL;
 
-    for(i=0; i<BLE_ANCS_MAX_CONN_NBR; i++)
+    for(i = 0; i < BLE_ANCS_MAX_CONN_NBR; i++)
     {
-        if (s_ancsConnList[i].state == BLE_ANCS_STATE_IDLE)
+        if (sp_ancsConnList[i] == NULL)
         {
-            s_ancsConnList[i].state = BLE_ANCS_STATE_CONNECTED;
-            s_ancsConnList[i].connIndex = i;
-            p_conn = &s_ancsConnList[i];
+            sp_ancsConnList[i] = OSAL_Malloc(sizeof(BLE_ANCS_ConnList_T));
+            p_conn = sp_ancsConnList[i];
+            if (p_conn != NULL)
+            {
+                BLE_ANCS_DecodeNtfyAttrs_T *p_attrNtfyData = &sp_ancsConnList[i]->attrData.attrNtfyData;
+                BLE_ANCS_DecodeAppAttrs_T  *p_attrAppData  = &sp_ancsConnList[i]->attrData.attrAppData;
 
+                (void)memset(p_conn, 0, sizeof(BLE_ANCS_ConnList_T));
+                p_conn->state     = BLE_ANCS_STATE_CONNECTED;
+                p_conn->connIndex = i;
+                p_conn->attMtu    = BLE_ATT_DEFAULT_MTU_LEN;
+                p_conn->ntfyAttrList[BLE_ANCS_NTFY_ATTR_ID_APP_IDENTIFIER].p_attrData 
+                                  = p_attrNtfyData->appId;
+                p_conn->ntfyAttrList[BLE_ANCS_NTFY_ATTR_ID_DATE].p_attrData 
+                                  = p_attrNtfyData->date;
+                p_conn->ntfyAttrList[BLE_ANCS_NTFY_ATTR_ID_POSITIVE_ACTION_LABEL].p_attrData 
+                                  = p_attrNtfyData->positiveAction;
+                p_conn->ntfyAttrList[BLE_ANCS_NTFY_ATTR_ID_NEGATIVE_ACTION_LABEL].p_attrData 
+                                  = p_attrNtfyData->negativeAction;
+                p_conn->appAttrList[BLE_ANCS_APP_ATTR_ID_DISPLAY_NAME].p_attrData 
+                                  = p_attrAppData->displayName;
+            }
             break;
         }
     }
@@ -934,38 +1151,34 @@ static BLE_ANCS_ConnList_T *ble_ancs_GetFreeConnList(void)
     return p_conn;
 }
 
-static void ble_ancs_InitConnList(BLE_ANCS_ConnList_T *p_conn, uint8_t disconnect)
+
+/**
+ * @brief Free the connection list for the ANCS service.
+ *
+ * @param p_conn        Pointer to the ANCS connection list structure to initialize.
+ * @param disconnect    Flag indicating whether to disconnect.
+ */
+static void ble_ancs_FreeConnList(BLE_ANCS_ConnList_T *p_conn)
 {
-    BLE_ANCS_DecodeNtfyAttrs_T  *p_attrNtfyData = &p_conn->attrData.attrNtfyData;
-    BLE_ANCS_DecodeAppAttrs_T   *p_attrAppData= &p_conn->attrData.attrAppData;
-    
-    if (disconnect != 0U)
+    uint8_t i;
+    ble_ancs_InitResource(p_conn);
+    for (i = 0; i < BLE_ANCS_MAX_CONN_NBR; i++)
     {
-        ble_ancs_InitResource(p_conn);
+        if (sp_ancsConnList[i] == p_conn)
+        {
+            OSAL_Free(sp_ancsConnList[i]);
+            sp_ancsConnList[i] = NULL;
+            break;
+        }
     }
-
-    (void)memset((uint8_t *)p_conn, 0, sizeof(BLE_ANCS_ConnList_T));
-    p_conn->attMtu= BLE_ATT_DEFAULT_MTU_LEN;
-
-    p_conn->ntfyAttrList[BLE_ANCS_NTFY_ATTR_ID_APP_IDENTIFIER].p_attrData 
-                = p_attrNtfyData->appId;
-    p_conn->ntfyAttrList[BLE_ANCS_NTFY_ATTR_ID_TITLE].p_attrData 
-                = p_attrNtfyData->p_title;
-    p_conn->ntfyAttrList[BLE_ANCS_NTFY_ATTR_ID_SUBTITLE].p_attrData 
-                = p_attrNtfyData->p_subtitle;
-    p_conn->ntfyAttrList[BLE_ANCS_NTFY_ATTR_ID_MESSAGE].p_attrData 
-                = p_attrNtfyData->p_msg;
-    p_conn->ntfyAttrList[BLE_ANCS_NTFY_ATTR_ID_DATE].p_attrData 
-                = p_attrNtfyData->date;
-    p_conn->ntfyAttrList[BLE_ANCS_NTFY_ATTR_ID_POSITIVE_ACTION_LABEL].p_attrData 
-                = p_attrNtfyData->positiveAction;
-    p_conn->ntfyAttrList[BLE_ANCS_NTFY_ATTR_ID_NEGATIVE_ACTION_LABEL].p_attrData 
-                = p_attrNtfyData->negativeAction;
-
-    p_conn->appAttrList[BLE_ANCS_APP_ATTR_ID_DISPLAY_NAME].p_attrData 
-                = p_attrAppData->displayName;
 }
 
+
+/**
+ * @brief Process GAP events for the ANCS service.
+ *
+ * @param p_event Pointer to the GAP event structure.
+ */
 static void ble_ancs_GapEventProcess(BLE_GAP_Event_T *p_event)
 {
     BLE_ANCS_ConnList_T *p_conn = NULL;
@@ -974,10 +1187,15 @@ static void ble_ancs_GapEventProcess(BLE_GAP_Event_T *p_event)
     {
         case BLE_GAP_EVT_CONNECTED:
         {
-            if ((p_event->eventField.evtConnect.status == GAP_STATUS_SUCCESS))
+            if (p_event->eventField.evtConnect.status == GAP_STATUS_SUCCESS)
             {
                 p_conn = ble_ancs_GetFreeConnList();
-                if (p_conn != NULL)
+
+                if (p_conn == NULL)
+                {
+                    ble_ancs_ConveyEvent(BLE_ANCS_EVT_ERR_NO_MEM_IND, NULL, 0);
+                }
+                else
                 {
                     p_conn->connHandle = p_event->eventField.evtConnect.connHandle;
                 }
@@ -991,7 +1209,7 @@ static void ble_ancs_GapEventProcess(BLE_GAP_Event_T *p_event)
             p_conn = ble_ancs_GetConnListByHandle(connHandle);
             if (p_conn != NULL)
             {
-                ble_ancs_InitConnList(p_conn, 1);
+                ble_ancs_FreeConnList(p_conn);
             }
         }
         break;
@@ -1023,46 +1241,112 @@ static void ble_ancs_GapEventProcess(BLE_GAP_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Registers a callback function for BLE ANCS events.
+ *
+ * @param[in] bleAncsHandler                The function to be called when an ANCS event occurs.
+ *
+ */
 void BLE_ANCS_EventRegister(BLE_ANCS_EventCb_T bleAncsHandler)
 {
-    bleAncsProcess = bleAncsHandler;
+    s_bleAncsProcess = bleAncsHandler;
 }
 
+
+/**
+ * @brief Initialize the characteristic list for the Apple Notification Center Service (ANCS).
+ *
+ * This function initializes the characteristic list for a given connection index by setting the
+ * connection handle to 0 and assigning the pointer to the characteristic information structure.
+ * It also initializes the characteristic handle and property for each characteristic in the list.
+ *
+ * @param[in,out] p_charList    Pointer to the characteristic list to initialize.
+ * @param[in] connIndex         The index of the connection for which the characteristic list is being initialized.
+ * 
+ */
 static void ble_ancs_InitCharList(BLE_DD_CharList_T *p_charList, uint8_t connIndex)
 {
     uint8_t i;
 
     p_charList->connHandle = 0;
-    p_charList->p_charInfo = (BLE_DD_CharInfo_T *) &(s_ancsCharInfoList[connIndex]);
+    p_charList->p_charInfo = (BLE_DD_CharInfo_T *) (sp_ancsServiceDb->ancsCharInfoList[connIndex]);
 
     for(i=0; i<(uint8_t)ANCS_INDEX_CHAR_MAX_NUM; i++)
     {
-        s_ancsCharInfoList[connIndex][i].charHandle = 0;
-        s_ancsCharInfoList[connIndex][i].property = 0;
+        sp_ancsServiceDb->ancsCharInfoList[connIndex][i].charHandle = 0;
+        sp_ancsServiceDb->ancsCharInfoList[connIndex][i].property = 0;
     }
 }
 
+/**
+ * @brief Initializes the Apple Notification Center Service (ANCS) profile.
+ *
+ * @retval MBA_RES_SUCCESS                  BLE ANCS profile was initialized successfully.
+ * @retval MBA_RES_FAIL                     Fail to initialize the BLE ANCS profile.
+ * @retval MBA_RES_OOM                      Internal memory allocation failure.
+ *
+ */
 uint16_t BLE_ANCS_Init(void)
 {
     uint8_t i;
-    BLE_DD_DiscSvc_T ancsDisc;
+    uint16_t ret;
+    BLE_DD_DiscSvc_T  ancsDisc;
 
-    for (i = 0; i < BLE_ANCS_MAX_CONN_NBR; i++)
+    if (sp_ancsServiceDb != NULL)
     {
-        ble_ancs_InitConnList(&s_ancsConnList[i], 0);
-        ble_ancs_InitCharList(&s_ancsCharList[i], i);
+        return MBA_RES_FAIL;
+    }
+    sp_ancsServiceDb = (BLE_ANCS_ServiceDb_T*)OSAL_Malloc(sizeof(BLE_ANCS_ServiceDb_T));
+    if (sp_ancsServiceDb == NULL)
+    {
+        return MBA_RES_OOM;
     }
 
+    (void)memset(sp_ancsServiceDb->ancsDiscCharList, 0x00, sizeof(BLE_DD_DiscChar_T)*ANCS_INDEX_CHAR_MAX_NUM);
+    sp_ancsServiceDb->ancsDiscCharList[ANCS_INDEX_CHAR_CONTROL_POINT].p_uuid = &s_discCharCtrl;
+    sp_ancsServiceDb->ancsDiscCharList[ANCS_INDEX_CHAR_NTFY].p_uuid          = &s_discCharNtfy;
+    sp_ancsServiceDb->ancsDiscCharList[ANCS_INDEX_CHAR_NTFY_CCCD].p_uuid     = &s_discCharNtfyCccd;
+    sp_ancsServiceDb->ancsDiscCharList[ANCS_INDEX_CHAR_NTFY_CCCD].settings   = CHAR_SET_DESCRIPTOR;
+    sp_ancsServiceDb->ancsDiscCharList[ANCS_INDEX_CHAR_DATA].p_uuid          = &s_discCharData;
+    sp_ancsServiceDb->ancsDiscCharList[ANCS_INDEX_CHAR_DATA_CCCD].p_uuid     = &s_discCharDataCccd;
+    sp_ancsServiceDb->ancsDiscCharList[ANCS_INDEX_CHAR_DATA_CCCD].settings   = CHAR_SET_DESCRIPTOR;
+
+    for(i = 0; i < ANCS_INDEX_CHAR_MAX_NUM; i++)
+    {
+        sp_ancsServiceDb->p_ancsDiscCharList[i] = &sp_ancsServiceDb->ancsDiscCharList[i];
+    }
+
+    for(i = 0; i < BLE_ANCS_MAX_CONN_NBR; i++)
+    {
+        ble_ancs_InitCharList(&sp_ancsServiceDb->ancsCharList[i], i);
+    }
     ancsDisc.svcUuid.uuidLength = ATT_UUID_LENGTH_16;
-    (void)memcpy(ancsDisc.svcUuid.uuid, discSvcUuid, ATT_UUID_LENGTH_16);
-    ancsDisc.p_discInfo = NULL;
-    ancsDisc.p_discChars = ancsDiscCharList;
-    ancsDisc.p_charList = s_ancsCharList;
+    (void)memcpy(ancsDisc.svcUuid.uuid, s_discSvcUuid, ATT_UUID_LENGTH_16);
+    ancsDisc.p_discInfo   = NULL;
+    ancsDisc.p_discChars  = sp_ancsServiceDb->p_ancsDiscCharList;
+    ancsDisc.p_charList   = sp_ancsServiceDb->ancsCharList;
     ancsDisc.discCharsNum = (uint8_t)ANCS_INDEX_CHAR_MAX_NUM;
 
-    return BLE_DD_ServiceDiscoveryRegister(&ancsDisc);
+    ret = BLE_DD_ServiceDiscoveryRegister(&ancsDisc);
+
+    if (ret != MBA_RES_SUCCESS)
+    {
+        OSAL_Free(sp_ancsServiceDb);
+        sp_ancsServiceDb = NULL;
+    }
+    return ret;
+
 }
 
+
+/**
+ * @brief Handles BLE_Stack events.
+ *        This function should be called when BLE stack events occur..
+ *
+ * @param[in] p_stackEvent                  Pointer to the BLE stack event data.
+ *
+ */
 void BLE_ANCS_BleEventHandler(STACK_Event_T *p_stackEvent)
 {
     switch (p_stackEvent->groupId)
@@ -1083,6 +1367,14 @@ void BLE_ANCS_BleEventHandler(STACK_Event_T *p_stackEvent)
     }
 }
 
+
+/**
+ * @brief Handles BLE Database Discovery (BLE_DD) events.
+ *        This function should be called when BLE_DD events occur.
+ *
+ * @param[in] p_event                       Pointer to the BLE_DD event data.
+ *
+ */
 void BLE_ANCS_BleDdEventHandler(BLE_DD_Event_T *p_event)
 {
     switch (p_event->eventId)

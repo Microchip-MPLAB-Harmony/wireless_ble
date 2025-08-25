@@ -31,162 +31,213 @@
     bt_sys.h
 
   Summary:
-    This file contains the BLE System functions for the project.
+    This header file provides the BLE sytem interface functions for application developers.
 
   Description:
-    This file contains the BLE System functions for the project. The "BT_SYS_Init"
-    function shall be called in the "SYS_Initialize" function to initialize the
-    this modules in the system. And the "BM_Task"  shall be called in the "SYS_Tasks".
+    The file provides declarations for BLE system-level functions that are integral to the 
+    operation of the BLE module in the project. It includes the initialization function "BT_SYS_Init", 
+    which should be invoked during the system initialization phase, specifically within the "SYS_Initialize" 
+    function. Additionally, the "BM_Task" function is provided for inclusion in the main system task 
+    scheduler, "SYS_Tasks", to ensure regular processing of BLE tasks and events. This ensures that 
+    the BLE module operates smoothly and efficiently within the system's multitasking environment. 
  *******************************************************************************/
-
-
-/**
- * @defgroup BT_SYS Bluetooth System
- * @brief Definitions of Bluetooth system
- * @{
- */
-
 #ifndef BT_SYS_H
 #define BT_SYS_H
 
-/** @defgroup BT_SYS_INT Bluetooth System Interface
- *  @brief This module defines the interface of the Bluetooth system.
- *  @{ */
-
+// *****************************************************************************
+// *****************************************************************************
+// Section: Included Files
+// *****************************************************************************
+// *****************************************************************************
 #include <stdbool.h>
 #include <stdint.h>
 
 // DOM-IGNORE-BEGIN
 #ifdef __cplusplus  // Provide C++ Compatibility
-
 extern "C" {
-
 #endif
 // DOM-IGNORE-END
+
+/**
+ * @defgroup BT_SYS Bluetooth System
+ * @brief Defines the interface for the BLE System functions provided by the BLE Library.
+ * @{
+ */
+
+
+/** 
+ * @defgroup BT_SYS_INT Bluetooth System Interface
+ * @brief This module defines the interface of the Bluetooth system.
+ * @{
+ */
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Macros
 // *****************************************************************************
 // *****************************************************************************
+/**
+ * @addtogroup BT_SYS_DEFINES Defines
+ * @{
+ */
+
+/**
+ * @defgroup BT_SYS_ADDR_LEN Bluetooth address length
+ * @brief Defines the length of a Bluetooth device address.
+ * @{
+ */
+#define BT_SYS_DEV_ADDR_LEN                 (7U)        /**< Bluetooth device address length in bytes. */
+/** @} */ //BT_SYS_ADDR_LEN
 
 
-/**@addtogroup BT_SYS_DEFINES Defines
- * @{ */
-
-/**@defgroup BT_SYS_ADDR_LEN Length of Bluetooth address
- * @brief Length of Bluetooth address.
- * @{ */
-#define BT_SYS_DEV_ADDR_LEN                 (7U)           /**< Length of the Bluetooth address. */
-/**@} */ //BT_SYS_ADDR_LEN
-
-
-/**@defgroup BT_SYS_TRACE_MASK Trace Mask
- * @brief The definition of trace mask.
- * @{ */
-#define BT_SYS_TRACE_INFO_LL_H              (1U)          /**< LL trace high priority information. */
-#define BT_SYS_TRACE_INFO_LL_L              (1U<<1U)      /**< LL trace low priority information. */
-#define BT_SYS_TRACE_INFO_HOST              (1U<<2U)      /**< Host trace info. */
-/**@} */ //BT_SYS_TRACE_MASK
+/**
+ * @defgroup BT_SYS_TRACE_MASK Trace mask
+ * @brief Defines the trace mask for different levels of debugging information.
+ * @{
+ */
+#define BT_SYS_TRACE_INFO_LL_H              (1U)        /**< High priority information from the Link Layer. */
+#define BT_SYS_TRACE_INFO_LL_L              (1U<<1U)    /**< Low priority information from the Link Layer. */
+#define BT_SYS_TRACE_INFO_HOST              (1U<<2U)    /**< Information from the Bluetooth Host stack. */
+/** @} */ //BT_SYS_TRACE_MASK
 
 
-/**@defgroup BT_SYS_TRACE_LEVEL Trace Level
- * @brief The definition of trace level.
- * @{ */
-#define BT_SYS_TRACE_LEVEL_ERR				0			  /**< Error level. */
-#define BT_SYS_TRACE_LEVEL_API				1		      /**< API level. */
-#define BT_SYS_TRACE_LEVEL_OP				2			  /**< OP level. */
-/**@} */ //BT_SYS_TRACE_LEVEL
+/**
+ * @defgroup BT_SYS_TRACE_LEVEL Trace level
+ * @brief Defines the trace levels for logging purposes.
+ * @{
+ */
+#define BT_SYS_TRACE_LEVEL_ERR              (0U)        /**< Error trace level for critical issues. */
+#define BT_SYS_TRACE_LEVEL_API              (1U)        /**< API trace level for function calls and parameters. */
+#define BT_SYS_TRACE_LEVEL_OP               (2U)        /**< Operational trace level for general operation logs. */
+/** @} */ //BT_SYS_TRACE_LEVEL
 
 
-/**@defgroup BT_SYS_RF_SUSPEND_STATUS Rf Suspned Status
- * @brief The definition of rf suspend status.
- * @{ */
-#define BT_SYS_RF_NOT_SUSPEND               (0U)          /**< BLE RF is not allowed to suspend. */
-#define BT_SYS_RF_SUSPENDED_NO_SLEEP        (1U)          /**< BLE RF is allowed to suspended without ble sleep mode. */
-#define BT_SYS_RF_SUSPENDED_WITH_SLEEP      (2U)          /**< BLE RF is allowed to suspended with ble sleep mode. */
-/**@} */ //BT_SYS_RF_SUSPEND
+/**
+ * @defgroup BT_SYS_RF_SUSPEND_STATUS RF suspned status
+ * @brief Defines the RF suspend status indicating if the RF can be suspended and under what conditions.
+ * @{
+ */
+#define BT_SYS_RF_NOT_SUSPEND               (0U)        /**< RF is not suspended; normal operation. */
+#define BT_SYS_RF_SUSPENDED_NO_SLEEP        (1U)        /**< RF is suspended without entering BLE sleep mode. */
+#define BT_SYS_RF_SUSPENDED_WITH_SLEEP      (2U)        /**< RF is suspended and BLE sleep mode is enabled. */
+/** @} */ //BT_SYS_RF_SUSPEND
 
-/**@defgroup BT_SYS_FEAT_MASK Feature Mask
- * @brief The definition of feature mask.
- * @{ */
-#define BT_SYS_FEAT_PWR_CTRL                (1U)          /**< Power control. */
-/**@} */ //BT_SYS_FEAT_MASK
+/**
+ * @defgroup BT_SYS_FEAT_MASK Feature mask
+ * @brief Defines the feature mask to enable or disable specific Bluetooth system features.
+ * @{
+ */
+#define BT_SYS_FEAT_PWR_CTRL                (1U)        /**< Power control feature mask. */
+#define BT_SYS_FEAT_CHC                     (1U<<1U)    /**< Channel classification feature mask. */
+/** @} */ //BT_SYS_FEAT_MASK
 
-/**@} */ //BT_SYS_DEFINES
+/**
+ * @defgroup BT_SYS_BLE_VER BLE version
+ * @brief Defines of BLE version in the Bluetooth system. Values can be referred in Assigned Numbers document.
+ * @{
+ */
+#define BT_SYS_BLE_VER_5_2                  (11U)       /**< Core Specification v5.2. */
+#define BT_SYS_BLE_VER_6_0                  (14U)       /**< Core Specification v6.0. */
+/** @} */ //BT_SYS_BLE_VER
 
 
-/**@addtogroup BT_SYS_ENUM Enumerations
- * @{ */
- 
-/**@defgroup BT_SYS_TRACE_FMT Trace format
- * @{ */
-/**@brief The definition of trace format. */
-typedef enum BT_SYS_TraceFmt_T{
-	BT_SYS_FMT_ASCII,	                                 /**< ASCII. */
+/** @} */ //BT_SYS_DEFINES
+
+
+/**
+ * @addtogroup BT_SYS_ENUM Enumerations
+ * @{
+ */
+
+/**
+ * @defgroup BT_SYS_TRACE_FMT Trace format
+ * @brief Enumeration for Bluetooth system trace output formats.
+ * @{
+ */
+typedef enum BT_SYS_TraceFmt_T
+{
+    BT_SYS_FMT_ASCII,	                                  /**< ASCII format for trace output. */
 }BT_SYS_TraceFmt_T;
-/**@} */ //BT_SYS_TRACE_FMT
+/** @} */ //BT_SYS_TRACE_FMT
 
 
-/**@defgroup BT_SYS_ERR BT system error code
- * @{ */
-/**@brief The definition of BT system error code. */
-typedef enum BT_SYS_ErrCode_T{
-	BT_SYS_ERR_OOM,	                                 	/**< Out of memory. */
-	BT_SYS_ERR_END										/**< End of error code definition. */
+/**
+ * @defgroup BT_SYS_ERR BT system error codes
+ * @brief Defines for error codes used in the Bluetooth system.
+ * @{
+ */
+typedef enum BT_SYS_ErrCode_T
+{
+    BT_SYS_ERR_OOM,                                     /**< Error code for 'Out of Memory' condition. */
+    BT_SYS_ERR_END                                      /**< Sentinel value indicating the end of error codes. */
 }BT_SYS_ErrCode_T;
-/**@} */ //BT_SYS_ERR
+/** @} */ //BT_SYS_ERR
 
 
-/**@} */ //BT_SYS_ENUM
+/** @} */ //BT_SYS_ENUM
 
 // *****************************************************************************
 // *****************************************************************************
-// SSection: Data Types
+// Section: Data Types
 // *****************************************************************************
+// *****************************************************************************
+/**
+ * @addtogroup BT_SYS_STRUCTS Structures
+ * @{
+ */
 
-/**@addtogroup BT_SYS_STRUCTS Structures
- * @{ */
-
-/**@brief Bluetooth system configuration. */
+/** @brief Structure for Bluetooth system configuration. */
 typedef struct BT_SYS_Cfg_T
 {
-    int8_t      	antennaGain;                        /**< Antenna gain. */
-    unsigned int    addrValid:1;                        /**< Set true if devAddr field is valid. */
-    unsigned int    rssiOffsetValid:1;                  /**< Set true if rssiOffset field is valid. */
-    unsigned int    adcTimingValid:1;                 	/**< Set true if adcTiming field is valid. */
-    uint8_t     	devAddr[BT_SYS_DEV_ADDR_LEN];       /**< Device address. */
-    int8_t      	rssiOffset;                         /**< RSSI offset. */
-    uint8_t     	adcTiming08;                        /**< Adc Timing register which is RF 08 reg */
-    uint8_t     	adcTiming51;                        /**< Adc Timing register which is RF 51 reg */
+    int8_t          antennaGain;                        /**< Antenna gain in dB. */
+    unsigned int    addrValid:1;                        /**< Flag indicating if the device address is valid (1) or not (0). */
+    unsigned int    rssiOffsetValid:1;                  /**< Flag indicating if the RSSI offset is valid (1) or not (0). */
+    unsigned int    adcTimingValid:1;                   /**< Flag indicating if the ADC timing field is valid (1) or not (0). */
+    uint8_t         devAddr[BT_SYS_DEV_ADDR_LEN];       /**< Bluetooth device address in hex format. */
+    int8_t          rssiOffset;                         /**< Offset to be applied to the RSSI value. */
+    uint8_t         adcTiming08;                        /**< ADC timing value for RF register 08, used for configuring ADC operation. */
+    uint8_t         adcTiming51;                        /**< ADC timing value for RF register 51, used for configuring ADC operation. */
 } BT_SYS_Cfg_T;
 
-/**@brief Bluetooth system initialization. */
+
+/** @brief Structure for Bluetooth system initialization options. */
 typedef struct BT_SYS_Option_T
 {
-    uint32_t        cmnMemSize;                     	/**< Common memory size. */
-    uint8_t         *p_cmnMemAddr;                  	/**< Common memory address. */
-    uint32_t        *p_sramVecorTable;              	/**< Vector table. */
-    unsigned int	hciMode:1;							/**< HCI mode option. Set TRUE to enable HCI mode. */
-    uint32_t        deFeatMask;                         /**< Features to be disabled. See @ref BT_SYS_FEAT_MASK. */
+    uint32_t        cmnMemSize;                         /**< Size of the common memory pool required by the Bluetooth stack. */
+    uint8_t         *p_cmnMemAddr;                      /**< Pointer to the start address of the common memory pool. */
+    uint32_t        *p_sramVecorTable;                  /**< Pointer to the SRAM vector table */
+    unsigned int    hciMode:1;                          /**< HCI mode flag. Set to 1 to enable HCI mode, 0 otherwise. */
+    uint32_t        deFeatMask;                         /**< Bitmask of features to be disabled, as defined by @ref BT_SYS_FEAT_MASK. */
 } BT_SYS_Option_T;
 
-/**@brief Trace event additional information. */
+
+/** @brief Structure for additional information about a trace event. */
 typedef struct BT_SYS_TraceInfo_T
 {
-	uint8_t			level;								/**< Level. */
-    uint8_t     	componentId;                        /**< Component id. */
-    uint8_t     	eventId;                  			/**< Event id. */
+    uint8_t         level;                              /**< Level of the trace event. See @ref BT_SYS_TRACE_LEVEL.*/
+    uint8_t         componentId;                        /**< Identifier of the component generating the trace event. */
+    uint8_t         eventId;                            /**< Identifier of the specific event being traced. */
 } BT_SYS_TraceInfo_T;
 
-/**@brief BT system trace callback type. This callback function sends trace events to the application. */
+
+/**
+ * @brief Callback type for Bluetooth system trace events.
+ * 
+ * @param p_traceInfo       Pointer to the structure containing trace event information. See @ref BT_SYS_TraceInfo_T.
+ * @param length            Length of the trace payload.
+ * @param p_tracePayload    Pointer to the payload of the trace event.
+ */
 typedef void (*BT_SYS_TraceEventCb_T)(BT_SYS_TraceInfo_T *p_traceInfo, uint8_t length, uint8_t *p_tracePayload);
 
 
-/**@brief BT system error callback type.*/
+/**
+ * @brief Callback type for Bluetooth system error events.
+ * 
+ * @param errCode           Error code indicating the type of error that occurred. See @ref BT_SYS_ErrCode_T.
+ */
 typedef void(*BT_SYS_ErrCb_T)(BT_SYS_ErrCode_T errCode);
 
-/**@} */ //BT_SYS_STRUCTS
+/** @} */ //BT_SYS_STRUCTS
 
 
 // *****************************************************************************
@@ -195,112 +246,131 @@ typedef void(*BT_SYS_ErrCb_T)(BT_SYS_ErrCode_T errCode);
 // *****************************************************************************
 // *****************************************************************************
 
-/**@addtogroup BT_SYS_FUNS Functions
- * @{ */
-
-/**@brief Initialize Bluetooth system.
- *
- * @param[in] p_reqQueueHandle                  OS handle for Bluetooth internal task.
- * @param[in] p_osalApiList                     OSAL api list.
- * @param[in] p_option                          Initialization option.
- * @param[in] p_cfg                             System configuration.
- *
- * @retval true                                 Success to initialize BT.
- * @retval false                                Fail to initialize BT.
+/**
+ * @addtogroup BT_SYS_FUNS Functions
+ * @{
  */
-bool BT_SYS_Init(void *p_reqQueueHandle, void *p_osalApiList, BT_SYS_Option_T *p_option, BT_SYS_Cfg_T *p_cfg);
 
-
-/**@brief Retrieve BT version.
+/**
+ * @brief Initialize the Bluetooth system.
  *
- * @param[out] p_version                        Point to version buffer.
+ * @param[in] p_reqSemHandle                    Handle to the OS semaphore for Bluetooth internal task management.
+ * @param[in] p_osalApiList                     Pointer to the list of OS abstraction layer (OSAL) APIs.
+ * @param[in] p_option                          Pointer to the structure containing initialization options. See @ref BT_SYS_Option_T.
+ * @param[in] p_cfg                             Pointer to the structure containing system configuration parameters. See @ref BT_SYS_Cfg_T.
+ *
+ * @retval true                                 Successfully initialize Bluetooth system.
+ * @retval false                                Fail to initialize Bluetooth system.
+ */
+bool BT_SYS_Init(void *p_reqSemHandle, void *p_osalApiList, BT_SYS_Option_T *p_option, BT_SYS_Cfg_T *p_cfg);
+
+
+/**
+ * @brief Retrieve the Bluetooth system version.
+ *
+ * @param[out] p_version                        Pointer to a variable where the version number will be stored.
  *
  */
 void BT_SYS_ReadVersion(uint32_t *p_version);
 
 
-/**@brief Query if BT is sleeping.
+/**
+ * @brief Query the sleep status of the Bluetooth system.
  *
- * @retval true                                     BT is sleeping.
- * @retval false                                    BT is not sleeping.
+ * @retval true                                 The Bluetooth system is currently in sleep mode.
+ * @retval false                                The Bluetooth system is not in sleep mode.
  */
 bool BT_SYS_GetSleepMode(void);
 
 
-/**@brief Request BT enter sleep mode.
+/**
+ * @brief Request the Bluetooth system to enter sleep mode.
  *
- * @param[in] ulRtcFrequency                        RTC frequency.
- * @param[in] ulRtcCurrentCnt                       RTC current count.
+ * @param[in] ulRtcFrequency                    The frequency of the RTC used for timing sleep duration.
+ * @param[in] ulRtcCurrentCnt                   The current count value of the RTC.
  *
- * @retval true                                     BT is ready for idle and enter sleep.
- * @retval false                                    BT is already sleeping or BT is not ready for idle.
+ * @retval true                                 The Bluetooth system is ready for idle and entering sleep mode.
+ * @retval false                                The Bluetooth system is not ready for idle or already sleeping.
  */
 bool BT_SYS_EnterSleepMode(uint32_t ulRtcFrequency, uint32_t ulRtcCurrentCnt);
 
 
-/**@brief Query if BT allow system enter sleep mode.
+/**
+ * @brief Check if the Bluetooth system allows the system to enter sleep mode.
  *
- * @param[in] ulRtcFrequency                        RTC frequency.
- * @param[in] ulRtcCurrentCnt                       RTC current count.
+ * @param[in] ulRtcFrequency                    The frequency of the RTC used for timing sleep duration.
+ * @param[in] ulRtcCurrentCnt                   The current count value of the RTC.
  *
- * @retval true                                     BT is sleeping and BT is ready for System enter sleep.
- * @retval false                                    BT is not sleeping or BT is not ready for System enter sleep.
+ * @retval true                                 The Bluetooth system is sleeping and allows the system to sleep.
+ * @retval false                                The Bluetooth system is not sleeping or disallows the system to sleep.
  */
 bool BT_SYS_AllowSystemSleep(uint32_t ulRtcFrequency, uint32_t ulRtcCurrentCnt);
 
 
-/**@brief Request BT enter deep sleep mode. */
+/** @brief Request the Bluetooth system to enter deep sleep mode. */
 void BT_SYS_EnterDeepSleepMode(void);
 
 
-/**@brief Request BT suspend RF.
+/**
+ * @brief Request to suspend the Bluetooth RF functionality.
  *
- * @param[in] enable                                Set true to suspend RF. Otherwise set false.
+ * @param[in] enable                            Set to true to suspend RF; otherwise set flase.
  *
- * @retval BT_SYS_RF_SUSPEND_STATUS                 BT system RF Suspend status. See @ref BT_SYS_RF_SUSPEND_STATUS.
+ * @retval BT_SYS_RF_SUSPEND_STATUS             The status of the RF suspend operation. See @ref BT_SYS_RF_SUSPEND_STATUS for possible values.
  */
 uint8_t BT_SYS_RfSuspendReq(bool enable);
 
 
-/**@brief Enable BT trace message indication.
+/**
+ * @brief Enable Bluetooth system trace message indications.
  *
- * @param[in] fmt                                   BT system trace format. See @ref BT_SYS_TRACE_FMT.
- * @param[in] traceMask                             BT system trace mask. See @ref BT_SYS_TRACE_MASK.
- * @param[in] traceCb                               BT system trace callback.
+ * @param[in] fmt                               The format of the trace messages. See @ref BT_SYS_TraceFmt_T for possible values.
+ * @param[in] traceMask                         A bitmask that specifies which trace messages to enable. See @ref BT_SYS_TRACE_MASK for details.
+ * @param[in] traceCb                           The callback function that will be invoked for trace events. See @ref BT_SYS_TraceEventCb_T.
  *
  */
 void BT_SYS_TraceEnable(BT_SYS_TraceFmt_T fmt, uint32_t traceMask, BT_SYS_TraceEventCb_T traceCb);
 
 
-/**@brief Register BT system error callback.
+/**
+ * @brief Register a callback function for Bluetooth system error events.
  *
- * @param[in] errHandler                             BT system error callback function.
+ * @param[in] errHandler                        The callback function to handle Bluetooth system errors. See @ref BT_SYS_ErrCb_T.
  *
  */
 void BT_SYS_ErrRegister(BT_SYS_ErrCb_T errHandler);
 
 
-/**@brief Hook Bluetooth task.
+/**
+ * @brief The main task function for the Bluetooth module.
  *
- * @param[in] p_param Pointer that will be used as the parameter for the task.
+ * @param[in] p_param                           A pointer to a parameter that will be passed to the task function.
  *
  */
 void BM_Task(void *p_param);
 
-/**@} */ //BT_SYS_FUNS
 
 /**
-  @}
-*/
+ * @brief Upgrade BLE version.
+ * @note  This API must be called before initializing the BLE module, such as with @ref BLE_GAP_Init, @ref HCI_Init, etc.
+ *
+ * @param[in] bleVersion                        BLE version. See @ref BT_SYS_BLE_VER.
+ *
+ * @retval true                                 Successfully upgrade BLE version.
+ * @retval false                                The BLE version is unacceptable.
+ */
+bool BT_SYS_UpgradeBleVersion(uint8_t bleVersion);
+
+/** @} */ //BT_SYS_FUNS
+
+/** @} */
+
+/** @} */
+
 //DOM-IGNORE-BEGIN
 #ifdef __cplusplus
 }
 #endif
 //DOM-IGNORE-END
 
-
 #endif//BT_SYS_H
-
-/**
-  @}
-*/

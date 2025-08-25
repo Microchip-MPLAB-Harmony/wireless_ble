@@ -31,10 +31,14 @@
     mw_aes.c
 
   Summary:
-    This file contains the Middleware AES functions for application user.
+    Implements AES encryption/decryption functions for use in applications.
 
   Description:
-    This file contains the Middleware AES functions for application user.
+    This source file provides a set of functions to handle AES (Advanced
+    Encryption Standard) encryption and decryption processes, facilitating
+    secure data handling in application-level code. It abstracts the complexity
+    of cryptographic operations, offering a user-friendly interface for
+    integrating AES into various software solutions.
  *******************************************************************************/
 
 
@@ -44,45 +48,29 @@
 // *****************************************************************************
 // *****************************************************************************
 
+#include "device.h"
+#include "driver/security/sxsymcrypt/keyref_api.h"
+#include "driver/security/silexpk/statuscodes_api.h"
+#include "driver/security/sxsymcrypt/aead_api.h"
+
 #include "mba_error_defs.h"
 #include "mw_aes.h"
-
-// *****************************************************************************
-// *****************************************************************************
-// Section: Macros
-// *****************************************************************************
-// *****************************************************************************
-
-
-
-// *****************************************************************************
-// *****************************************************************************
-// Section: Data Types
-// *****************************************************************************
-// *****************************************************************************
-
-
-
-// *****************************************************************************
-// *****************************************************************************
-// Section: Function Prototypes
-// *****************************************************************************
-// *****************************************************************************
-
-// *****************************************************************************
-// *****************************************************************************
-// Section: Local Variables
-// *****************************************************************************
-// *****************************************************************************
-
-
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Functions
 // *****************************************************************************
 // *****************************************************************************
-
+/** 
+ * @brief Initializes AES CBC block cipher decryption.
+ *
+ * @param[out] p_ctx               Pointer to the AES context structure.
+ * @param[in] p_aesKey             Pointer to the 16-byte encryption key.
+ * @param[in] p_iv                 Pointer to the 16-byte initialization vector (IV).
+ *
+ * @retval MBA_RES_SUCCESS         Initialize successfully.
+ * @retval MBA_RES_FAIL            Initialization failed.
+ */
 uint16_t MW_AES_CbcDecryptInit(MW_AES_Ctx_T * p_ctx, uint8_t *p_aesKey, uint8_t *p_iv)
 {
     uint16_t result;
@@ -105,13 +93,25 @@ uint16_t MW_AES_CbcDecryptInit(MW_AES_Ctx_T * p_ctx, uint8_t *p_aesKey, uint8_t 
 
 }
 
-uint16_t MW_AES_AesCbcDecrypt(MW_AES_Ctx_T * p_ctx, uint16_t length, uint8_t *p_plainText, uint8_t *p_chiperText)
+
+/**
+ * @brief Decrypts a block of data using AES CBC mode.
+ *
+ * @param[in] p_ctx                Pointer to the AES context structure.
+ * @param[in] length               The length of the data to be decrypted.
+ * @param[out] p_plainText         Pointer to the buffer where the decrypted data will be stored.
+ * @param[in] p_cipherText         Pointer to the buffer containing the data to be decrypted.
+ *
+ * @retval MBA_RES_SUCCESS         Decryption successful.
+ * @retval MBA_RES_FAIL            Decryption failed.
+ */
+uint16_t MW_AES_AesCbcDecrypt(MW_AES_Ctx_T * p_ctx, uint16_t length, uint8_t *p_plainText, uint8_t *p_cipherText)
 {
     int32_t s;
 
     SX_CLK_ENABLE();
 
-    s = SX_BLKCIPHER_CRYPT(&p_ctx->aesBlkCipher, (char *)p_chiperText, length, (char *)p_plainText);
+    s = SX_BLKCIPHER_CRYPT(&p_ctx->aesBlkCipher, (char *)p_cipherText, length, (char *)p_plainText);
     if (s == SX_OK)
     {
         s = SX_BLKCIPHER_SAVE_STATE(&p_ctx->aesBlkCipher);
@@ -136,6 +136,16 @@ uint16_t MW_AES_AesCbcDecrypt(MW_AES_Ctx_T * p_ctx, uint16_t length, uint8_t *p_
     return MBA_RES_SUCCESS;
 }
 
+
+/**
+ * @brief Initializes AES ECB block cipher encryption.
+ *
+ * @param[out] p_ctx               Pointer to the AES context structure.
+ * @param[in] p_aesKey             Pointer to the 16-byte encryption key.
+ *
+ * @retval MBA_RES_SUCCESS         Initialization successful.
+ * @retval MBA_RES_FAIL            Initialization failed.
+ */
 uint16_t MW_AES_EcbEncryptInit(MW_AES_Ctx_T * p_ctx, uint8_t *p_aesKey)
 {
     uint16_t result;
@@ -158,13 +168,25 @@ uint16_t MW_AES_EcbEncryptInit(MW_AES_Ctx_T * p_ctx, uint8_t *p_aesKey)
 
 }
 
-uint16_t MW_AES_AesEcbEncrypt(MW_AES_Ctx_T * p_ctx, uint16_t length, uint8_t *p_chiperText, uint8_t *p_plainText)
+
+/**
+ * @brief Encrypts a block of data using AES ECB mode.
+ *
+ * @param[in] p_ctx                Pointer to the AES context structure.
+ * @param[in] length               The length of the data to be encrypted.
+ * @param[out] p_cipherText        Pointer to the buffer where the encrypted data will be stored.
+ * @param[in] p_plainText          Pointer to the buffer containing the data to be encrypted.
+ *
+ * @retval MBA_RES_SUCCESS         Encryption successful.
+ * @retval MBA_RES_FAIL            Encryption failed.
+ */
+uint16_t MW_AES_AesEcbEncrypt(MW_AES_Ctx_T * p_ctx, uint16_t length, uint8_t *p_cipherText, uint8_t *p_plainText)
 {
     int32_t s;
 
     SX_CLK_ENABLE();
 
-    s = SX_BLKCIPHER_CRYPT(&p_ctx->aesBlkCipher, (char *)p_plainText, length, (char *)p_chiperText);
+    s = SX_BLKCIPHER_CRYPT(&p_ctx->aesBlkCipher, (char *)p_plainText, length, (char *)p_cipherText);
     if (s == SX_OK)
     {
         s = SX_BLKCIPHER_RUN(&p_ctx->aesBlkCipher);
@@ -173,6 +195,217 @@ uint16_t MW_AES_AesEcbEncrypt(MW_AES_Ctx_T * p_ctx, uint16_t length, uint8_t *p_
     {
         s = SX_BLKCIPHER_WAIT(&p_ctx->aesBlkCipher);
     }
+
+    SX_CLK_DISABLE();
+
+
+    if (s != SX_OK)
+    {
+        return MBA_RES_FAIL;
+    }
+
+    return MBA_RES_SUCCESS;
+}
+
+/**
+ * @brief Initializes AES CCM encryption.
+ *
+ * @param[out] p_ctx               Pointer to the AES context structure.
+ * @param[in] p_aesKey             Pointer to the 16-byte encryption key.
+ * @param[in] p_nonce              Pointer to the nonce used for encryption.
+ * @param[in] nonceSz              The size of p_nonce, between 7 and 13 bytes.
+ * @param[in] tagSz                The tag size used for encryption, must be a value in {4, 6, 8, 10, 12, 14, 16}.
+ * @param[in] p_aad                Pointer to the additional authentication data.
+ * @param[in] aadSz                The size of p_aad, can be 0 if p_aad is NULL.
+ * @param[in] dataSz               The size of the data to be encrypted.
+ *
+ * @retval MBA_RES_SUCCESS         Initialization successful.
+ * @retval MBA_RES_FAIL            Initialization failed.
+ */
+uint16_t MW_AES_CcmEncryptInit(MW_AES_Ctx_T * p_ctx, uint8_t *p_aesKey, uint8_t *p_nonce, uint8_t nonceSz, uint8_t tagSz, uint8_t *p_aad, uint16_t aadSz, uint16_t dataSz)
+{
+    int32_t s;
+
+    SX_CLK_ENABLE();
+    
+    p_ctx->aesKeyRef=SX_KEYREF_LOAD_MATERIAL(16, (char *)p_aesKey);
+    s = SX_AEAD_CREATE_AESCCM_ENC(&p_ctx->aeadCtx, &p_ctx->aesKeyRef, (char *)p_nonce, nonceSz, tagSz, aadSz, dataSz);
+
+    if (s == SX_OK)
+    {
+        s = SX_AEAD_FEED_AAD(&p_ctx->aeadCtx, (const char *)p_aad, aadSz);
+    }
+    
+    
+    SX_CLK_DISABLE();
+
+    if (s != SX_OK)
+    {
+        return MBA_RES_FAIL;
+    }
+
+    p_ctx->aeadSize = dataSz;
+    
+    return MBA_RES_SUCCESS;
+}
+
+
+/**
+ * @brief Encrypts data using AES CCM mode.
+ *
+ * @param[in] p_ctx                Pointer to the AES context structure.
+ * @param[in] length               The length of the data to be encrypted. 
+ *                                 Must be a multiple of 16 bytes, except for the last data fragment.
+ * @param[in] p_plainText          Pointer to the buffer containing the data to be encrypted.
+ * @param[out] p_cipherText        Pointer to the buffer where the encrypted data will be stored.
+ * @param[out] p_tag               Pointer to the buffer where the authentication tag will be stored.
+ *                                 Only valid if p_plainText is the last data fragment.
+ *
+ * @retval MBA_RES_SUCCESS         Encryption successful.
+ * @retval MBA_RES_FAIL            Encryption failed.
+ */
+uint16_t MW_AES_AesCcmEncrypt(MW_AES_Ctx_T * p_ctx, uint16_t length, uint8_t *p_plainText, uint8_t *p_cipherText, uint8_t *p_tag)
+{
+    int32_t s;
+
+    SX_CLK_ENABLE();
+
+
+    
+    s = SX_AEAD_CRYPT(&p_ctx->aeadCtx, (char *)p_plainText, length, (char *)p_cipherText);
+
+    if (s == SX_OK)
+    {
+        if (p_ctx->aeadCtx.dataintotalsz < p_ctx->aeadSize)
+        {
+            s = SX_AEAD_SAVE_STATE(&p_ctx->aeadCtx);
+
+            if (s == SX_OK)
+            {
+                s = SX_AEAD_WAIT(&p_ctx->aeadCtx);
+            }
+
+            if (s == SX_OK)
+            {
+                s = SX_AEAD_RESUME_STATE(&p_ctx->aeadCtx);
+            }
+        }
+        else
+        {
+            s = SX_AEAD_PRODUCE_TAG(&p_ctx->aeadCtx, (char *)p_tag);
+            
+            if (s == SX_OK)
+            {
+                s = SX_AEAD_WAIT(&p_ctx->aeadCtx);
+            }
+
+        }
+    }
+
+
+    SX_CLK_DISABLE();
+
+
+    if (s != SX_OK)
+    {
+        return MBA_RES_FAIL;
+    }
+
+    return MBA_RES_SUCCESS;
+}
+
+/**
+ * @brief Initializes AES CCM decryption.
+ *
+ * @param[out] p_ctx               Pointer to the AES context structure.
+ * @param[in] p_aesKey             Pointer to the 16-byte encryption key.
+ * @param[in] p_nonce              Pointer to the nonce used for encryption.
+ * @param[in] nonceSz              The size of p_nonce, between 7 and 13 bytes.
+ * @param[in] tagSz                The tag size used for encryption, must be a value in {4, 6, 8, 10, 12, 14, 16}.
+ * @param[in] p_aad                Pointer to the additional authentication data.
+ * @param[in] aadSz                The size of p_aad, can be 0 if p_aad is NULL.
+ * @param[in] dataSz               The size of the data to be decrypted.
+ *
+ * @retval MBA_RES_SUCCESS         Initialization successful.
+ * @retval MBA_RES_FAIL            Initialization failed.
+ */
+uint16_t MW_AES_CcmDecryptInit(MW_AES_Ctx_T * p_ctx, uint8_t *p_aesKey, uint8_t *p_nonce, uint8_t nonceSz, uint8_t tagSz, uint8_t *p_aad, uint16_t aadSz, uint16_t dataSz)
+{
+    int32_t s;
+
+    SX_CLK_ENABLE();
+    
+    p_ctx->aesKeyRef=SX_KEYREF_LOAD_MATERIAL(16, (char *)p_aesKey);
+    s = SX_AEAD_CREATE_AESCCM_DEC(&p_ctx->aeadCtx, &p_ctx->aesKeyRef, (char *)p_nonce, nonceSz, tagSz, aadSz, dataSz);
+
+    if (s == SX_OK)
+    {
+        s = SX_AEAD_FEED_AAD(&p_ctx->aeadCtx, (const char *)p_aad, aadSz);
+    }
+    
+    
+    SX_CLK_DISABLE();
+
+    if (s != SX_OK)
+    {
+        return MBA_RES_FAIL;
+    }
+
+    p_ctx->aeadSize = dataSz;
+    
+    return MBA_RES_SUCCESS;
+}
+
+/**
+ * @brief Decrypts data using AES CCM mode.
+ *
+ * @param[in] p_ctx                Pointer to the AES context structure.
+ * @param[in] length               The length of the data to be decrypted. 
+ *                                 Must be a multiple of 16 bytes, except for the last data fragment.
+ * @param[in] p_cipherText         Pointer to the buffer containing the data to be decrypted.
+ * @param[in] p_tag                Pointer to the buffer containing the authentication tag.
+ *                                 Only be used if p_cipherText is the last data fragment.
+ * @param[out] p_plainText         Pointer to the buffer where the decrypted data will be stored.
+ *
+ * @retval MBA_RES_SUCCESS         Encryption successful.
+ * @retval MBA_RES_FAIL            Encryption failed.
+ */
+uint16_t MW_AES_AesCcmDecrypt(MW_AES_Ctx_T * p_ctx, uint16_t length, uint8_t *p_cipherText, uint8_t *p_tag, uint8_t *p_plainText)
+{
+    int32_t s;
+
+    SX_CLK_ENABLE();
+
+    s = SX_AEAD_CRYPT(&p_ctx->aeadCtx, (char *)p_cipherText, length, (char *)p_plainText);
+
+    if (s == SX_OK)
+    {
+        if (p_ctx->aeadCtx.dataintotalsz < p_ctx->aeadSize)
+        {
+            s = SX_AEAD_SAVE_STATE(&p_ctx->aeadCtx);
+
+            if (s == SX_OK)
+            {
+                s = SX_AEAD_WAIT(&p_ctx->aeadCtx);
+            }
+
+            if (s == SX_OK)
+            {
+                s = SX_AEAD_RESUME_STATE(&p_ctx->aeadCtx);
+            }
+        }
+        else
+        {
+            s = SX_AEAD_VERIFY_TAG(&p_ctx->aeadCtx, (char *)p_tag);
+            
+            if (s == SX_OK)
+            {
+                s = SX_AEAD_WAIT(&p_ctx->aeadCtx);
+            }
+
+        }
+    }
+
 
     SX_CLK_DISABLE();
 

@@ -22,7 +22,7 @@
 *******************************************************************************/
 
 /*******************************************************************************
-  BLE Tx Power Service Header File
+  BLE TX Power Service Header File
 
   Company:
     Microchip Technology Inc.
@@ -31,84 +31,99 @@
     ble_tps.h
 
   Summary:
-    This file contains the BLE Tx Power Service functions for application user.
+    Interface definitions for the BLE TX Power Service (TPS).
 
   Description:
-    This file contains the BLE Tx Power Service functions for application user.
+    Provides function prototypes and constants relevant to the BLE TPS,
+    facilitating the management of the transmit power level of a BLE device
+    within an application context.
  *******************************************************************************/
-
-
-/**
- * @addtogroup BLE_TPS BLE TPS
- * @{
- * @brief Header file for the BLE Tx Power Service.
- * @note Definitions and prototypes for the BLE Tx Power Service stack layer application programming interface.
- */
 #ifndef BLE_TPS_H
 #define BLE_TPS_H
 
 // DOM-IGNORE-BEGIN
 #ifdef __cplusplus  // Provide C++ Compatibility
-
 extern "C" {
-
 #endif
 // DOM-IGNORE-END
+
+/**
+ * @addtogroup BLE_SERVICE BLE Service
+ * @{
+ */
+
+/**
+ * @addtogroup BLE_TPS BLE TX Power Service
+ * @brief Provides the interface for the BLE TX Power Service.
+ * @note This section defines the API for the BLE TPS which allows
+ *          monitoring of the transmission power level in a BLE application.
+ * @{
+ */
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Macros
 // *****************************************************************************
 // *****************************************************************************
+/**
+ * @addtogroup BLE_TPS_DEFINES Defines
+ * @{
+ */
 
-/**@defgroup BLE_TPS_UUID_DEF BLE_TPS_UUID_DEF
- * @brief The definition of Tx Power Service UUID.
- * @{ */
-#define UUID_TXPOWER_SERVICE                              (0x1804U)  /**< Tx Power Service UUID. */
+/**
+ * @defgroup BLE_TPS_UUID_DEF TX Power Service UUID definitions
+ * @brief Bluetooth SIG-defined UUIDs for the TX Power Service characteristics.
+ * @{
+ */
+#define UUID_TXPOWER_SERVICE                            (0x1804U)                         /**< UUID for TX Power Service. */
+#define UUID_TXPOWER_LEVEL                              (0x2A07U)                         /**< UUID for TX Power Level characteritsic. */
 /** @} */
 
-/**@defgroup BLE_TX_POWER_LEVEL_UUID_DEF BLE_TX_POWER_LEVEL_UUID_DEF
- * @brief The definition of Tx Power Level UUID.
- * @{ */
-#define UUID_TXPOWER_LEVEL                                (0x2A07U)  /**< Tx Power Level UUID. */
-/** @} */
+/**
+ * @defgroup BLE_TPS_ASSIGN_HANDLE TPS assigned handles
+ * @brief Handles associated with the BLE TX Power Service attributes.
+ * @{
+ */
+#define TPS_START_HDL                                   (0x139U)                          /**< Start handle for the BLE TX Power Service. */
 
-/**@defgroup BLE_TPS_ASSIGN_HANDLE BLE_TPS_ASSIGN_HANDLE
- * @brief Assigned attribute handles of BLE Tx Power Service.
- * @{ */
-#define TPS_START_HDL                                     (0x139U)    /**< The start attribute handle of transparent service. */
-/** @} */
-
-/**@brief Definition of BLE Tx Power Service attribute handle */
+/* Enumeration of attribute handles for the BLE TX Power Service. */
 typedef enum BLE_TPS_AttributeHandle_T
 {
-    TPS_HDL_SVC = TPS_START_HDL,           /**< Handle of Primary Service of BLE Tx Power Service. */
-    TPS_HDL_CHAR_TXPOWER_LEVEL,               /**< Handle of Tx Power Level characteristic. */
-    TPS_HDL_CHARVAL_TXPOWER_LEVEL,            /**< Handle of Tx Power Level characteristic value. */
+    TPS_HDL_SVC = TPS_START_HDL,                                                          /**< Handle for the BLE TX Power Service primary service. */
+    TPS_HDL_CHAR_TXPOWER_LEVEL,                                                           /**< Handle for thef TX Power Level characteristic. */
+    TPS_HDL_CHARVAL_TXPOWER_LEVEL,                                                        /**< Handle for the TX Power Level characteristic value. */
 }BLE_TPS_AttributeHandle_T;
 
-/**@defgroup BLE_TPS_ASSIGN_HANDLE BLE_TPS_ASSIGN_HANDLE
- * @brief Assigned attribute handles of BLE Tx Power Service.
- * @{ */
-#define TPS_END_HDL                                 (TPS_HDL_CHARVAL_TXPOWER_LEVEL)         /**< The end attribute handle of Tx Power service. */
+#define TPS_END_HDL                                     (TPS_HDL_CHARVAL_TXPOWER_LEVEL)   /**< End handle for the BLE TX Power Service. */
 /** @} */
 
-
+/** @} */ //BLE_TPS_DEFINES
 // *****************************************************************************
 // *****************************************************************************
 // Section: Function Prototypes
 // *****************************************************************************
 // *****************************************************************************
+/**
+ * @addtogroup BLE_TPS_FUNS Functions
+ * @{
+ */
 
 /**
- *@brief This API is used to register the BLE TPS Service to GATT server.
+ * @brief Adds the BLE TX Power Service to the GATT server.
  *
- *
- *@retval MBA_RES_SUCCESS       Successfully registering the service
- *@retval MBA_RES_FAIL          Fail to register the service. The assigned attribute handles in the service conflict or \n
- *                              the start handle of the service is smaller than @ref GATTS_APP_SVC_START_HDL.
+ * This function adds the BLE TX Power Service to the BLE stack's GATT server,
+ * enabling the service to be discovered and accessed by remote BLE devices.
+ * 
+ * @retval MBA_RES_SUCCESS                    The BLE TX Power service was successfully added.
+ * @retval MBA_RES_NO_RESOURCE                Insufficient resource to add the BLE TX Power service.
  */
 uint16_t BLE_TPS_Add(void);
+
+/** @} */ //BLE_TPS_FUNS
+
+/** @} */
+
+/** @} */
 
 //DOM-IGNORE-BEGIN
 #ifdef __cplusplus
@@ -116,8 +131,4 @@ uint16_t BLE_TPS_Add(void);
 #endif
 //DOM-IGNORE-END
 
-#endif
-
-/**
-  @}
- */
+#endif //BLE_TPS_H

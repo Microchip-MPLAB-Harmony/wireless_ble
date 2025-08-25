@@ -31,10 +31,16 @@
     ble_hogps.c
 
   Summary:
-    This file contains the BLE HID over GATT profile server role functions for application user.
+    This source file contains the functions and definitions for the Bluetooth Low
+    Energy (BLE) Human Interface Device (HID) over GATT profile server role, which
+    can be utilized by the application developer.
 
   Description:
-    This file contains the BLE HID over GATT profile server role functions for application user.
+    The BLE HID over GATT profile server role is designed to enable the exchange
+    of HID information over a BLE connection. This file provides a set of APIs
+    for the application to interact with the BLE HID service, facilitating the
+    implementation of HID devices such as keyboards, mice, and other input devices
+    using BLE connectivity.
  *******************************************************************************/
 
 
@@ -63,43 +69,44 @@
 // *****************************************************************************
 // *****************************************************************************
 
-/**@brief The structure contains information about BLE HOGPS connection parameters. */
+/* Structure for BLE HID over GATT Profile (HOGP) connection parameters. */
 typedef struct BLE_HOGPS_ConnParams_T
 {
-    uint16_t                    connHandle;                                                         /**< Connection handle associated with this connection. */
-    uint8_t                     protocolMode;                                                       /**< Record current protocol mode. */
-    uint8_t                     suspendStatus;                                                      /**< Record current suspend status. */
+    uint16_t                    connHandle;                                                         // Connection handle associated with this connection.
+    uint8_t                     protocolMode;                                                       // Current protocol mode (Boot or Report).
+    uint8_t                     suspendStatus;                                                      // Current suspend mode status (active or suspended).
 } BLE_HOGPS_ConnParams_T;
 
-/**@brief The structure contains information about BLE HOGPS database. */
+
+/* Structure for BLE HID over GATT Profile (HOGP) database. */
 typedef struct BLE_HOGPS_Database_T
 {
     #ifdef HIDS_KEYBOARD_SUPPORT
-    uint16_t                    charLengthKbInputReport;                                            /**< Length of Keyboard Input Report value. */
+    uint16_t                    charLengthKbInputReport;                                            // Length of the Keyboard Input Report.
     #endif
-    uint16_t                    charLengthMbInputReport;                                            /**< Length of Mouse Buttons Input Report value. */
-    uint16_t                    charLengthMmInputReport;                                            /**< Length of Mouse Motion Input Report value. */
+    uint16_t                    charLengthMbInputReport;                                            // Length of the Mouse Button Input Report.
+    uint16_t                    charLengthMmInputReport;                                            // Length of the Mouse Motion Input Report.
     #ifdef HIDS_KEYBOARD_SUPPORT
-    uint16_t                    charLengthKbOutputReport;                                           /**< Length of Keyboard Output Report value. */
+    uint16_t                    charLengthKbOutputReport;                                           // Length of the Keyboard Output Report.
     #endif
     #if defined(HIDS_KEYBOARD_SUPPORT) && defined (HIDS_BOOT_PROTOCOL_MODE_SUPPORT)
-    uint16_t                    charLengthBootKbInputReport;                                        /**< Length of Boot Keyboard Input Report value. */
-    uint16_t                    charLengthBootKbOutputReport;                                       /**< Length of Boot Keyboard Output Report value. */
+    uint16_t                    charLengthBootKbInputReport;                                        // Length of the Boot Keyboard Input Report.
+    uint16_t                    charLengthBootKbOutputReport;                                       // Length of the Boot Keyboard Output Report.
     #endif
-    uint16_t                    charLengthBootMInputReport;                                         /**< Length of Boot Mouse Input Report value. */
+    uint16_t                    charLengthBootMInputReport;                                         // Length of the Boot Mouse Input Report.
     #ifdef HIDS_KEYBOARD_SUPPORT
-    uint8_t                     charValKbInputReport[HID_REPORT_LENGTH_KB_INPUT];                   /**< Keyboard Input Report value. */
+    uint8_t                     charValKbInputReport[HID_REPORT_LENGTH_KB_INPUT];                   // Buffer for the Keyboard Input Report data.
     #endif
-    uint8_t                     charValMbInputReport[HID_REPORT_LENGTH_MB_INPUT];                   /**< Mouse Buttons Input Report value. */
-    uint8_t                     charValMmInputReport[HID_REPORT_LENGTH_MM_INPUT];                   /**< Mouse Motion Input Report value. */
+    uint8_t                     charValMbInputReport[HID_REPORT_LENGTH_MB_INPUT];                   // Buffer for the Mouse Button Input Report data.
+    uint8_t                     charValMmInputReport[HID_REPORT_LENGTH_MM_INPUT];                   // Buffer for the Mouse Motion Input Report data.
     #ifdef  HIDS_KEYBOARD_SUPPORT
-    uint8_t                     charValKbOutputReport[HID_REPORT_LENGTH_KB_OUTPUT];                 /**< Keyboard Output Report value. */
+    uint8_t                     charValKbOutputReport[HID_REPORT_LENGTH_KB_OUTPUT];                 // Buffer for the Keyboard Output Report data.
     #endif
     #if defined(HIDS_KEYBOARD_SUPPORT) && defined (HIDS_BOOT_PROTOCOL_MODE_SUPPORT)
-    uint8_t                     charValBootKbInputReport[HID_REPORT_LENGTH_BOOT_KB_INPUT];          /**< Boot Keyboard Input Report value. */
-    uint8_t                     charValBootKbOutputReport[HID_REPORT_LENGTH_BOOT_KB_OUTPUT];        /**< Boot Keyboard Output Report value. */
+    uint8_t                     charValBootKbInputReport[HID_REPORT_LENGTH_BOOT_KB_INPUT];          // Buffer for the Boot Keyboard Input Report data.
+    uint8_t                     charValBootKbOutputReport[HID_REPORT_LENGTH_BOOT_KB_OUTPUT];        // Buffer for the Boot Keyboard Output Report data.
     #endif
-    uint8_t                     charValBootMInputReport[HID_REPORT_LENGTH_BOOT_M_INPUT];            /**< Boot Mouse Input Report value. */
+    uint8_t                     charValBootMInputReport[HID_REPORT_LENGTH_BOOT_M_INPUT];            // Buffer for the Boot Mouse Input Report data.
 } BLE_HOGPS_Database_T;
 
 // *****************************************************************************
@@ -108,17 +115,21 @@ typedef struct BLE_HOGPS_Database_T
 // *****************************************************************************
 // *****************************************************************************
 
-static BLE_HOGPS_EventCb_T      sp_hogpsCbRoutine;      /* Variables for callback routines. */
-static BLE_HOGPS_ConnParams_T   s_hogpsConnParams;      /* Connection parameters. */
-static BLE_HOGPS_Database_T     s_hogpsDb;              /* Database. */
+static BLE_HOGPS_EventCb_T      sp_hogpsCbRoutine;      // Pointer to the callback function for BLE HID over GATT Profile (HOGP) events.
+static BLE_HOGPS_ConnParams_T   *sp_hogpsConnParams;    // Structure to hold the connection parameters for the BLE HID over GATT Profile.
+static BLE_HOGPS_Database_T     s_hogpsDb;              // Instance of the database structure for the BLE HID over GATT Profile services and characteristics.
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Functions
 // *****************************************************************************
 // *****************************************************************************
-
-static void ble_hogps_init_db(void)
+/**
+ * @brief Initialize the HID over GATT Profile (HOGP) service database.
+ *
+ * This function initializes the HOGP service database to default values.
+ */
+static void ble_hogps_InitDatabase(void)
 {
     (void)memset((uint8_t *)&s_hogpsDb, 0x00, sizeof(BLE_HOGPS_Database_T));
     #ifdef HIDS_KEYBOARD_SUPPORT
@@ -136,6 +147,12 @@ static void ble_hogps_init_db(void)
     s_hogpsDb.charLengthBootMInputReport = HID_REPORT_LENGTH_BOOT_M_INPUT;
 }
 
+
+/**
+ * @brief Convey a HOGP event to the registered callback.
+ *
+ * @param p_event Pointer to the HOGP event structure that needs to be conveyed.
+ */
 static void ble_hogps_ConveyEvent(BLE_HOGPS_Event_T *p_event)
 {
     if (sp_hogpsCbRoutine != NULL)
@@ -144,6 +161,17 @@ static void ble_hogps_ConveyEvent(BLE_HOGPS_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Generate and convey a report mode write event.
+ *
+ * This function creates a HOGP event based on the GATT event received and
+ * conveys it to the application via a callback.
+ *
+ * @param p_event   Pointer to the GATT event structure containing the write information.
+ * @param eventId   The ID of the HOGP event to be generated.
+ * @param reportId  The ID of the report being written to.
+ */
 static void ble_hogps_GenerateReportModeWriteEvent(GATT_Event_T *p_event, BLE_HOGPS_EventId_T eventId, uint8_t reportId)
 {
     BLE_HOGPS_Event_T hogpsEvent;
@@ -157,7 +185,17 @@ static void ble_hogps_GenerateReportModeWriteEvent(GATT_Event_T *p_event, BLE_HO
     ble_hogps_ConveyEvent(&hogpsEvent);
 }
 
+
 #ifdef HIDS_BOOT_PROTOCOL_MODE_SUPPORT
+/**
+ * @brief Generate and convey a boot mode write event.
+ *
+ * This function creates a HOGP boot mode write event based on the GATT event received and
+ * conveys it to the application via a callback.
+ *
+ * @param p_event Pointer to the GATT event structure containing the write information.
+ * @param eventId The ID of the HOGP event to be generated.
+ */
 static void ble_hogps_GenerateBootModeWriteEvent(GATT_Event_T *p_event, BLE_HOGPS_EventId_T eventId)
 {
     BLE_HOGPS_Event_T hogpsEvent;
@@ -171,18 +209,45 @@ static void ble_hogps_GenerateBootModeWriteEvent(GATT_Event_T *p_event, BLE_HOGP
 }
 #endif
 
+
+/**
+ * @brief Process GAP events specific to the HOGP service.
+ *
+ * This function processes incoming GAP events and updates the HOGP service
+ * connection parameters accordingly.
+ *
+ * @param p_event Pointer to the GAP event structure.
+ */
 static void ble_hogps_GapEventProcess(BLE_GAP_Event_T *p_event)
 {
     switch (p_event->eventId)
     {
         case BLE_GAP_EVT_CONNECTED:
         {
-            s_hogpsConnParams.connHandle = p_event->eventField.evtConnect.connHandle;
-            s_hogpsConnParams.protocolMode = HID_MODE_REPORT_PROTOCOL;
-            s_hogpsConnParams.suspendStatus = HID_HOST_SUSPEND_EXIT;
+            if ((sp_hogpsConnParams == NULL) && (p_event->eventField.evtConnect.status == GAP_STATUS_SUCCESS))
+            {
+                sp_hogpsConnParams = OSAL_Malloc(sizeof(BLE_HOGPS_ConnParams_T));
+                if(sp_hogpsConnParams != NULL)
+                {
+                    sp_hogpsConnParams->connHandle = p_event->eventField.evtConnect.connHandle;
+                    sp_hogpsConnParams->protocolMode = HID_MODE_REPORT_PROTOCOL;
+                    sp_hogpsConnParams->suspendStatus = HID_HOST_SUSPEND_EXIT;
+                }
+            }
+
         }
         break;
 
+        case BLE_GAP_EVT_DISCONNECTED:
+        {
+            if ((sp_hogpsConnParams != NULL) && (p_event->eventField.evtDisconnect.connHandle == sp_hogpsConnParams->connHandle))
+            {
+                OSAL_Free(sp_hogpsConnParams);
+                sp_hogpsConnParams = NULL;
+            }
+        }
+        break;
+                                      
         default:
         {
             //Do nothing
@@ -191,6 +256,16 @@ static void ble_hogps_GapEventProcess(BLE_GAP_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Send a read response to a GATT client.
+ *
+ * This function prepares and sends a read response for a given attribute to the GATT client.
+ *
+ * @param p_readEvt     Pointer to the read event structure containing details about the read operation.
+ * @param len           The length of the data to be sent in the read response.
+ * @param p_value       Pointer to the data to be sent in the read response.
+ */
 static void ble_hogps_SendReadResponse(GATT_EvtRead_T *p_readEvt, uint16_t len, uint8_t *p_value)
 {
     GATTS_SendReadRespParams_T readResponse;
@@ -202,6 +277,16 @@ static void ble_hogps_SendReadResponse(GATT_EvtRead_T *p_readEvt, uint16_t len, 
     (void)GATTS_SendReadResponse(p_readEvt->connHandle, &readResponse);
 }
 
+
+/**
+ * @brief Send a read by type response to a GATT client.
+ *
+ * This function prepares and sends a read by type response for a given attribute to the GATT client.
+ *
+ * @param p_readEvt     Pointer to the read event structure containing details about the read by type operation.
+ * @param len           The length of the data to be sent in the read by type response.
+ * @param p_value       Pointer to the data to be sent in the read by type response.
+ */
 static void ble_hogps_SendReadByTypeResponse(GATT_EvtRead_T *p_readEvt, uint16_t len, uint8_t *p_value)
 {
     GATTS_SendReadByTypeRespParams_T readResponse;
@@ -219,6 +304,14 @@ static void ble_hogps_SendReadByTypeResponse(GATT_EvtRead_T *p_readEvt, uint16_t
 }
 
 
+/**
+ * @brief Process GATT events for the HID over GATT profile service.
+ *
+ * This function processes various GATT events such as read, write, etc., and takes appropriate actions
+ * based on the HID over GATT profile specifications.
+ *
+ * @param p_event Pointer to the GATT event structure containing details about the event.
+ */
 static void ble_hogps_GattEventProcess(GATT_Event_T *p_event)
 {
     switch (p_event->eventId)
@@ -232,7 +325,7 @@ static void ble_hogps_GattEventProcess(GATT_Event_T *p_event)
             if (p_event->eventField.onRead.attrHandle == (uint16_t)HIDS_HDL_CHARVAL_HID_PROTOCOL_MODE)
             {
                 valueLen = 0x01;
-                p_value = &s_hogpsConnParams.protocolMode;
+                p_value = &sp_hogpsConnParams->protocolMode;
             }
             #endif
             #ifdef HIDS_KEYBOARD_SUPPORT
@@ -317,7 +410,7 @@ static void ble_hogps_GattEventProcess(GATT_Event_T *p_event)
                     if (p_event->eventField.onWrite.writeValue[0] == (uint8_t)HID_HOST_SUSPEND_ENTER)
                     {
                         /* Enter suspend mode */
-                        s_hogpsConnParams.suspendStatus = HID_HOST_SUSPEND_ENTER;
+                        sp_hogpsConnParams->suspendStatus = HID_HOST_SUSPEND_ENTER;
                         hogpsEvent.eventId = BLE_HOGPS_EVT_HOST_SUSPEND_ENTER_IND;
                         hogpsEvent.eventField.evtHostSuspendEnter.connHandle = p_event->eventField.onWrite.connHandle;
                         ble_hogps_ConveyEvent(&hogpsEvent);
@@ -325,7 +418,7 @@ static void ble_hogps_GattEventProcess(GATT_Event_T *p_event)
                     else if (p_event->eventField.onWrite.writeValue[0] == (uint8_t)HID_HOST_SUSPEND_EXIT)
                     {
                         /* Exit suspend mode */
-                        s_hogpsConnParams.suspendStatus = HID_HOST_SUSPEND_EXIT;
+                        sp_hogpsConnParams->suspendStatus = HID_HOST_SUSPEND_EXIT;
                         hogpsEvent.eventId = BLE_HOGPS_EVT_HOST_SUSPEND_EXIT_IND;
                         hogpsEvent.eventField.evtHostSuspendExit.connHandle = p_event->eventField.onWrite.connHandle;
                         ble_hogps_ConveyEvent(&hogpsEvent);
@@ -346,7 +439,7 @@ static void ble_hogps_GattEventProcess(GATT_Event_T *p_event)
                     if (p_event->eventField.onWrite.writeValue[0] == (uint8_t)HID_MODE_BOOT_PROTOCOL)
                     {
                         /* Enter boot mode */
-                        s_hogpsConnParams.protocolMode = HID_MODE_BOOT_PROTOCOL;
+                        sp_hogpsConnParams->protocolMode = HID_MODE_BOOT_PROTOCOL;
                         hogpsEvent.eventId = BLE_HOGPS_EVT_BOOT_MODE_ENTER_IND;
                         hogpsEvent.eventField.evtBootModeEnter.connHandle = p_event->eventField.onWrite.connHandle;
                         ble_hogps_ConveyEvent(&hogpsEvent);
@@ -354,7 +447,7 @@ static void ble_hogps_GattEventProcess(GATT_Event_T *p_event)
                     else if (p_event->eventField.onWrite.writeValue[0] == (uint8_t)HID_MODE_REPORT_PROTOCOL)
                     {
                         /* Enter report mode */
-                        s_hogpsConnParams.protocolMode = HID_MODE_REPORT_PROTOCOL;
+                        sp_hogpsConnParams->protocolMode = HID_MODE_REPORT_PROTOCOL;
                         hogpsEvent.eventId = BLE_HOGPS_EVT_REPORT_MODE_ENTER_IND;
                         hogpsEvent.eventField.evtReportModeEnter.connHandle = p_event->eventField.onWrite.connHandle;
                         ble_hogps_ConveyEvent(&hogpsEvent);
@@ -435,18 +528,42 @@ static void ble_hogps_GattEventProcess(GATT_Event_T *p_event)
     }
 }
 
+
+/**
+ * @brief Initializes the BLE HID over GATT profile server role.
+ *
+ * @retval MBA_RES_SUCCESS          The initialization was successful.
+ * @retval MBA_RES_FAIL             The initialization failed.
+ *
+ */
 uint16_t BLE_HOGPS_Init(void)
 {
     sp_hogpsCbRoutine = NULL;
-    ble_hogps_init_db();
+    ble_hogps_InitDatabase();
     return BLE_HIDS_Add();
 }
 
+
+/**
+ * @brief Registers a callback for the BLE HID over GATT profile server role events.
+ *
+ * @param[in] routine               Callback function to handle BLE HID over GATT profile server role events.
+ *
+ */
 void BLE_HOGPS_EventRegister(BLE_HOGPS_EventCb_T routine)
 {
     sp_hogpsCbRoutine = routine;
 }
 
+
+/**
+ * @brief Handles BLE_Stack events.
+ * 
+ * This function should be called when BLE stack events occur.
+ *
+ * @param[in] p_stackEvent          Pointer to the BLE stack event data.
+ *
+*/
 void BLE_HOGPS_BleEventHandler(STACK_Event_T *p_stackEvent)
 {
     switch (p_stackEvent->groupId)
@@ -472,6 +589,20 @@ void BLE_HOGPS_BleEventHandler(STACK_Event_T *p_stackEvent)
 }
 
 #ifdef HIDS_KEYBOARD_SUPPORT
+/**
+ * @brief Sets HID keyboard input report.
+ * 
+ * This function prepares the input report for a keyboard device in the Human Interface Device (HID) profile.
+ * The report includes modifier keys, reserved byte, and up to six keycodes representing the keys that are pressed.
+ *
+ * @param[in] p_keyCodeArray        An array of 8 bytes representing the keyboard report. The array is structured as follows:\n
+ *                                  - Byte 0: Modifier keys (e.g., Shift, Ctrl)
+ *                                  - Byte 1: Reserved (typically 0x00)
+ *                                  - Bytes 2 to 7: Keycodes 1 to 6, indicating keys that are currently pressed
+ *
+ * @retval MBA_RES_SUCCESS          The input report was successfully set.
+ * @retval MBA_RES_INVALID_PARA     The input parameters are invalid.
+*/
 uint16_t BLE_HOGPS_SetKeyboardInputReport(uint8_t *p_keyCodeArray)
 {
     (void)memcpy(s_hogpsDb.charValKbInputReport, p_keyCodeArray, HID_REPORT_LENGTH_KB_INPUT);
@@ -480,6 +611,21 @@ uint16_t BLE_HOGPS_SetKeyboardInputReport(uint8_t *p_keyCodeArray)
 }
 #endif
 
+
+/**
+ * @brief Sets the HID mouse button input report.
+ * 
+ * This function prepares the input report for mouse button states, wheel movement, and AC pan in the HID profile.
+ * It indicates which mouse buttons are pressed, the vertical scroll wheel movement, and the horizontal scroll (AC Pan).
+ *
+ * @param[in] buttons               A bitmask representing the state of mouse buttons. Each bit corresponds to a button:\n
+ *                                  - Bit 0 to Bit 4: Indicate whether each button is pressed (1) or not (0)
+ * @param[in] wheel                 The vertical scroll amount with a valid range from -127 to 127.
+ * @param[in] acPan                 The horizontal scroll (AC Pan) amount with a valid range from -127 to 127.
+ *
+ * @retval MBA_RES_SUCCESS          The input report was successfully set.
+ * @retval MBA_RES_INVALID_PARA     The input parameters are invalid.
+*/
 uint16_t BLE_HOGPS_SetMouseButtonInputReport(uint8_t buttons, int8_t wheel, int8_t acPan)
 {
     s_hogpsDb.charValMbInputReport[0] = buttons;
@@ -488,6 +634,19 @@ uint16_t BLE_HOGPS_SetMouseButtonInputReport(uint8_t buttons, int8_t wheel, int8
     return MBA_RES_SUCCESS;
 }
 
+
+/**
+ * @brief Sets the HID mouse motion input report.
+ *
+ * This function prepares the input report for mouse motion in the HID profile.
+ * It specifies the relative movement of the mouse along the X and Y axes.
+ * 
+ * @param[in] xAxis                 The relative movement on the X-Axis with a valid range from -2047 to 2047.
+ * @param[in] yAxis                 The relative movement on the Y-Axis with a valid range from -2047 to 2047.
+ *
+ * @retval MBA_RES_SUCCESS          The input report was successfully set.
+ * @retval MBA_RES_INVALID_PARA     The input parameters are invalid.
+*/
 uint16_t BLE_HOGPS_SetMouseMotionInputReport(int16_t xAxis, int16_t yAxis)
 {
     s_hogpsDb.charValMmInputReport[0] = (uint8_t)((uint8_t)xAxis>>4U);
@@ -497,6 +656,24 @@ uint16_t BLE_HOGPS_SetMouseMotionInputReport(int16_t xAxis, int16_t yAxis)
 }
 
 #ifdef HIDS_KEYBOARD_SUPPORT
+/**
+ * @brief Sets the HID keyboard output report.
+ *
+ * This function updates the LED status indicators for a HID keyboard, such as Num Lock,
+ * Caps Lock, and Scroll Lock LEDs. The state of each LED is represented by individual bits
+ * within the provided 'ledValue' parameter.
+ * 
+ * @param[in] ledValue              A 8-bit value where each bit corresponds to an LED on the keyboard:\n
+ *                                  - Bit 0: Num Lock LED
+ *                                  - Bit 1: Caps Lock LED
+ *                                  - Bit 2: Scroll Lock LED
+ *                                  - Bit 3: Compose LED
+ *                                  - Bit 4: Kana LED
+ *                                  The remaining bits (5-7) are reserved and should be set to 0.
+ *
+ * @retval MBA_RES_SUCCESS          The output report was successfully set.
+ * @retval MBA_RES_INVALID_PARA     The input parameters are invalid.
+*/
 uint16_t BLE_HOGPS_SetKeyboardOutputReport(uint8_t ledValue)
 {
     s_hogpsDb.charValKbOutputReport[0] = ledValue;
@@ -505,12 +682,46 @@ uint16_t BLE_HOGPS_SetKeyboardOutputReport(uint8_t ledValue)
 #endif
 
 #if defined(HIDS_KEYBOARD_SUPPORT) && defined (HIDS_BOOT_PROTOCOL_MODE_SUPPORT)
+/**
+ * @brief Sets the HID boot keyboard input report.
+ *
+ * This function updates the input report for a boot keyboard with the specified key codes.
+ * The input report format follows the standard boot protocol layout.
+ * 
+ * @param[in] p_keyCodeArray        An array representing the keyboard report. The array is expected 
+ *                                  to be 8 bytes in length, with the following structure:\n
+ *                                  - Byte 0: Modifier keys (e.g., Shift, Ctrl)
+ *                                  - Byte 1: Reserved (typically 0x00)
+ *                                  - Bytes 2 to 7: Key codes 1 to 6, representing keys pressed
+ *
+ * @retval MBA_RES_SUCCESS          The input report was successfully set.
+ * @retval MBA_RES_INVALID_PARA     The input parameters are invalid.
+*/
 uint16_t BLE_HOGPS_SetBootKeyboardInputReport(uint8_t *p_keyCodeArray)
 {
     (void)memcpy(s_hogpsDb.charValBootKbInputReport, p_keyCodeArray, HID_REPORT_LENGTH_BOOT_KB_INPUT);
     return MBA_RES_SUCCESS;
 }
 
+
+/**
+ * @brief Sets the output report for a HID boot keyboard.
+ *
+* This function updates the LED status indicators on a HID boot keyboard, such as Num Lock,
+ * Caps Lock, and Scroll Lock LEDs. The state of each LED is represented by individual bits
+ * within the provided 'ledValue' parameter.
+ * 
+ * @param[in] ledValue              A bitmask where each bit corresponds to an LED on the keyboard:\n
+ *                                  - Bit 0: Num Lock LED
+ *                                  - Bit 1: Caps Lock LED
+ *                                  - Bit 2: Scroll Lock LED
+ *                                  - Bit 3: Compose LED
+ *                                  - Bit 4: Kana LED
+ *                                  Bits 5 to 7 are reserved and should be set to 0.
+ *
+ * @retval MBA_RES_SUCCESS          The output report was successfully set.
+ * @retval MBA_RES_INVALID_PARA     The input parameters are invalid.
+*/
 uint16_t BLE_HOGPS_SetBootKeyboardOutputReport(uint8_t ledValue)
 {
     s_hogpsDb.charValBootKbOutputReport[0] = ledValue;
@@ -518,6 +729,22 @@ uint16_t BLE_HOGPS_SetBootKeyboardOutputReport(uint8_t ledValue)
 }
 #endif
 
+
+/**
+ * @brief Sets the HID boot mode mouse input report.
+ *
+ * This function prepares the input report for a mouse in HID boot mode with the current state of mouse buttons and position.
+ * 
+ * @param[in] buttons               Bitmask representing the state of the mouse buttons: *
+ *                                  - Bit 0: Left button (1 if pressed, 0 if not)
+ *                                  - Bit 1: Right button (1 if pressed, 0 if not)
+ *                                  - Bit 2: Middle button (1 if pressed, 0 if not)
+ * @param[in] xAxis                 The displacement of the mouse along the X-axis since the last report, in units.
+ * @param[in] yAxis                 The displacement of the mouse along the Y-axis since the last report, in units.
+ *
+ * @retval MBA_RES_SUCCESS          The input report was successfully set.
+ * @retval MBA_RES_INVALID_PARA     The parameters provided are invalid.
+*/
 uint16_t BLE_HOGPS_SetBootMouseInputReport(uint8_t buttons, int8_t xAxis, int8_t yAxis)
 {
     s_hogpsDb.charValBootMInputReport[0] = buttons;
@@ -527,12 +754,29 @@ uint16_t BLE_HOGPS_SetBootMouseInputReport(uint8_t buttons, int8_t xAxis, int8_t
 }
 
 #ifdef HIDS_KEYBOARD_SUPPORT
+/**
+ * @brief Sends a HID keyboard input report.
+ *
+ * This function transmits a report containing keyboard keypress information
+ * to a connected BLE host using the specified connection handle.
+ * 
+ * @param[in] connHandle            The connection handle associated with the connection.
+ * @param[in] p_keyCodeArray        A pointer to an array of 8 bytes representing the HID report.
+*                                   The array structure is as follows:\n
+ *                                  - Byte 0: Modifier keys (e.g., Shift, Ctrl)
+ *                                  - Byte 1: Reserved (must be 0)
+ *                                  - Bytes 2-7: Key codes (up to 6 keys that are currently pressed)
+ *
+ * @retval MBA_RES_SUCCESS          The transmission of the input report was successful.
+ * @retval MBA_RES_OOM              Internal memory allocation failure.
+ * @retval MBA_RES_INVALID_PARA     The parameters provided are invalid.
+*/
 uint16_t BLE_HOGPS_SendKeyboardInputReport(uint16_t connHandle, uint8_t *p_keyCodeArray)
 {
     GATTS_HandleValueParams_T hvParams;
     uint16_t result;
 
-    if (s_hogpsConnParams.connHandle != connHandle)
+    if (sp_hogpsConnParams->connHandle != connHandle)
     {
         return MBA_RES_INVALID_PARA;
     }
@@ -551,12 +795,26 @@ uint16_t BLE_HOGPS_SendKeyboardInputReport(uint16_t connHandle, uint8_t *p_keyCo
 #endif
 
 #ifdef HIDS_MOUSE_SUPPORT
+/**
+ * @brief Sends a HID mouse button input report.
+ *
+ * This function transmits a report indicating the state of mouse buttons, the scroll wheel, and the AC pan.
+ * 
+ * @param[in] connHandle            The connection handle associated with the connection.
+ * @param[in] buttons               A bitmask representing the state of each button (bit 0 for button 1, bit 1 for button 2, etc.).
+ * @param[in] wheel                 The vertical scroll amount, where positive values indicate upward scrolling. Range: -127 to 127.
+ * @param[in] acPan                 The horizontal scroll amount, where positive values indicate rightward scrolling. Range: -127 to 127.
+ *
+ * @retval MBA_RES_SUCCESS          The input report was sent successfully.
+ * @retval MBA_RES_OOM              Internal memory allocation failure.
+ * @retval MBA_RES_INVALID_PARA     The parameters provided are invalid.
+*/
 uint16_t BLE_HOGPS_SendMouseButtonInputReport(uint16_t connHandle, uint8_t buttons, int8_t wheel, int8_t acPan)
 {
     GATTS_HandleValueParams_T hvParams;
     uint16_t result;
 
-    if (s_hogpsConnParams.connHandle != connHandle)
+    if (sp_hogpsConnParams->connHandle != connHandle)
     {
         return MBA_RES_INVALID_PARA;
     }
@@ -573,12 +831,24 @@ uint16_t BLE_HOGPS_SendMouseButtonInputReport(uint16_t connHandle, uint8_t butto
     return GATTS_SendHandleValue(connHandle, &hvParams);
 }
 
+
+/**
+ * @brief Sends a HID mouse motion input report.
+ *
+ * @param[in] connHandle            The connection handle associated with the connection.
+ * @param[in] xAxis                 The movement along the X-axis. Range: -2047 to 2047.
+ * @param[in] yAxis                 The movement along the Y-axis. Range: -2047 to 2047.
+ *
+ * @retval MBA_RES_SUCCESS          The input report was sent successfully.
+ * @retval MBA_RES_OOM              Internal memory allocation failure.
+ * @retval MBA_RES_INVALID_PARA     The parameters provided are invalid.
+*/
 uint16_t BLE_HOGPS_SendMouseMotionInputReport(uint16_t connHandle, int16_t xAxis, int16_t yAxis)
 {
     GATTS_HandleValueParams_T hvParams;
     uint16_t result;
 
-    if (s_hogpsConnParams.connHandle != connHandle)
+    if (sp_hogpsConnParams->connHandle != connHandle)
     {
         return MBA_RES_INVALID_PARA;
     }
@@ -597,12 +867,31 @@ uint16_t BLE_HOGPS_SendMouseMotionInputReport(uint16_t connHandle, int16_t xAxis
 #endif
 
 #if defined(HIDS_KEYBOARD_SUPPORT) && defined (HIDS_BOOT_PROTOCOL_MODE_SUPPORT)
+/**
+ * @brief Sends a HID boot keyboard input report.
+ * 
+ * This function transmits a keyboard input report in the boot protocol mode. The report consists of
+ * an array of key codes that represent the keys currently pressed. The first byte of the array
+ * indicates modifier keys (such as Shift, Ctrl, etc.), followed by a reserved byte, and then up to
+ * six key codes representing the keys being pressed simultaneously.
+ *
+ * @param[in] connHandle            The connection handle associated with the connection.
+ * @param[in] p_keyCodeArray        A pointer to an 8-byte array containing the key report. The array is
+ *                                  structured as follows:\n
+ *                                  - Byte 0: Modifier keys bit mask
+ *                                  - Byte 1: Reserved (typically 0x00)
+ *                                  - Bytes 2-7: Key codes (up to 6 keys)
+ *
+ * @retval MBA_RES_SUCCESS          The input report was sent successfully.
+ * @retval MBA_RES_OOM              Internal memory allocation failure.
+ * @retval MBA_RES_INVALID_PARA     The parameters provided are invalid.
+*/
 uint16_t BLE_HOGPS_SendBootKeyboardInputReport(uint16_t connHandle, uint8_t *p_keyCodeArray)
 {
     GATTS_HandleValueParams_T hvParams;
     uint16_t result;
 
-    if (s_hogpsConnParams.connHandle != connHandle)
+    if (sp_hogpsConnParams->connHandle != connHandle)
     {
         return MBA_RES_INVALID_PARA;
     }
@@ -621,12 +910,30 @@ uint16_t BLE_HOGPS_SendBootKeyboardInputReport(uint16_t connHandle, uint8_t *p_k
 #endif
 
 #if defined(HIDS_MOUSE_SUPPORT) && defined (HIDS_BOOT_PROTOCOL_MODE_SUPPORT)
+/**
+ * @brief Sends a HID boot mouse input report.
+ *
+ * This function transmits the current state of the mouse buttons along with the X and Y axis movement values.
+ * 
+ * @param[in] connHandle            The connection handle associated with the connection.
+ * @param[in] buttons               Mouse button states encoded as bit fields:\n
+ *                                  - Bit 0: Left button
+ *                                  - Bit 1: Right button
+ *                                  - Bit 2: Middle button
+ *                                  A value of 1 indicates the button is pressed; 0 indicates it is not pressed.
+ * @param[in] xAxis                 The displacement value along the X-axis since the last report.
+ * @param[in] yAxis                 The displacement value along the Y-axis since the last report.
+ *
+ * @retval MBA_RES_SUCCESS          The input report was sent successfully.
+ * @retval MBA_RES_OOM              Internal memory allocation failure.
+ * @retval MBA_RES_INVALID_PARA     The parameters provided are invalid.
+*/
 uint16_t BLE_HOGPS_SendBootMouseInputReport(uint16_t connHandle, uint8_t buttons, int8_t xAxis, int8_t yAxis)
 {
     GATTS_HandleValueParams_T hvParams;
     uint16_t result;
 
-    if (s_hogpsConnParams.connHandle != connHandle)
+    if (sp_hogpsConnParams->connHandle != connHandle)
     {
         return MBA_RES_INVALID_PARA;
     }
@@ -644,11 +951,21 @@ uint16_t BLE_HOGPS_SendBootMouseInputReport(uint16_t connHandle, uint8_t buttons
 }
 #endif
 
+
+/**
+ * @brief Sends the battery level of a HID device using the BLE Battery Service.
+ *
+ * @param[in] connHandle            The connection handle associated with the connection.
+ *
+ * @retval MBA_RES_SUCCESS          The battery level was successfully sent.
+ * @retval MBA_RES_OOM              Internal memory allocation failure.
+ * @retval MBA_RES_INVALID_PARA     The parameters provided are invalid.
+*/
 uint16_t BLE_HOGPS_SendBatteryLevel(uint16_t connHandle)
 {
     GATTS_HandleValueParams_T hvParams;
 
-    if (s_hogpsConnParams.connHandle != connHandle)
+    if (sp_hogpsConnParams->connHandle != connHandle)
     {
         return MBA_RES_INVALID_PARA;
     }

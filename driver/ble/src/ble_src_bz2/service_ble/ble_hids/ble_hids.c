@@ -31,10 +31,14 @@
     ble_hids.c
 
   Summary:
-    This file contains the BLE Human Interface Device Service functions for application user.
+    Implements the Bluetooth Low Energy (BLE) HID Service functionality for
+    application developers.
 
   Description:
-    This file contains the BLE Human Interface Device Service functions for application user.
+    This source file provides the interface and operational functions necessary
+    for the management and manipulation of BLE HID services. It is designed to
+    facilitate the integration of HID features into BLE applications by the
+    application developer.
  *******************************************************************************/
 
 
@@ -55,23 +59,25 @@
 // Section: Macros
 // *****************************************************************************
 // *****************************************************************************
+#define BLE_HID_MIN_KEY_SIZE                                0x10        // The minimum key size for attribute permissions (HID).
 
-#define HID_CD_HID                                          0x0111      /**< Version number (HID v1.11) of base USB HID Sepcification. */
+#define HID_CD_HID                                          0x0111      // HID specification version: 1.11.
 
-#define HID_COUNTRY_CODE_NONE                               0x00        /**< Country code of the localized hardware. Value 0x00 represents not localized. */
-#define HID_COUNTRY_CODE_JAPAN                              0x0F        /**< Country code of the localized hardware: Japan. */
-#define HID_COUNTRY_CODE_TAIWAN                             0x1E        /**< Country code of the localized hardware: Taiwan. */
-#define HID_COUNTRY_CODE_US                                 0x11        /**< Country code of the localized hardware: US. */
+#define HID_COUNTRY_CODE_NONE                               0x00        // No specific country localization (default).
+#define HID_COUNTRY_CODE_JAPAN                              0x0F        // Country code for Japan.
+#define HID_COUNTRY_CODE_TAIWAN                             0x1E        // Country code for Taiwan.
+#define HID_COUNTRY_CODE_US                                 0x11        // Country code for the United States.
 
-#define HID_FLAG_NONE                                       0x00        /**< Default value of HID infomation characteristic. */
-#define HID_FLAG_REMOTE_WAKE                                0x01        /**< HID Device is capable of sending a wake-signal to a HID Host or not. */
-#define HID_FLAG_NORMALLY_CONNECTABLE                       0x02        /**< HID Device will be advertising when bonded but not connected or not. */
+#define HID_FLAG_NONE                                       0x00        // No flags set for HID information characteristic.
+#define HID_FLAG_REMOTE_WAKE                                0x01        // Indicates capability to send wake signal to host.
+#define HID_FLAG_NORMALLY_CONNECTABLE                       0x02        // Indicates if device is connectable when bonded but not connected.
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Local Variables
 // *****************************************************************************
 // *****************************************************************************
+/* UUIDs for Human Interface Device Service and its Characteristics */
 static const uint8_t s_svcUuidHids[ATT_UUID_LENGTH_2] =                 {UINT16_TO_BYTES(UUID_HUMAN_INTERFACE_DEVICE_SERVICE)};
 #if defined(HIDS_KEYBOARD_SUPPORT) && defined (HIDS_BOOT_PROTOCOL_MODE_SUPPORT)
 static const uint8_t s_chUuidHidBootKbInReport[ATT_UUID_LENGTH_2] =     {UINT16_TO_BYTES(UUID_HID_BOOT_KB_INPUT_REPORT)};
@@ -342,13 +348,24 @@ static const GATTS_CccdSetting_T s_hidsCccdSetting[] =
 
 /* HID Service structure */
 static GATTS_Service_T s_svcHids;
+
+/* Index to keep track of the current attribute within the HID Service */
 static uint8_t s_hidsAttrIndex;
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Functions
 // *****************************************************************************
-
+/**
+ * @brief Adds the BLE Human Interface Device Service to the GATT server.
+ *
+ * This function adds the BLE Human Interface Device Service to the BLE stack's GATT server,
+ * enabling the service to be discovered and accessed by remote BLE devices.
+ * 
+ * @retval MBA_RES_SUCCESS                    The BLE Human Interface Device service was successfully added.
+ * @retval MBA_RES_NO_RESOURCE                Insufficient resource to add the BLE Human Interface Device service.
+ *
+ */
 uint16_t BLE_HIDS_Add(void)
 {
     uint16_t result;
@@ -662,5 +679,3 @@ uint16_t BLE_HIDS_Add(void)
     result = GATTS_AddService(&s_svcHids, s_hidsAttrIndex);
     return result;
 }
-
-

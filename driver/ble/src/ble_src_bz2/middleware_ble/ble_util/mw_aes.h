@@ -31,20 +31,14 @@
     mw_aes.h
 
   Summary:
-    This file contains the BLE AES functions for application user.
+    Provides an interface for the Advanced Encryption Standard (AES) functionality
+    within the BLE middleware.
 
   Description:
-    This file contains the BLE AES functions for application user.
+    This header file exposes the AES cryptographic functions that are part of the
+    BLE middleware, enabling the application user to perform encryption and decryption
+    operations in compliance with the AES standard.
  *******************************************************************************/
-
-
-/**
- * @addtogroup MW_AES
- * @{
- * @brief Header file for the Middleware AES library.
- * @note Definitions and prototypes for the Middleware AES stack layer application programming interface.
- */
-
 #ifndef MW_AES_H
 #define MW_AES_H
 
@@ -59,95 +53,198 @@
 
 // DOM-IGNORE-BEGIN
 #ifdef __cplusplus  // Provide C++ Compatibility
-
 extern "C" {
-
 #endif
 // DOM-IGNORE-END
 
-// *****************************************************************************
-// *****************************************************************************
-// Section: Macros
-// *****************************************************************************
-// *****************************************************************************
+/**
+ * @addtogroup BLE_MW BLE Middleware
+ * @{
+ */
 
+/**
+ * @defgroup MW_AES Advanced Encryption Standard (AES)
+ * 
+ * @brief Provides AES cryptographic functions for BLE applications.
+ * @note This section declares the API for the AES component of the BLE middleware.
+ * @{
+ */
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Data Types
 // *****************************************************************************
 // *****************************************************************************
-/**@addtogroup MW_AES_STRUCTS Structures
- * @{ */
+/**
+ * @addtogroup MW_AES_STRUCTS Structures
+ * @{
+ */
 
-/**@brief Structure of AES context which is used to contain aes information. */
+/** 
+ * @brief Structure for maintaining AES ccm encryption context.
+ * @note This structure is used to store information about the ccm parameter
+ *           that is registered for the AES ccm mode calculation.
+*/
+typedef struct MW_AES_Ccm_T
+{
+    uint8_t *p_nonce;                                          /**< Pointer to the nonce used for encryption. */
+    uint8_t nonceSz;                                           /**< The size of p_nonce, between 7 and 13 bytes. */
+    uint8_t tagSz;                                             /**< The tag size used for encryption, must be a value in {4, 6, 8, 10, 12, 14, 16}. */
+    uint8_t *p_aad;                                            /**< Pointer to the additional authentication data. */
+    uint16_t aadSz;                                            /**< The size of p_aad, can be 0 if p_aad is NULL. */
+    uint16_t dataSz;                                           /**< The size of the data to be encrypted / decrypted. */
+} MW_AES_Ccm_T;
+
+
+/** @brief Structure for maintaining AES encryption context. */
 typedef struct MW_AES_Ctx_T
 {
-    CRYPT_AES_CTX aesCtx;                                      /**< Context which saves state. */
+    CRYPT_AES_CTX aesCtx;                                      /**< Underlying cryptographic library's AES context. This context is used 
+                                                                    to retain the internal state between encryption or decryption operations. */
+    MW_AES_Ccm_T ccmCtx;                                       /**< Underlying ccm library's user input. This context is used to ensure the api consistency.*/
 } MW_AES_Ctx_T;
 
 
-/**@} */ //MW_AES_STRUCTS
+/** @} */ //MW_AES_STRUCTS
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Function Prototypes
 // *****************************************************************************
 // *****************************************************************************
-/**@addtogroup MW_AES_FUNS Functions
- * @{ */
-
 /**
- *@brief The API is used to initialize AES CBC block cipher decryption.
+ * @addtogroup MW_AES_FUNS Functions
+ * @{
+ */
+
+/** @brief Initializes AES CBC block cipher decryption.
  *
- *@param[out] p_ctx               Pointer to the structure of AES context. Refer to @ref MW_AES_Ctx_T for detail structure info.
- *@param[in] p_aesKey             Pointer to the 16 bytes encryption key.
- *@param[in] p_iv                 Pointer to the 16 bytes IV value.
+ * @param[out] p_ctx               Pointer to the AES context structure. See @ref MW_AES_Ctx_T.
+ * @param[in] p_aesKey             Pointer to the 16-byte encryption key.
+ * @param[in] p_iv                 Pointer to the 16-byte initialization vector (IV).
  *
- *@retval MBA_RES_SUCCESS         Initialize successfully.
- *@retval MBA_RES_FAIL            Failed to initialize.
+ * @retval MBA_RES_SUCCESS         Initialization successful.
+ * @retval MBA_RES_FAIL            Initialization failed.
  */
 uint16_t MW_AES_CbcDecryptInit(MW_AES_Ctx_T * p_ctx, uint8_t *p_aesKey, uint8_t *p_iv);
 
-/**
- *@brief The API is used to decrypt a block of data using the AES CBC mode.
- *
- *@param[in] p_ctx                Pointer to the structure of AES context. Refer to @ref MW_AES_Ctx_T for detail structure info.
- *@param[in] length               The length of data to be decrypted.
- *@param[out] p_plainText         Pointer to buffer to store the results of the decryption.
- *@param[in] p_chiperText         Pointer to buffer holding the data to be decrypted.
- *
- *@retval MBA_RES_SUCCESS         Descrypt successfully.
- *@retval MBA_RES_FAIL            Failed to Descrypt.
- */
-uint16_t MW_AES_AesCbcDecrypt(MW_AES_Ctx_T * p_ctx, uint16_t length, uint8_t *p_plainText, uint8_t *p_chiperText);
 
 /**
- *@brief The API is used to initialize AES ECB block cipher Encryption.
+ * @brief Decrypts a block of data using AES CBC mode.
  *
- *@param[out] p_ctx               Pointer to the structure of AES context. Refer to @ref MW_AES_Ctx_T for detail structure info.
- *@param[in] p_aesKey             Pointer to the 16 bytes encryption key.
+ * @param[in] p_ctx                Pointer to the AES context structure. See @ref MW_AES_Ctx_T.
+ * @param[in] length               The length of the data to be decrypted.
+ * @param[out] p_plainText         Pointer to the buffer where the decrypted data will be stored.
+ * @param[in] p_cipherText         Pointer to the buffer containing the data to be decrypted.
  *
- *@retval MBA_RES_SUCCESS         Initialize successfully.
- *@retval MBA_RES_FAIL            Failed to initialize.
+ * @retval MBA_RES_SUCCESS         Decryption successful.
+ * @retval MBA_RES_FAIL            Decryption failed.
+ */
+uint16_t MW_AES_AesCbcDecrypt(MW_AES_Ctx_T * p_ctx, uint16_t length, uint8_t *p_plainText, uint8_t *p_cipherText);
+
+
+/**
+ * @brief Initializes AES ECB block cipher encryption.
+ *
+ * @param[out] p_ctx               Pointer to the AES context structure. See @ref MW_AES_Ctx_T.
+ * @param[in] p_aesKey             Pointer to the 16-byte encryption key.
+ *
+ * @retval MBA_RES_SUCCESS         Initialization successful.
+ * @retval MBA_RES_FAIL            Initialization failed.
  */
 uint16_t MW_AES_EcbEncryptInit(MW_AES_Ctx_T * p_ctx, uint8_t *p_aesKey);
 
 
 /**
- *@brief The API is used to encrypt a block of data using the AES ECB mode.
+ * @brief Encrypts a block of data using AES ECB mode.
  *
- *@param[in] p_ctx                Pointer to the structure of AES context. Refer to @ref MW_AES_Ctx_T for detail structure info.
- *@param[in] length               The length of data to be decrypted.
- *@param[out] p_chiperText        Pointer to buffer to store the results of the encryption.
- *@param[in] p_plainText          Pointer to buffer holding the data to be encrypted.
+ * @param[in] p_ctx                Pointer to the AES context structure. See @ref MW_AES_Ctx_T.
+ * @param[in] length               The length of the data to be encrypted.
+ * @param[out] p_cipherText        Pointer to the buffer where the encrypted data will be stored.
+ * @param[in] p_plainText          Pointer to the buffer containing the data to be encrypted.
  *
- *@retval MBA_RES_SUCCESS         Descrypt successfully.
- *@retval MBA_RES_FAIL            Failed to Encrypt.
+ * @retval MBA_RES_SUCCESS         Encryption successful.
+ * @retval MBA_RES_FAIL            Encryption failed.
  */
-uint16_t MW_AES_AesEcbEncrypt(MW_AES_Ctx_T * p_ctx, uint16_t length, uint8_t *p_chiperText, uint8_t *p_plainText);
+uint16_t MW_AES_AesEcbEncrypt(MW_AES_Ctx_T * p_ctx, uint16_t length, uint8_t *p_cipherText, uint8_t *p_plainText);
 
-/**@} */ //MW_AES_FUNS
+/**
+ * @brief Initializes AES CCM encryption.
+ *
+ * @param[out] p_ctx               Pointer to the AES context structure.
+ * @param[in] p_aesKey             Pointer to the 16-byte encryption key.
+ * @param[in] p_nonce              Pointer to the nonce used for encryption.
+ * @param[in] nonceSz              The size of p_nonce, between 7 and 13 bytes.
+ * @param[in] tagSz                The tag size used for encryption, must be a value in {4, 6, 8, 10, 12, 14, 16}.
+ * @param[in] p_aad                Pointer to the additional authentication data.
+ * @param[in] aadSz                The size of p_aad, can be 0 if p_aad is NULL.
+ * @param[in] dataSz               The size of the data to be encrypted.
+ *
+ * @retval MBA_RES_SUCCESS         Initialization successful.
+ * @retval MBA_RES_FAIL            Initialization failed.
+ */
+uint16_t MW_AES_CcmEncryptInit(MW_AES_Ctx_T * p_ctx, uint8_t *p_aesKey, uint8_t *p_nonce, uint8_t nonceSz, uint8_t tagSz, uint8_t *p_aad, uint16_t aadSz, uint16_t dataSz);
+
+/**
+ * @brief Encrypts data using AES CCM mode.
+ *
+ * @param[in] p_ctx                Pointer to the AES context structure.
+ * @param[in] length               The length of the data to be encrypted. 
+ *                                 Must be a multiple of 16 bytes, except for the last data fragment.
+ * @param[in] p_plainText          Pointer to the buffer containing the data to be encrypted.
+ * @param[out] p_cipherText        Pointer to the buffer where the encrypted data will be stored.
+ * @param[out] p_tag               Pointer to the buffer where the authentication tag will be stored.
+ *                                 Only valid if p_plainText is the last data fragment.
+ *
+ * @retval MBA_RES_SUCCESS         Encryption successful.
+ * @retval MBA_RES_FAIL            Encryption failed.
+ * @retval MBA_RES_AUTHENTICATION_FAILURE Authentication failed.
+ * @retval MBA_RES_INVALID_PARA    Invalid parameter input.
+ */
+uint16_t MW_AES_AesCcmEncrypt(MW_AES_Ctx_T * p_ctx, uint16_t length, uint8_t *p_plainText, uint8_t *p_cipherText, uint8_t *p_tag);
+
+/**
+ * @brief Initializes AES CCM decryption.
+ *
+ * @param[out] p_ctx               Pointer to the AES context structure.
+ * @param[in] p_aesKey             Pointer to the 16-byte encryption key.
+ * @param[in] p_nonce              Pointer to the nonce used for encryption.
+ * @param[in] nonceSz              The size of p_nonce, between 7 and 13 bytes.
+ * @param[in] tagSz                The tag size used for encryption, must be a value in {4, 6, 8, 10, 12, 14, 16}.
+ * @param[in] p_aad                Pointer to the additional authentication data.
+ * @param[in] aadSz                The size of p_aad, can be 0 if p_aad is NULL.
+ * @param[in] dataSz               The size of the data to be decrypted.
+ *
+ * @retval MBA_RES_SUCCESS         Initialization successful.
+ * @retval MBA_RES_FAIL            Initialization failed.
+ */
+uint16_t MW_AES_CcmDecryptInit(MW_AES_Ctx_T * p_ctx, uint8_t *p_aesKey, uint8_t *p_nonce, uint8_t nonceSz, uint8_t tagSz, uint8_t *p_aad, uint16_t aadSz, uint16_t dataSz);
+
+
+/**
+ * @brief Decrypts data using AES CCM mode.
+ *
+ * @param[in] p_ctx                Pointer to the AES context structure.
+ * @param[in] length               The length of the data to be decrypted. 
+ *                                 Must be a multiple of 16 bytes, except for the last data fragment.
+ * @param[in] p_cipherText         Pointer to the buffer containing the data to be decrypted.
+ * @param[in] p_tag                Pointer to the buffer containing the authentication tag.
+ *                                 Only be used if p_cipherText is the last data fragment.
+ * @param[out] p_plainText         Pointer to the buffer where the decrypted data will be stored.
+ *
+ * @retval MBA_RES_SUCCESS         Encryption successful.
+ * @retval MBA_RES_FAIL            Encryption failed.
+ * @retval MBA_RES_AUTHENTICATION_FAILURE Authentication failed.
+ * @retval MBA_RES_INVALID_PARA    Invalid parameter input.
+ */
+uint16_t MW_AES_AesCcmDecrypt(MW_AES_Ctx_T * p_ctx, uint16_t length, uint8_t *p_cipherText, uint8_t *p_tag, uint8_t *p_plainText);
+
+
+/** @} */ //MW_AES_FUNS
+
+/** @} */
+
+/** @} */
 
 //DOM-IGNORE-BEGIN
 #ifdef __cplusplus
@@ -155,9 +252,4 @@ uint16_t MW_AES_AesEcbEncrypt(MW_AES_Ctx_T * p_ctx, uint16_t length, uint8_t *p_
 #endif
 //DOM-IGNORE-END
 
-#endif
-/**
- @}
-*/
-
-
+#endif //MW_AES_H

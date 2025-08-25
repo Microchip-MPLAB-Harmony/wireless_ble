@@ -272,7 +272,7 @@ static void ble_dm_SecurityManager(BLE_SMP_Event_T *p_event)
             {
                 return;
             }
-            
+            memset(p_devInfo,0,sizeof(BLE_DM_PairedDevInfo_T));
             p_key = &p_event->eventField.evtNotifyKeys.keys;
 
             p_devInfo->remoteAddr = p_key->remote.idInfo.addr;

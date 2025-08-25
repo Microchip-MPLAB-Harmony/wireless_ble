@@ -31,10 +31,14 @@
     ble_ans.c
 
   Summary:
-    This file contains the BLE Alert Notification Service functions for application user.
+    Implements the server role of the BLE Alert Notification Service (ANS),
+    providing functions to manage alert notifications for a BLE application.
 
   Description:
-    This file contains the BLE Alert Notification Service functions for application user.
+    This source file includes the necessary functions to initialize, configure,
+    and manage the BLE Alert Notification Service in the server role. It allows
+    the application to handle incoming alerts and notify connected clients
+    according to the ANS specification.
  *******************************************************************************/
 
 
@@ -43,7 +47,6 @@
 // Section: Included Files
 // *****************************************************************************
 // *****************************************************************************
-
 #include <string.h>
 #include <stdint.h>
 #include "mba_error_defs.h"
@@ -51,20 +54,20 @@
 #include "ble_util/byte_stream.h"
 #include "ble_ans.h"
 
-
 // *****************************************************************************
 // *****************************************************************************
 // Section: Macros
 // *****************************************************************************
 // *****************************************************************************
 
-#define BLE_ANS_CCC_NUM                     0x02
-#define BLE_ANS_UUID_ANS_SVC                0x1811
-#define BLE_ANS_UUID_ANCP                   0x2A44 /**< Alert Notification Control Point.*/
-#define BLE_ANS_UUID_UNREAD_ALERT_STAT      0x2A45 /**< Unread Alert Status Declaration.*/
-#define BLE_ANS_UUID_NEW_ALERT              0x2A46 /**< New Alert Declaration.*/
-#define BLE_ANS_UUID_SUPP_NEW_ALERT_CAT     0x2A47 /**< Supported New Alert Category Declaration.*/
-#define BLE_ANS_UUID_SUPP_UNREAD_ALERT_CAT  0x2A48 /**< Support Unread Alert Category Declaration.*/
+#define BLE_ANS_CCC_NUM                     0x02        // The number of CCCDs for the Alert Notification Service (ANS).
+#define BLE_ANS_MIN_KEY_SIZE                0x10        // The minimum key size for attribute permissions (ANS).
+#define BLE_ANS_UUID_ANS_SVC                0x1811      // The UUID for the Alert Notification Service.
+#define BLE_ANS_UUID_ANCP                   0x2A44      // The UUID for the Alert Notification Control Point characteristic.
+#define BLE_ANS_UUID_UNREAD_ALERT_STAT      0x2A45      // The UUID for the Unread Alert Status characteristic.
+#define BLE_ANS_UUID_NEW_ALERT              0x2A46      // The UUID for the New Alert characteristic.
+#define BLE_ANS_UUID_SUPP_NEW_ALERT_CAT     0x2A47      // The UUID for the Supported New Alert Category characteristic.
+#define BLE_ANS_UUID_SUPP_UNREAD_ALERT_CAT  0x2A48      // The UUID for the Supported Unread Alert Category characteristic.
 
 // *****************************************************************************
 // *****************************************************************************
@@ -251,6 +254,7 @@ static GATTS_Attribute_T s_ansList[] =
     },
 };
 
+/* CCCD settings for the Alert Notification Service characteristics. */
 static const GATTS_CccdSetting_T s_ansCccdSetting[] = 
 {
     {(uint16_t)ANS_HDL_CHARVAL_NEW_ALERT_CCC, (NOTIFICATION)},
@@ -273,7 +277,16 @@ static GATTS_Service_T s_svcAns =
 // Section: Functions
 // *****************************************************************************
 // *****************************************************************************
-
+/**
+ * @brief Adds the BLE Alert Notificaiton Service to the GATT server.
+ *
+ * This function adds the BLE Alert Notificaiton Service to the BLE stack's GATT server,
+ * enabling the service to be discovered and accessed by remote BLE devices.
+ *
+ * @retval MBA_RES_SUCCESS                    The BLE Alert Notificaiton service was successfully added.
+ * @retval MBA_RES_NO_RESOURCE                Insufficient resource to add the BLE Alert Notificaiton service.
+ *
+ */
 uint16_t BLE_ANS_Add(void)
 {
     return GATTS_AddService(&s_svcAns, (uint8_t)((uint16_t)BLE_ANS_END_HDL - (uint16_t)BLE_ANS_START_HDL + 1U));

@@ -31,22 +31,14 @@
     ble_log.h
 
   Summary:
-    This file contains the BLE Log functions for this project.
+    This header file provides the prototypes and definitions for the BLE Log 
+    middleware used in this project.
 
   Description:
-    This file contains the BLE Log functions for this project.
+    The BLE Log middleware facilitates logging of BLE Stack events and 
+    data for debugging and analysis purposes. This file defines the API for 
+    interacting with the BLE Log functionality.
  *******************************************************************************/
-/** @addtogroup BLE_MW BLE Middleware
- *  @{ */
-
-/**
- * @defgroup BLE_LOG BLE Log (BLE_LOG)
- * @brief Handling Bluetooth system log from LIB
- * @{
- * @brief Header file for the BLE Log (ble_log) module.
- * @note Definitions and prototypes for the BLE Log application programming interface.
- */
-
 #ifndef BLE_LOG_H
 #define BLE_LOG_H
 
@@ -61,11 +53,23 @@
 
 // DOM-IGNORE-BEGIN
 #ifdef __cplusplus  // Provide C++ Compatibility
-
 extern "C" {
-
 #endif
 // DOM-IGNORE-END
+
+/** 
+ * @addtogroup BLE_MW BLE Middleware
+ * @{
+ */
+
+/**
+ * @defgroup BLE_LOG BLE Log (BLE_LOG)
+ * 
+ * @brief Provides functions for handling BLE Stack logs.
+ * @note This file includes the necessary definitions and prototypes to interface
+ *       with the BLE Log functionality provided by the middleware.
+ * @{
+ */
 
 // *****************************************************************************
 // *****************************************************************************
@@ -73,16 +77,20 @@ extern "C" {
 // *****************************************************************************
 // *****************************************************************************
 
-/**@addtogroup BLE_LOG_DEFINES Defines
- * @{ */
+/**
+ * @addtogroup BLE_LOG_DEFINES Defines
+ * @{
+ */
 
-/**@defgroup BLE_LOG_TYPE Definitions of BLE log
- * @brief The definition of BLE log.
- * @{ */
-#define BLE_LOG_TYPE_HCI_COMMAND            0x01                                            /**< HCI Command. */
-#define BLE_LOG_TYPE_HCI_ACL_TX             0x02                                            /**< HCI ACL Tx Packet. */
-#define BLE_LOG_TYPE_HCI_ACL_RX             0x03                                            /**< HCI ACL Rx Packet. */
-#define BLE_LOG_TYPE_HCI_EVENT              0x04                                            /**< HCI Event. */
+/**
+ * @defgroup BLE_LOG_TYPE BLE log types
+ * @brief Defines various BLE log types used for debugging and tracing BLE communication.
+ * @{
+ */
+#define BLE_LOG_TYPE_HCI_COMMAND            0x01                                            /**< HCI Command log type. */
+#define BLE_LOG_TYPE_HCI_ACL_TX             0x02                                            /**< HCI ACL Data TX (transmit) packet log type. */
+#define BLE_LOG_TYPE_HCI_ACL_RX             0x03                                            /**< HCI ACL Data RX (receive) packet log type. */
+#define BLE_LOG_TYPE_HCI_EVENT              0x04                                            /**< HCI Event packet log type. */
 /** @} */
 
 
@@ -93,13 +101,25 @@ extern "C" {
 // Section: Data Types
 // *****************************************************************************
 
-/**@addtogroup BLE_LOG_STRUCTS Structures
- * @{ */
+/**
+ * @addtogroup BLE_LOG_STRUCTS Structures
+ * @{
+ */
 
-/**@brief BLE_LOG callback type. This callback function sends BLE_LOG events to the application. */
+/**
+ * @brief Callback type for BLE logging events.
+ *
+ * This callback function is used to send BLE logging events to the application.
+ * It is triggered with the log data when a logging event occurs.
+ *
+ * @param[in] logType       The type of the log event. See @ref BLE_LOG_TYPE for value definitions.
+ * @param[in] logLength     The length of the log data payload in bytes.
+ * @param[in] p_logPayload  Pointer to the log data payload. This is the actual data 
+ *                          associated with the log event.
+ */
 typedef void (*BLE_LOG_EventCb_T)(uint8_t logType, uint16_t logLength, uint8_t *p_logPayload);
 
-/**@} */ //BLE_LOG_STRUCTS
+/** @} */ //BLE_LOG_STRUCTS
 
 // *****************************************************************************
 // *****************************************************************************
@@ -107,22 +127,37 @@ typedef void (*BLE_LOG_EventCb_T)(uint8_t logType, uint16_t logLength, uint8_t *
 // *****************************************************************************
 // *****************************************************************************
 
-/**@addtogroup BLE_LOG_FUNS Functions
- * @{ */
+/**
+ * @addtogroup BLE_LOG_FUNS Functions
+ * @{
+ */
 
-/**@brief Register BLE_LOG callback.
+/**
+ * @brief Registers a callback function for BLE logging events.
  *
- * @param[in] eventCb       Client callback function.
+ * This function allows a client to register a callback that will be invoked
+ * when a BLE logging event occurs.
+ * 
+ * @param[in] eventCb       The function pointer to the callback that handles BLE logging events. See @ref BLE_LOG_EventCb_T.
 */
 void BLE_LOG_EventRegister(BLE_LOG_EventCb_T eventCb);
 
-/**@brief Handling BT_SYS_Log comes from ble_stack lib. BT_SYS_Log is the debug log with ble_stack HCI traffic information.
+
+/**
+ * @brief Processes BLE stack logs containing HCI traffic information.
  *
- * @param[in] p_log         Pointer to @ref BT_SYS_LogEvent_T buffer. 
+ * This function is responsible for handling the debug logs generated by the BLE stack.
+ * It processes the HCI traffic information contained within the logs.
+ * 
+ * @param[in] p_log        A pointer to the @ref BT_SYS_LogEvent_T structure that contains the log information.
 */
 void BLE_LOG_StackLogHandler(BT_SYS_LogEvent_T *p_log);
 
-/**@} */ //BLE_LOG_FUNS
+/** @} */ //BLE_LOG_FUNS
+
+/** @} */
+
+/** @} */
 
 //DOM-IGNORE-BEGIN
 #ifdef __cplusplus
@@ -130,12 +165,4 @@ void BLE_LOG_StackLogHandler(BT_SYS_LogEvent_T *p_log);
 #endif
 //DOM-IGNORE-END
 
-
-#endif
-
-/** @} */
-
-/**
-  @}
-*/
-
+#endif //BLE_LOG_H

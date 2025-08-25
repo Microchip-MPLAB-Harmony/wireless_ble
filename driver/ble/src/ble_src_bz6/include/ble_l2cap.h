@@ -159,6 +159,15 @@ extern "C" {
 /** @} */
 
 
+
+
+/**@defgroup BLE_L2CAP_ERR_REASON L2CAP error enountered reason
+ * @brief Defines the reason codes for encountered L2CAP error.
+ * @{ */
+#define BLE_L2CAP_ERR_INVALID_PACKET                (0x0000U)          /**< Invalid Packet received. */
+#define BLE_L2CAP_ERR_UNSUPP_SPSM                   (0x0001U)          /**< SPSM not supported. */
+/** @} */
+
 /**
  * @defgroup BLE_L2CAP_CB_CONN_RSP_RESULT L2CAP credit-based connection response result codes
  * @brief Defines the result codes for L2CAP credit-based connection response packets.
@@ -202,6 +211,8 @@ typedef enum BLE_L2CAP_EventId_T
                                                                            Refer to @ref BLE_L2CAP_EvtCbAddCreditsInd_T for details of the event payload. */
     BLE_L2CAP_EVT_CB_DISC_IND,                                        /**< Event indicating that a disconnect request for a credit-based L2CAP connection has been received. 
                                                                            Refer to @ref BLE_L2CAP_EvtCbDiscInd_T for details of the event payload. */
+    BLE_L2CAP_EVT_ERR_IND,                                            /**< Event indicating that a error handling for an error has been encountered.
+                                                                           Refer to @ref BLE_L2CAP_EvtErrInd_T for details of the event payload. */
     BLE_L2CAP_EVT_END                                                 /**< End of BLE L2CAP event enumeration. */
 }BLE_L2CAP_EventId_T;
 
@@ -284,6 +295,13 @@ typedef struct BLE_L2CAP_EvtCbDiscInd_T
     uint8_t                     leL2capId;                             /**< Identifier for the L2CAP session instance that was disconnected. */
 } BLE_L2CAP_EvtCbDiscInd_T;
 
+/** @brief Structure for @ref BLE_L2CAP_EVT_ERR_IND event.*/
+typedef struct BLE_L2CAP_EvtErrInd_T
+{
+    uint16_t                    connHandle;                            /**< Connection handle associated with this failure indication.*/
+    uint16_t                    reason;                                /**< Reason code indicating the reason for the error encountering. 
+                                                                            See @ref BLE_L2CAP_ERR_REASON. */
+} BLE_L2CAP_EvtErrInd_T;
 
 /** @brief Union of BLE L2CAP callback event data types. */
 typedef union
@@ -295,6 +313,7 @@ typedef union
     BLE_L2CAP_EvtCbSduInd_T                  evtCbSduInd;              /**< Data for the BLE_L2CAP_EVT_CB_SDU_IND event. */
     BLE_L2CAP_EvtCbAddCreditsInd_T           evtCbAddCreditsInd;       /**< Data for the BLE_L2CAP_EVT_CB_ADD_CREDITS_IND event. */
     BLE_L2CAP_EvtCbDiscInd_T                 evtCbDiscInd;             /**< Data for the BLE_L2CAP_EVT_CB_DISC_IND event. */
+    BLE_L2CAP_EvtErrInd_T                    evtErrInd;                /**< Data for the BLE_L2CAP_EVT_ERR_IND event. */
 } BLE_L2CAP_EventField_T;
 
 

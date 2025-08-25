@@ -31,10 +31,13 @@
     ble_trs.c
 
   Summary:
-    This file contains the BLE Transparent Service functions for application user.
+    Implements the BLE Transparent Service functions used by the application.
 
   Description:
-    This file contains the BLE Transparent Service functions for application user.
+    his source file provides the implementation for the BLE Transparent Service
+    functions that are available to the application user. It facilitates the
+    communication between the BLE stack and the application layer, enabling
+    transparent data transfer over BLE.
  *******************************************************************************/
 
 
@@ -56,8 +59,8 @@
 // Section: Macros
 // *****************************************************************************
 // *****************************************************************************
-
-#define TRS_MAX_MTU_LEN                                      BLE_ATT_MAX_MTU_LEN
+#define BLE_TRS_MIN_KEY_SIZE                                 0x10                       // The minimum key size for attribute permissions (TRS).
+#define TRS_MAX_MTU_LEN                                      BLE_ATT_MAX_MTU_LEN        // Maximum Transmission Unit length for TRS.
 
 // *****************************************************************************
 // *****************************************************************************
@@ -189,7 +192,8 @@ static GATTS_Attribute_T s_trsList[] = {
     }
 };
 
-static const GATTS_CccdSetting_T s_trsCccdSetting[] = 
+/* CCCD settings for the Transparent Service characteristics. */
+static const GATTS_CccdSetting_T s_trsCccdSetting[] =
 {
     {(uint16_t)TRS_HDL_CCCD_TX, (NOTIFICATION)},
     {(uint16_t)TRS_HDL_CCCD_CTRL, (NOTIFICATION)}
@@ -200,7 +204,7 @@ static GATTS_Service_T s_svcTrs =
 {
     NULL,
     (GATTS_Attribute_T *) s_trsList,
-    (GATTS_CccdSetting_T const *)s_trsCccdSetting,
+    (GATTS_CccdSetting_T *)s_trsCccdSetting,
     (uint16_t)TRS_START_HDL,
     (uint16_t)TRS_END_HDL,
     2
@@ -211,12 +215,35 @@ static GATTS_Service_T s_svcTrs =
 // Section: Functions
 // *****************************************************************************
 // *****************************************************************************
-
+/**
+ * @brief Adds the BLE Transparent Service to the GATT server.
+ *
+ * This function adds the BLE Transparent Service to the BLE stack's GATT server,
+ * enabling the service to be discovered and accessed by remote BLE devices.
+ * 
+ * @retval MBA_RES_SUCCESS                    The BLE Transparent service was successfully added.
+ * @retval MBA_RES_NO_RESOURCE                Insufficient resource to add the BLE Transparent service.
+ */
 uint16_t BLE_TRS_Add(void) 
 {
     return GATTS_AddService(&s_svcTrs, (uint8_t)((uint16_t)TRS_END_HDL - (uint16_t)TRS_START_HDL + 1U));
 }
 
+
+/**
+ * @brief Configures the permissions for a characteristic within the transparent service.
+ *
+ * This function sets the access permissions for a given characteristic's attribute handle within the transparent service.
+ * It should be called after initializing the transparent service with BLE_TRS_Add().
+ *
+ * @param[in] attrHdl                         Transparent service attribute handle.
+ *                                            Refer to @ref BLE_TRS_AttributeHandle_T for possible values.
+ * @param[in] permissions                     Attribute permissions to be set. Refer to @ref GATT_ATTRIBUTE_PERMISSIONS for possible values.
+ *
+ * @retval MBA_RES_SUCCESS                    The permissions were successfully configured.
+ * @retval MBA_RES_INVALID_PARA               The provided attribute handle does not belong to the transparent service.
+ *
+ */
 uint16_t BLE_TRS_PermissionConfig(uint16_t attrHdl, uint8_t permissions)
 {
     if (attrHdl >= (uint16_t)TRS_HDL_SVC && attrHdl <= (uint16_t)TRS_HDL_CCCD_CTRL)
