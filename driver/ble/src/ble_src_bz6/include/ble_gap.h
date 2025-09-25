@@ -2286,21 +2286,7 @@ uint16_t BLE_GAP_SetTxPowerReportingEnable(uint16_t connHandle, bool localEnable
  *      If legacy advertising PDU types are being used and the advertising set already contains data, the type shall 
  *      be one that supports advertising data, and the amount of data shall not exceed 31 bytes.\n
  *          If extended advertising PDU types are being used, then:\n
- *          - The advertisement shall not be both connectable and scannable.\n
- *          - High duty cycle directed connectable advertising shall not be used (bit 3 = 0).\n
- *      For the address of the 2nd advertising set,\n
- *          If local privacy via @ref BLE_GAP_SetLocalPrivacy is enabled, this API only accepts 2 configurations:\n
- *              1. Event property is non-connectable and non-scannable: This advertising set will use Non-RPA
- *                 automatically and change periodically.  The default address timeout is 15 minutes if the application
- *                 has not set local privacy.\n
- *              2. Event property is connectable or scannable: The peer address must be in the resolving list and local
- *                 privacy must be enabled. This peer address should not use the same IRK as other advertising sets.
- *                 This advertising set will use RPA.\n
- *          Otherwise the address will use the device address which can be updated via @ref BLE_GAP_SetDeviceAddr
- *              and it will be same as the address of 1st advertising set.\n
- *
- *      It is recommended to clear and reconfigure all advertising sets after calling @ref BLE_GAP_SetLocalPrivacy 
- *      or @ref BLE_GAP_SetResolvingList due to potential changes in privacy settings.
+ *          - High duty cycle directed connectable advertising shall not be used (bit 3 = 0).
  *
  * @param[in] p_extAdvParams                Pointer to the structure containing extended advertising parameters. See @ref BLE_GAP_ExtAdvParams_T.
  * @param[out] p_selectedTxPower            Pointer to the variable where the selected transmit power level will be stored. (Unit: dBm)
