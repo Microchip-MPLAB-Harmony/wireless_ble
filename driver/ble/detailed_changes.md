@@ -3,6 +3,68 @@
 
 # Detailed Changes
 
+## Wireless BLE Release v1.5.0
+### PIC32CX-BZ2
++ **BLE Stack Lib**
+	+ Move struct ATT_Uuid_T to ble_dd.h
+	+ Remove HCI_CMD_RESET from HCI_CmdCbId_T
+	+ Change the function return type
+		+ HCI_Cmd
+		+ HCI_AclTx
+	+ Remove unnecessary macro definitions
+		+ ATT_PERMISSION_KEY_SIZE
+		+ GATTS_BUILDIN_CCCD_NUM
+
++ **BLE Profile/Service**
+	+ Move the internal definition to the sourece file
+		+ BLE_ANPS_MAX_CONN_NBR
+		+ BLE_TRCBPS_CTRL_MPS
+		+ BLE_TRCBPS_CTRL_MAX_CREDITS
+		+ BLE_TRCBPS_CTRL_MAX_ACCU_CREDITS
+		+ BLE_TRCBPS_DATA_MAX_CREDITS
+		+ BLE_TRCBPS_DATA_MAX_ACCU_CREDITS
+		+ BLE_TRCBPS_PERMISSION
+		+ BLE_TRCBPS_CTRL_MAX_BUF_IN
+		+ BLE_TRCBPS_DATA_MAX_BUF_IN
+	+ Remove unnecessary structure definitions
+		+ BLE_TRCBPS_ConnPara_T
+		+ BLE_TRSPS_Uuids_T
+		+ BLE_TRS_Uuids_T
+
+### PIC32CX-BZ3
++ **BLE Stack Lib**
+	+ Move struct ATT_Uuid_T to ble_dd.h
+	+ Remove HCI_CMD_RESET from HCI_CmdCbId_T
+	+ Change the function return type
+		+ HCI_Cmd
+		+ HCI_AclTx
+	+ Remove unnecessary macro definitions
+		+ ATT_PERMISSION_KEY_SIZE
+		+ GATTS_BUILDIN_CCCD_NUM
+
++ **BLE Profile/Service**
+	+ Move the internal definition to the sourece file
+		+ BLE_ANPS_MAX_CONN_NBR
+		+ BLE_TRCBPS_CTRL_MPS
+		+ BLE_TRCBPS_CTRL_MAX_CREDITS
+		+ BLE_TRCBPS_CTRL_MAX_ACCU_CREDITS
+		+ BLE_TRCBPS_DATA_MAX_CREDITS
+		+ BLE_TRCBPS_DATA_MAX_ACCU_CREDITS
+		+ BLE_TRCBPS_PERMISSION
+		+ BLE_TRCBPS_CTRL_MAX_BUF_IN
+		+ BLE_TRCBPS_DATA_MAX_BUF_IN
+	+ Remove unnecessary structure definitions
+		+ BLE_TRCBPS_ConnPara_T
+		+ BLE_TRSPS_Uuids_T
+		+ BLE_TRS_Uuids_T
+
+### PIC32CX-BZ6
++ **BLE Stack Lib**
+	+ Remove HCI_CMD_RESET from HCI_CmdCbId_T
+	+ Change the function return type
+		+ HCI_Cmd
+		+ HCI_AclTx
+
 ## Wireless BLE Release v1.3.0
 
 ### PIC32CX-BZ2

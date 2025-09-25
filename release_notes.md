@@ -4,6 +4,134 @@
 
 # Microchip MPLAB® Harmony 3 Release Notes
 
+## Wireless BLE Release v1.5.0
+
+This release includes additions and improvements to the PIC32CX-BZ2, PIC32CX-BZ3, PIC32CX-BZ6, and the new PIC32CX-BZ36 device families, with support for the PIC32WM-BW1.
+
+### New Features
++ **PIC32CX-BZ2/PIC32CX-BZ3**
+	+ BT5.2: LE Path Loss Monitoring
+	+ BT5.3:
+		+ Connection Subrating
+		+ AdvDataInfo in Periodic Advertising
+		+ LE Channel Classification
+		+ LL privacy update - Address change on advertising data change
+	+ BT5.4:
+		+ Advertising Coding Selection
+		+ Encrypted Advertising Data
+		+ Security Level Characteristics
+	+ Support for Extended Advertising with deep sleep mode
+	+ Support for modularized HCI initialization
+	+ New API/Event for Connection Subrating:
+		+ BLE_GAP_SetDefaultSubrat
+		+ BLE_GAP_SubrateRequest
+		+ BLE_GAP_EVT_SUBRATE_CHANGE
+	+ New options for AdvDataInfo in Periodic Advertising
+		+ BLE_GAP_PERIODIC_ADV_DATA_OPERAION
+		+ BLE_GAP_PA_ENABLE_OPTION
+		+ BLE_GAP_PA_ENABLE_RX_OPTION
+	+ New API for LE Channel Classification:
+		+ BLE_GAP_ReadAfhChannelAssessMode
+		+ BLE_GAP_WriteAfhChannelAssessMode
+	+ New options for Advertising Coding Selection:
+		+ priPhyOptions
+		+ secPhyOptions
+	+ New API/Event for Encrypted advertising data:
+		+ GATTS_EncDataKeyMatlRsp
+		+ GATTS_UpdateEncDataKeyMatl
+		+ GATTS_EVT_ENC_DATA_KEY_MATL_REQ
+		+ charEncDataKeyMatl
+		+ MW_MISC_EncryptAdvData
+		+ MW_MISC_DecryptAdvData
+	+ New options for Security Level Characteristics:
+		+ charLeGattSecLvls
+	+ New API for modularized HCI initialization:
+		+ HCI_AdvInit
+		+ HCI_ExtAdvInit
+		+ HCI_PeriodicAdvInit
+		+ HCI_ScanInit
+		+ HCI_ExtScanInit
+		+ HCI_SyncInit
+		+ HCI_ConnCentralInit
+		+ HCI_ExtConnCntrlInit
+		+ HCI_ConnPeripheralInit
+	+ New API for Bluetooth Core version configuation:
+		+ BT_SYS_UpgradeBleVersion
+
++ **PIC32CX-BZ6**
+	+ BT5.2: LE Path Loss Monitoring
+	+ BT5.3:
+		+ LL privacy update - Address change on advertising data change
+	+ Support for Extended Advertising with deep sleep mode
+	+ Support for modularized HCI initialization
+	+ New API for modularized HCI initialization:
+		+ HCI_AdvInit
+		+ HCI_ExtAdvInit
+		+ HCI_PeriodicAdvInit
+		+ HCI_ScanInit
+		+ HCI_ExtScanInit
+		+ HCI_SyncInit
+		+ HCI_ConnCentralInit
+		+ HCI_ExtConnCntrlInit
+		+ HCI_ConnPeripheralInit
+
++ **PIC32CX-BZ36**
+	+ Initial Bluetooth Low Energy software support for the PIC32CX-BZ36 / PIC32WM-BZ36x families 32-bit microcontrollers
+	+ All supported features are aligned with those of the PIC32CX-BZ3 devices
+
+### Improvements
++ **PIC32CX-BZ2/PIC32CX-BZ3**
+	+ Optimize data memory usage
+	+ Improve vulnerability robustness by disconnecting upon detection of malicious behavior
+	+ Optimize the procedure for minimum number of used channels
+	+ Reduce advertising power consumption in sleep mode
+	+ Support public and random static addresses in the second advertising set
+	+ SMP initiator now checks the security level between the peripheral’s security request and the pairing response
+
++ **PIC32CX-BZ6**
+	+ Optimize data memory usage
+	+ Improve vulnerability robustness by disconnecting upon detection of malicious behavior
+	+ Optimize the procedure for minimum number of used channels
+	+ Reduce advertising power consumption in sleep mode
+	+ Support public and random static addresses in the second advertising set
+
+### Bug Fixes
++ **PIC32CX-BZ2/PIC32CX-BZ3**
+	+ Improve channel management and coexistence (channel misuse, missing MAP/STATUS indications, PTA handling)
+	+ Enhance connection stability across long-hour tests, LLCP collisions, smart phone interoperability, and legacy advertising scenarios
+	+ Fix issues with multi-link BLE + 15.4 combo support and parameter handling (LL_CONN_PARAM_REQ, Data Length Update)
+	+ Address potential BusFault and LLCP collision issues to improve robustness
+	+ Fix ADV name filter not working properly when using BLE_GAP_SetScanningFilter
+	+ Fix ATT CCCD list malfunction when a new service is added under an existing BLE connection
+	+ Fix pairing procedure not being prohibited from execution before the current procedure was completed
+	+ Fix GATT server malfunction when responding to ATT_READ_BY_TYPE_REQ with the default ATT MTU length
+
++ **PIC32CX-BZ6**
+	+ Improve channel management and coexistence (channel misuse, missing MAP/STATUS indications, PTA handling)
+	+ Enhance connection stability across long-hour tests, LLCP collisions, smart phone interoperability, and legacy advertising scenarios
+	+ Fix issues with multi-link BLE + 15.4 combo support and parameter handling (LL_CONN_PARAM_REQ, Data Length Update)
+	+ Address potential BusFault and LLCP collision issues to improve robustness
+	+ Fix ADV name filter not working properly when using BLE_GAP_SetScanningFilter
+	+ Fix ATT CCCD list malfunction when a new service is added under an existing BLE connection
+	+ Fix pairing procedure not being prohibited from execution before the current procedure was completed
+
+### Known Issues/Limitations
++ **PIC32CX-BZ2**
+	+ With multiple BLE links, if Wi-Fi has higher priority and BLE cannot obtain a PTA grant for an extended period, BLE connections may be lost. (#5489)
+	+ With multiple BLE roles and heavy traffic, the central role may lose connection if there are insufficient used channels. (#5499)
+
++ **PIC32CX-BZ3/PIC32CX-BZ36**
+	+ With multiple BLE links, if Wi-Fi has higher priority and BLE cannot obtain a PTA grant for an extended period, BLE connections may be lost. (#1722)
+
++ **PIC32CX-BZ6**
+	+ With multiple BLE links, if Wi-Fi has higher priority and BLE cannot obtain a PTA grant for an extended period, BLE connections may be lost. (#762)
+
+### Development Tools
++ [MPLAB X v6.25](https://www.microchip.com/mplab/mplab-x-ide)
++ [MPLAB® XC32 C/C++ Compiler v4.60](https://www.microchip.com/mplab/compilers)
++ MPLAB® X IDE plug-ins: MPLAB® Code Configurator (MCC) v5.5.2 and above
+
+
 ## Wireless BLE Release v1.4.0
 
 This release includes support for the new PIC32CX-BZ6 device.
