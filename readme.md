@@ -14,7 +14,7 @@ MPLAB® Harmony 3 is an extension of the MPLAB® ecosystem for creating embedded
 This repository contains the MPLAB® Harmony 3 Wireless BLE solutions and example applications. Quickly incorporate connectivity to your designs with Wireless BLE ICs, modules, software and development kits that make connecting effortless for your customers. Our comprehensive Wireless BLE portfolio has the technology to meet your range, data rate, interoperability, frequency and topology needs. Refer to the following links for release notes, training materials, and interface reference information.
 
 - [Release Notes](release_notes.md)
-- [MPLAB® Harmony License](mplab_harmony_license.md)
+- [License](License.md)
 - [MPLAB® Harmony 3 Wireless BLE Wiki](https://github.com/Microchip-MPLAB-Harmony/wireless_ble/wiki)
 - [MPLAB® Harmony 3 Wireless BLE API Help](https://microchip-mplab-harmony.github.io/wireless_ble)
 
@@ -23,7 +23,6 @@ This repository contains the MPLAB® Harmony 3 Wireless BLE solutions and exampl
 | Folder     | Description                                                                          |
 | ---        | ---                                                                                  |
 | config     | Wireless BLE component configuration file                 |
-| docs       | Wireless BLE help documentation                           |
 | drivers    | Driver/Firmware files of Wireless BLE component           |
 
 
