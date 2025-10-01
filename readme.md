@@ -36,7 +36,7 @@ Extract the zip file into a folder.
 Navigate to the folder and open index.html in a web browser of your choice.
 ____
 
-[![License](https://img.shields.io/badge/license-Harmony%20license-orange.svg)](https://github.com/Microchip-MPLAB-Harmony/wireless_ble/blob/master/mplab_harmony_license.md)
+[![License](https://img.shields.io/badge/license-Harmony%20license-orange.svg)](https://github.com/Microchip-MPLAB-Harmony/wireless_ble/blob/master/License.md)
 [![Latest release](https://img.shields.io/github/release/Microchip-MPLAB-Harmony/wireless_ble.svg)](https://github.com/Microchip-MPLAB-Harmony/wireless_ble/releases/latest)
 [![Latest release date](https://img.shields.io/github/release-date/Microchip-MPLAB-Harmony/wireless_ble.svg)](https://github.com/Microchip-MPLAB-Harmony/wireless_ble/releases/latest)
 [![Commit activity](https://img.shields.io/github/commit-activity/y/Microchip-MPLAB-Harmony/wireless_ble.svg)](https://github.com/Microchip-MPLAB-Harmony/wireless_ble/graphs/commit-activity)
